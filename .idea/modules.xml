@@ -4,7 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/AndroidBLE.iml" filepath="$PROJECT_DIR$/AndroidBLE.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/cmtechble/cmtechble.iml" filepath="$PROJECT_DIR$/cmtechble/cmtechble.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ble/ble.iml" filepath="$PROJECT_DIR$/ble/ble.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ble/cmtechble.iml" filepath="$PROJECT_DIR$/ble/cmtechble.iml" />
     </modules>
   </component>
 </project>

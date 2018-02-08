@@ -1,1 +1,1 @@
-include ':app', ':cmtechble'
+include ':app', ':ble'
