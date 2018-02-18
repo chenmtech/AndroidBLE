@@ -15,14 +15,14 @@ import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/8/1 22:58.
  */
-public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilter {
+public class NoFilterScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilter {
     protected Handler handler = new Handler(Looper.myLooper());
     protected boolean isScan = true;//是否开始扫描
     protected boolean isScanning = false;//是否正在扫描
     protected BluetoothLeDeviceStore bluetoothLeDeviceStore;//用来存储扫描到的设备
     protected IScanCallback scanCallback;//扫描结果回调
 
-    public ScanCallback(IScanCallback scanCallback) {
+    public NoFilterScanCallback(IScanCallback scanCallback) {
         this.scanCallback = scanCallback;
         if (scanCallback == null) {
             throw new NullPointerException("this scanCallback is null!");
@@ -30,7 +30,7 @@ public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilte
         bluetoothLeDeviceStore = new BluetoothLeDeviceStore();
     }
 
-    public ScanCallback setScan(boolean scan) {
+    public NoFilterScanCallback setScan(boolean scan) {
         isScan = scan;
         return this;
     }
@@ -52,7 +52,7 @@ public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilte
                         isScanning = false;
 
                         if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                            ViseBle.getInstance().getBluetoothAdapter().stopLeScan(ScanCallback.this);
+                            ViseBle.getInstance().getBluetoothAdapter().stopLeScan(NoFilterScanCallback.this);
                         }
 
                         if (bluetoothLeDeviceStore.getDeviceMap() != null
@@ -66,17 +66,17 @@ public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilte
             }
             isScanning = true;
             if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().startLeScan(ScanCallback.this);
+                ViseBle.getInstance().getBluetoothAdapter().startLeScan(NoFilterScanCallback.this);
             }
         } else {
             isScanning = false;
             if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().stopLeScan(ScanCallback.this);
+                ViseBle.getInstance().getBluetoothAdapter().stopLeScan(NoFilterScanCallback.this);
             }
         }
     }
 
-    public ScanCallback removeHandlerMsg() {
+    public NoFilterScanCallback removeHandlerMsg() {
         handler.removeCallbacksAndMessages(null);
         bluetoothLeDeviceStore.clear();
         return this;

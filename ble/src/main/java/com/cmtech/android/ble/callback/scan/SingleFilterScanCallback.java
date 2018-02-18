@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/9/12 22:16.
  */
-public class SingleFilterScanCallback extends ScanCallback {
+public class SingleFilterScanCallback extends NoFilterScanCallback {
     private AtomicBoolean hasFound = new AtomicBoolean(false);
     private String deviceName;//指定设备名称
     private String deviceMac;//指定设备Mac地址
@@ -19,12 +19,12 @@ public class SingleFilterScanCallback extends ScanCallback {
         super(scanCallback);
     }
 
-    public ScanCallback setDeviceName(String deviceName) {
+    public NoFilterScanCallback setDeviceName(String deviceName) {
         this.deviceName = deviceName;
         return this;
     }
 
-    public ScanCallback setDeviceMac(String deviceMac) {
+    public NoFilterScanCallback setDeviceMac(String deviceMac) {
         this.deviceMac = deviceMac;
         return this;
     }
