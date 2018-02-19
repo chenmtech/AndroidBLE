@@ -9,7 +9,7 @@ import java.util.List;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/9/12 22:50.
  */
-public class ListFilterScanCallback extends NoFilterScanCallback {
+public class ListFilterScanCallback extends FilterScanCallback {
     private List<String> deviceNameList;//指定设备名称集合
     private List<String> deviceMacList;//指定设备Mac地址集合
 

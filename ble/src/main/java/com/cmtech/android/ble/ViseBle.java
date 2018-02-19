@@ -8,8 +8,8 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
+import com.cmtech.android.ble.callback.scan.FilterScanCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
-import com.cmtech.android.ble.callback.scan.NoFilterScanCallback;
 import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
@@ -82,9 +82,9 @@ public class ViseBle {
      *
      * @param scanCallback 自定义回调
      */
-    public void startScan(NoFilterScanCallback scanCallback) {
+    public void startScan(FilterScanCallback scanCallback) {
         if (scanCallback == null) {
-            throw new IllegalArgumentException("this NoFilterScanCallback is Null!");
+            throw new IllegalArgumentException("this FilterScanCallback is Null!");
         }
         scanCallback.setScan(true).scan();
     }
@@ -94,9 +94,9 @@ public class ViseBle {
      *
      * @param scanCallback 自定义回调
      */
-    public void stopScan(NoFilterScanCallback scanCallback) {
+    public void stopScan(FilterScanCallback scanCallback) {
         if (scanCallback == null) {
-            throw new IllegalArgumentException("this NoFilterScanCallback is Null!");
+            throw new IllegalArgumentException("this FilterScanCallback is Null!");
         }
         scanCallback.setScan(false).removeHandlerMsg().scan();
     }
