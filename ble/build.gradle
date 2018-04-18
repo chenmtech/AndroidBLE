@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 23
-    buildToolsVersion '26.0.2'
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         minSdkVersion 18
@@ -19,6 +19,6 @@ android {
 }
 
 dependencies {
-    compile 'com.vise.xiaoyaoyou:viselog:1.1.2'
+    implementation 'com.vise.xiaoyaoyou:viselog:1.1.2'
 }
 
