@@ -139,6 +139,9 @@ public class DeviceMirror {
             }
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
+
+                //if(connectState == ConnectState.CONNECT_SUCCESS) return;    // 这一句是我加上来的，防止两次收到SUCCESS
+
                 bluetoothGatt = gatt;
                 connectState = ConnectState.CONNECT_SUCCESS;
                 if (connectCallback != null) {
