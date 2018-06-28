@@ -148,6 +148,8 @@ public class DeviceMirror {
                     isActiveDisconnect = false;
                     ViseBle.getInstance().getDeviceMirrorPool().addDeviceMirror(deviceMirror);
                     connectCallback.onConnectSuccess(deviceMirror);
+                } else {
+                    close();
                 }
             } else {
                 connectFailure(new ConnectException(gatt, status));
@@ -596,6 +598,7 @@ public class DeviceMirror {
      */
     public synchronized void close() {
         if (bluetoothGatt != null) {
+            bluetoothGatt.disconnect();
             bluetoothGatt.close();
         }
     }
