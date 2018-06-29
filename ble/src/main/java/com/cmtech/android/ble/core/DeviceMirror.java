@@ -181,6 +181,8 @@ public class DeviceMirror {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+            super.onCharacteristicWrite(gatt, characteristic, status);
+
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == BluetoothGatt.GATT_SUCCESS) {
