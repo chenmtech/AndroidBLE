@@ -25,6 +25,7 @@ import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -181,8 +182,6 @@ public class DeviceMirror {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-            super.onCharacteristicWrite(gatt, characteristic, status);
-
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -374,6 +373,7 @@ public class DeviceMirror {
         writeDataRetryCount = 0;
         writeData = data;
         write(data);
+        ViseLog.i("write data: " + Arrays.toString(data));
     }
 
     /**
@@ -589,6 +589,7 @@ public class DeviceMirror {
         if (bluetoothGatt != null) {
             isActiveDisconnect = true;
             bluetoothGatt.disconnect();
+            ViseLog.i("BluetoothGatt disconnect.");
         }
         if (handler != null) {
             handler.removeCallbacksAndMessages(null);
