@@ -140,17 +140,12 @@ public class DeviceMirror {
             }
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
-
-                //if(connectState == ConnectState.CONNECT_SUCCESS) return;    // 这一句是我加上来的，防止两次收到SUCCESS
-
                 bluetoothGatt = gatt;
                 connectState = ConnectState.CONNECT_SUCCESS;
                 if (connectCallback != null) {
                     isActiveDisconnect = false;
                     ViseBle.getInstance().getDeviceMirrorPool().addDeviceMirror(deviceMirror);
                     connectCallback.onConnectSuccess(deviceMirror);
-                } else {
-                    close();
                 }
             } else {
                 connectFailure(new ConnectException(gatt, status));
@@ -182,8 +177,6 @@ public class DeviceMirror {
          */
         @Override
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
-            super.onCharacteristicWrite(gatt, characteristic, status);
-
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -622,7 +615,7 @@ public class DeviceMirror {
     public synchronized void clear() {
         ViseLog.i("deviceMirror clear.");
         disconnect();
-        refreshDeviceCache();
+        //refreshDeviceCache();
         close();
         if (bleCallbackMap != null) {
             bleCallbackMap.clear();
