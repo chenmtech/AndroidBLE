@@ -145,6 +145,7 @@ public class ViseBle {
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
                 if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+                    ViseLog.i("已扫描到设备，开始连接。");
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
@@ -152,12 +153,14 @@ public class ViseBle {
                         }
                     });
                 } else {
+                    ViseLog.i("扫描错误。");
                     connectCallback.onConnectFailure(new TimeoutException());
                 }
             }
 
             @Override
             public void onScanTimeout() {
+                ViseLog.i("扫描超时。");
                 connectCallback.onConnectFailure(new TimeoutException());
             }
         }).setDeviceMac(mac));
