@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.FilterScanCallback;
@@ -145,22 +146,34 @@ public class ViseBle {
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
                 if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
-                    ViseLog.i("已扫描到设备，开始连接。");
+
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
+                            Toast.makeText(context, "已扫描到设备，开始连接。", Toast.LENGTH_SHORT).show();
                             connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
                         }
                     });
                 } else {
-                    ViseLog.i("扫描错误。");
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(context, "扫描错误。", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
                     connectCallback.onConnectFailure(new TimeoutException());
                 }
             }
 
             @Override
             public void onScanTimeout() {
-                ViseLog.i("扫描超时。");
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(context, "扫描超时。", Toast.LENGTH_SHORT).show();
+                    }
+                });
                 connectCallback.onConnectFailure(new TimeoutException());
             }
         }).setDeviceMac(mac));

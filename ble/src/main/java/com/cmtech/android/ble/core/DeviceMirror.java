@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.widget.Toast;
 
 import com.cmtech.android.ble.ViseBle;
 import com.cmtech.android.ble.callback.IBleCallback;
@@ -106,6 +107,13 @@ public class DeviceMirror {
             ViseLog.i("onConnectionStateChange  status: " + status + " ,newState: " + newState +
                     "  ,thread: " + Thread.currentThread());
             if (newState == BluetoothGatt.STATE_CONNECTED) {
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ViseBle.getInstance().getContext(), "已连接，开始发现服务。", Toast.LENGTH_SHORT).show();
+                    }
+                });
+
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                 close();
@@ -145,6 +153,13 @@ public class DeviceMirror {
                 if (connectCallback != null) {
                     isActiveDisconnect = false;
                     ViseBle.getInstance().getDeviceMirrorPool().addDeviceMirror(deviceMirror);
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(ViseBle.getInstance().getContext(), "成功发现服务。", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+
                     connectCallback.onConnectSuccess(deviceMirror);
                 }
             } else {
