@@ -17,4 +17,7 @@ public interface IConnectCallback {
 
     //连接断开
     void onDisconnect(boolean isActive);
+
+    // 扫描失败
+    void onScanFailure(BleException exception);
 }

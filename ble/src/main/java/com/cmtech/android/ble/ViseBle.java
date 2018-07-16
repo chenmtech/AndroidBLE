@@ -162,7 +162,7 @@ public class ViseBle {
                         }
                     });
 
-                    connectCallback.onConnectFailure(new TimeoutException());
+                    connectCallback.onScanFailure(new TimeoutException());
                 }
             }
 
@@ -174,7 +174,7 @@ public class ViseBle {
                         Toast.makeText(context, "扫描超时。", Toast.LENGTH_SHORT).show();
                     }
                 });
-                connectCallback.onConnectFailure(new TimeoutException());
+                connectCallback.onScanFailure(new TimeoutException());
             }
         }).setDeviceMac(mac));
     }
