@@ -604,6 +604,7 @@ public class DeviceMirror {
      */
     public synchronized void close() {
         if (bluetoothGatt != null) {
+            ViseLog.i("BluetoothGatt close.");
             bluetoothGatt.close();
         }
     }
