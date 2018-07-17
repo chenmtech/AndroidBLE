@@ -150,7 +150,7 @@ public class ViseBle {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, "已扫描到设备，开始连接。", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "扫描到设备。", Toast.LENGTH_SHORT).show();
                             connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
                         }
                     });
