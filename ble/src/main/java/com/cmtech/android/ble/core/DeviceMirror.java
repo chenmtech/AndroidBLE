@@ -109,7 +109,7 @@ public class DeviceMirror {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                close();
+                //close();
                 if (connectCallback != null) {
                     if (handler != null) {
                         handler.removeCallbacksAndMessages(null);
@@ -563,10 +563,15 @@ public class DeviceMirror {
      * @return 返回是否刷新成功
      */
     public synchronized boolean refreshDeviceCache() {
+        int count = 0;
+
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
             if (refresh != null && bluetoothGatt != null) {
-                final boolean success = (Boolean) refresh.invoke(getBluetoothGatt());
+                boolean success = (Boolean) refresh.invoke(getBluetoothGatt());
+                while(!success && count < 100) {
+                    success = (Boolean) refresh.invoke(getBluetoothGatt());
+                }
                 ViseLog.i("Refreshing result: " + success);
                 return success;
             }
