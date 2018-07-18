@@ -147,13 +147,6 @@ public class DeviceMirror {
                     isActiveDisconnect = false;
                     ViseBle.getInstance().getDeviceMirrorPool().addDeviceMirror(deviceMirror);
                     connectCallback.onConnectSuccess(deviceMirror);
-
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(ViseBle.getInstance().getContext(), "连接成功。", Toast.LENGTH_SHORT).show();
-                        }
-                    });
                 }
             } else {
                 connectFailure(new ConnectException(gatt, status));
