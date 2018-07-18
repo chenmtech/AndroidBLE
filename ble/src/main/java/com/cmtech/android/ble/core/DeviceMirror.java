@@ -569,8 +569,9 @@ public class DeviceMirror {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
             if (refresh != null && bluetoothGatt != null) {
                 boolean success = (Boolean) refresh.invoke(getBluetoothGatt());
-                while(!success && count < 100) {
+                while(!success || count < 2) {
                     success = (Boolean) refresh.invoke(getBluetoothGatt());
+                    count++;
                 }
                 ViseLog.i("Refreshing result: " + success);
                 return success;
@@ -621,7 +622,7 @@ public class DeviceMirror {
     public synchronized void clear() {
         ViseLog.i("deviceMirror clear.");
         disconnect();
-        refreshDeviceCache();
+        //refreshDeviceCache();
         close();
         if (bleCallbackMap != null) {
             bleCallbackMap.clear();
