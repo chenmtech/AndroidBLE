@@ -803,8 +803,9 @@ public class DeviceMirror {
             } else {
                 connectState = ConnectState.CONNECT_FAILURE;
             }
-            close();
+            //close();
             if (connectCallback != null) {
+                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(deviceMirror);
                 connectCallback.onConnectFailure(bleException);
             }
             ViseLog.i("connectFailure " + bleException);
