@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.FilterScanCallback;
@@ -16,7 +15,6 @@ import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.DeviceMirrorPool;
-import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
@@ -146,35 +144,22 @@ public class ViseBle {
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
                 if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+                    connectCallback.onScanFinish(true);
 
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            Toast.makeText(context, "扫描到设备。", Toast.LENGTH_SHORT).show();
                             connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
                         }
                     });
                 } else {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(context, "扫描错误。", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
-                    connectCallback.onScanFailure(new TimeoutException());
+                    connectCallback.onScanFinish(false);
                 }
             }
 
             @Override
             public void onScanTimeout() {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        Toast.makeText(context, "扫描超时。", Toast.LENGTH_SHORT).show();
-                    }
-                });
-                connectCallback.onScanFailure(new TimeoutException());
+                connectCallback.onScanFinish(false);
             }
         }).setDeviceMac(mac));
     }
@@ -199,6 +184,8 @@ public class ViseBle {
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
                 if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+                    connectCallback.onScanFinish(true);
+
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
@@ -206,13 +193,13 @@ public class ViseBle {
                         }
                     });
                 } else {
-                    connectCallback.onConnectFailure(new TimeoutException());
+                    connectCallback.onScanFinish(false);
                 }
             }
 
             @Override
             public void onScanTimeout() {
-                connectCallback.onConnectFailure(new TimeoutException());
+                connectCallback.onScanFinish(false);
             }
         }).setDeviceName(name));
     }
