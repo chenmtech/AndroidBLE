@@ -623,7 +623,7 @@ public class DeviceMirror {
     public synchronized void clear() {
         ViseLog.i("deviceMirror clear.");
         disconnect();
-        //refreshDeviceCache();
+        refreshDeviceCache();
         close();
         if (bleCallbackMap != null) {
             bleCallbackMap.clear();
