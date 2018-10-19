@@ -9,6 +9,7 @@ import com.cmtech.android.ble.ViseBle;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
+import com.vise.log.ViseLog;
 
 /**
  * @Description: 扫描设备回调
@@ -51,6 +52,8 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
                     public void run() {
                         isScanning = false;
 
+                        ViseLog.e("scan timeout");
+
                         if (ViseBle.getInstance().getBluetoothAdapter() != null) {
                             ViseBle.getInstance().getBluetoothAdapter().stopLeScan(FilterScanCallback.this);
                         }
@@ -87,6 +90,7 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
         BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(bluetoothDevice, rssi, scanRecord, System.currentTimeMillis());
         BluetoothLeDevice filterDevice = onFilter(bluetoothLeDevice);
         if (filterDevice != null) {
+            ViseLog.e("onLeScan: device found");
             bluetoothLeDeviceStore.addDevice(filterDevice);
             scanCallback.onDeviceFound(filterDevice);
         }
