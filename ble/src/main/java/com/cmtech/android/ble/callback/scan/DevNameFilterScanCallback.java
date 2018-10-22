@@ -20,10 +20,12 @@ public class DevNameFilterScanCallback extends FilterScanCallback {
 
     @Override
     public BluetoothLeDevice onFilter(BluetoothLeDevice bluetoothLeDevice) {
-        if (bluetoothLeDevice != null && bluetoothLeDevice.getName() != null && deviceName != null
-                && deviceName.equalsIgnoreCase(bluetoothLeDevice.getName().trim())) {
-            return bluetoothLeDevice;
-        } else
-            return null;
+        BluetoothLeDevice rtnDevice = null;
+        if (bluetoothLeDevice != null && bluetoothLeDevice.getName() != null && deviceName != null) {
+            if(deviceName.equals("") || deviceName.equalsIgnoreCase(bluetoothLeDevice.getName().trim())) {
+                rtnDevice = bluetoothLeDevice;
+            }
+        }
+        return rtnDevice;
     }
 }
