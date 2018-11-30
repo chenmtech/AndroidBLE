@@ -8,13 +8,14 @@ import android.os.Looper;
 import android.text.TextUtils;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
-import com.cmtech.android.ble.callback.scan.FilterScanCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
+import com.cmtech.android.ble.callback.scan.ScanCallback;
 import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.DeviceMirrorPool;
+import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
@@ -81,9 +82,9 @@ public class ViseBle {
      *
      * @param scanCallback 自定义回调
      */
-    public void startScan(FilterScanCallback scanCallback) {
+    public void startScan(ScanCallback scanCallback) {
         if (scanCallback == null) {
-            throw new IllegalArgumentException("this FilterScanCallback is Null!");
+            throw new IllegalArgumentException("this ScanCallback is Null!");
         }
         scanCallback.setScan(true).scan();
     }
@@ -93,9 +94,9 @@ public class ViseBle {
      *
      * @param scanCallback 自定义回调
      */
-    public void stopScan(FilterScanCallback scanCallback) {
+    public void stopScan(ScanCallback scanCallback) {
         if (scanCallback == null) {
-            throw new IllegalArgumentException("this FilterScanCallback is Null!");
+            throw new IllegalArgumentException("this ScanCallback is Null!");
         }
         scanCallback.setScan(false).removeHandlerMsg().scan();
     }
@@ -143,12 +144,21 @@ public class ViseBle {
 
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-
+                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
+                        }
+                    });
+                } else {
+                    connectCallback.onConnectFailure(new TimeoutException());
+                }
             }
 
             @Override
             public void onScanTimeout() {
-
+                connectCallback.onConnectFailure(new TimeoutException());
             }
         }).setDeviceMac(mac));
     }
@@ -172,12 +182,21 @@ public class ViseBle {
 
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-
+                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
+                        }
+                    });
+                } else {
+                    connectCallback.onConnectFailure(new TimeoutException());
+                }
             }
 
             @Override
             public void onScanTimeout() {
-
+                connectCallback.onConnectFailure(new TimeoutException());
             }
         }).setDeviceName(name));
     }

@@ -6,14 +6,14 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
  * Created by bme on 2018/2/19.
  */
 
-public class DevNameFilterScanCallback extends FilterScanCallback {
+public class DevNameFilterScanCallback extends ScanCallback {
     private String deviceName;//指定设备名称
 
     public DevNameFilterScanCallback(IScanCallback scanCallback) {
         super(scanCallback);
     }
 
-    public FilterScanCallback setDeviceName(String deviceName) {
+    public ScanCallback setDeviceName(String deviceName) {
         this.deviceName = deviceName;
         return this;
     }

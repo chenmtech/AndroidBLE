@@ -9,21 +9,20 @@ import com.cmtech.android.ble.ViseBle;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
-import com.vise.log.ViseLog;
 
 /**
  * @Description: 扫描设备回调
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/8/1 22:58.
  */
-public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilter {
+public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilter {
     protected Handler handler = new Handler(Looper.myLooper());
     protected boolean isScan = true;//是否开始扫描
     protected boolean isScanning = false;//是否正在扫描
     protected BluetoothLeDeviceStore bluetoothLeDeviceStore;//用来存储扫描到的设备
     protected IScanCallback scanCallback;//扫描结果回调
 
-    public FilterScanCallback(IScanCallback scanCallback) {
+    public ScanCallback(IScanCallback scanCallback) {
         this.scanCallback = scanCallback;
         if (scanCallback == null) {
             throw new NullPointerException("this scanCallback is null!");
@@ -31,7 +30,7 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
         bluetoothLeDeviceStore = new BluetoothLeDeviceStore();
     }
 
-    public FilterScanCallback setScan(boolean scan) {
+    public ScanCallback setScan(boolean scan) {
         isScan = scan;
         return this;
     }
@@ -52,10 +51,8 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
                     public void run() {
                         isScanning = false;
 
-                        ViseLog.e("scan timeout");
-
                         if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                            ViseBle.getInstance().getBluetoothAdapter().stopLeScan(FilterScanCallback.this);
+                            ViseBle.getInstance().getBluetoothAdapter().stopLeScan(ScanCallback.this);
                         }
 
                         if (bluetoothLeDeviceStore.getDeviceMap() != null
@@ -69,17 +66,17 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
             }
             isScanning = true;
             if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().startLeScan(FilterScanCallback.this);
+                ViseBle.getInstance().getBluetoothAdapter().startLeScan(ScanCallback.this);
             }
         } else {
             isScanning = false;
             if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().stopLeScan(FilterScanCallback.this);
+                ViseBle.getInstance().getBluetoothAdapter().stopLeScan(ScanCallback.this);
             }
         }
     }
 
-    public FilterScanCallback removeHandlerMsg() {
+    public ScanCallback removeHandlerMsg() {
         handler.removeCallbacksAndMessages(null);
         bluetoothLeDeviceStore.clear();
         return this;
@@ -90,7 +87,6 @@ public class FilterScanCallback implements BluetoothAdapter.LeScanCallback, ISca
         BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(bluetoothDevice, rssi, scanRecord, System.currentTimeMillis());
         BluetoothLeDevice filterDevice = onFilter(bluetoothLeDevice);
         if (filterDevice != null) {
-            ViseLog.e("onLeScan: device found");
             bluetoothLeDeviceStore.addDevice(filterDevice);
             scanCallback.onDeviceFound(filterDevice);
         }

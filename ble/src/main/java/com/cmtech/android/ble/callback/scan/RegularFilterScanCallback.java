@@ -12,7 +12,7 @@ import java.util.regex.Pattern;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/9/12 22:19.
  */
-public class RegularFilterScanCallback extends FilterScanCallback {
+public class RegularFilterScanCallback extends ScanCallback {
     private Pattern pattern;
     private Matcher matcher;
     private String regularDeviceName;//正则表达式表示的设备名称
