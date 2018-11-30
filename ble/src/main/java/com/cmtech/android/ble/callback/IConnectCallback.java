@@ -18,6 +18,4 @@ public interface IConnectCallback {
     //连接断开
     void onDisconnect(boolean isActive);
 
-    // 扫描结束
-    void onScanFinish(boolean result);
 }

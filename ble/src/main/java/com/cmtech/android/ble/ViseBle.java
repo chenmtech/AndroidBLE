@@ -143,23 +143,12 @@ public class ViseBle {
 
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
-                    connectCallback.onScanFinish(true);
 
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
-                        }
-                    });
-                } else {
-                    connectCallback.onScanFinish(false);
-                }
             }
 
             @Override
             public void onScanTimeout() {
-                connectCallback.onScanFinish(false);
+
             }
         }).setDeviceMac(mac));
     }
@@ -183,23 +172,12 @@ public class ViseBle {
 
             @Override
             public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
-                    connectCallback.onScanFinish(true);
 
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
-                        }
-                    });
-                } else {
-                    connectCallback.onScanFinish(false);
-                }
             }
 
             @Override
             public void onScanTimeout() {
-                connectCallback.onScanFinish(false);
+
             }
         }).setDeviceName(name));
     }
