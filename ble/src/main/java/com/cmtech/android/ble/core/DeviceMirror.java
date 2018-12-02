@@ -59,12 +59,28 @@ public class DeviceMirror {
     private boolean isIndication;//是否是指示器方式
     private boolean enable;//是否设置使能
     private byte[] writeData;//写入数据
-    private ConnectState connectState = ConnectState.CONNECT_INIT;//设备状态描述
+    private ConnectState connectState;//设备状态描述
     private volatile HashMap<String, BluetoothGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
     private volatile HashMap<String, BluetoothGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
     private volatile HashMap<String, BluetoothGattChannel> enableInfoMap = new HashMap<>();//设置使能GATT信息集合
     private volatile HashMap<String, IBleCallback> bleCallbackMap = new HashMap<>();//数据操作回调集合
     private volatile HashMap<String, IBleCallback> receiveCallbackMap = new HashMap<>();//数据接收回调集合
+
+    private IDeviceMirrorStateObserver observer;
+
+    public void registerStateObserver(IDeviceMirrorStateObserver observer) { this.observer = observer; }
+    public void removeStateObserver() { observer = null; }
+    private void notifyStateObserver() {
+        if(observer != null)
+            observer.updateDeviceMirrorState(connectState);
+    }
+
+    private void setConnectState(ConnectState connectState) {
+        if(this.connectState != connectState) {
+            this.connectState = connectState;
+            notifyStateObserver();
+        }
+    }
 
     private final Handler handler = new Handler(Looper.myLooper()) {
         @Override
@@ -114,15 +130,15 @@ public class DeviceMirror {
                     }
                     ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(deviceMirror);
                     if (status == BluetoothGatt.GATT_SUCCESS) {
-                        connectState = ConnectState.CONNECT_DISCONNECT;
+                        setConnectState(ConnectState.CONNECT_DISCONNECT);
                         connectCallback.onDisconnect(isActiveDisconnect);
                     } else {
-                        connectState = ConnectState.CONNECT_FAILURE;
+                        setConnectState(ConnectState.CONNECT_FAILURE);
                         connectCallback.onConnectFailure(new ConnectException(gatt, status));
                     }
                 }
             } else if (newState == BluetoothGatt.STATE_CONNECTING) {
-                connectState = ConnectState.CONNECT_PROCESS;
+                setConnectState(ConnectState.CONNECT_PROCESS);
             }
         }
 
@@ -140,7 +156,7 @@ public class DeviceMirror {
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
                 bluetoothGatt = gatt;
-                connectState = ConnectState.CONNECT_SUCCESS;
+                setConnectState(ConnectState.CONNECT_SUCCESS);
                 if (connectCallback != null) {
                     isActiveDisconnect = false;
                     ViseBle.getInstance().getDeviceMirrorPool().addDeviceMirror(deviceMirror);
@@ -272,6 +288,7 @@ public class DeviceMirror {
         deviceMirror = this;
         this.bluetoothLeDevice = bluetoothLeDevice;
         this.uniqueSymbol = bluetoothLeDevice.getAddress() + bluetoothLeDevice.getName();
+        setConnectState(ConnectState.CONNECT_INIT);
     }
 
     /**
@@ -577,7 +594,7 @@ public class DeviceMirror {
      * 主动断开设备连接
      */
     public synchronized void disconnect() {
-        connectState = ConnectState.CONNECT_INIT;
+        setConnectState(ConnectState.CONNECT_INIT);
         connectRetryCount = 0;
         if (bluetoothGatt != null) {
             isActiveDisconnect = true;
@@ -665,7 +682,7 @@ public class DeviceMirror {
             handler.removeMessages(MSG_CONNECT_TIMEOUT);
             handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
         }
-        connectState = ConnectState.CONNECT_PROCESS;
+        setConnectState(ConnectState.CONNECT_PROCESS);
         if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
             bluetoothLeDevice.getDevice().connectGatt(ViseBle.getInstance().getContext(), false, coreGattCallback);
         }
@@ -789,9 +806,9 @@ public class DeviceMirror {
             ViseLog.i("connectFailure connectRetryCount is " + connectRetryCount);
         } else {
             if (bleException instanceof TimeoutException) {
-                connectState = ConnectState.CONNECT_TIMEOUT;
+                setConnectState(ConnectState.CONNECT_TIMEOUT);
             } else {
-                connectState = ConnectState.CONNECT_FAILURE;
+                setConnectState(ConnectState.CONNECT_FAILURE);
             }
             close();
             if (connectCallback != null) {

@@ -3,6 +3,7 @@ package com.cmtech.android.ble.core;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
+import com.vise.log.ViseLog;
 
 import java.util.ArrayList;
 import java.util.Collections;
