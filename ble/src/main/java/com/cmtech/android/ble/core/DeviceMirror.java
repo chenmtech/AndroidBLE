@@ -72,7 +72,7 @@ public class DeviceMirror {
     public void removeStateObserver() { observer = null; }
     private void notifyStateObserver() {
         if(observer != null)
-            observer.updateDeviceMirrorState(connectState);
+            observer.updateDeviceStateAccordingMirror(connectState);
     }
 
     private void setConnectState(ConnectState connectState) {
