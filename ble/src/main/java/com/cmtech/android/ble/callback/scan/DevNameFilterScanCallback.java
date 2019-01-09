@@ -3,6 +3,7 @@ package com.cmtech.android.ble.callback.scan;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 
 /**
+ *  DevNameFilterScanCallback: 用指定的设备名作为过滤规则的扫描回调适配器
  * Created by bme on 2018/2/19.
  */
 
@@ -20,12 +21,11 @@ public class DevNameFilterScanCallback extends ScanCallback {
 
     @Override
     public BluetoothLeDevice onFilter(BluetoothLeDevice bluetoothLeDevice) {
-        BluetoothLeDevice rtnDevice = null;
         if (bluetoothLeDevice != null && bluetoothLeDevice.getName() != null && deviceName != null) {
             if(deviceName.equals("") || deviceName.equalsIgnoreCase(bluetoothLeDevice.getName().trim())) {
-                rtnDevice = bluetoothLeDevice;
+                return bluetoothLeDevice;
             }
         }
-        return rtnDevice;
+        return null;
     }
 }
