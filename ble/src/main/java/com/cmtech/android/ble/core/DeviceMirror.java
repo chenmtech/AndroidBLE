@@ -66,19 +66,19 @@ public class DeviceMirror {
     private volatile HashMap<String, IBleCallback> bleCallbackMap = new HashMap<>();//数据操作回调集合
     private volatile HashMap<String, IBleCallback> receiveCallbackMap = new HashMap<>();//数据接收回调集合
 
-    private IDeviceMirrorStateObserver observer;
+    private OnDeviceMirrorStateChangedListener listener;
 
-    public void registerStateObserver(IDeviceMirrorStateObserver observer) { this.observer = observer; }
-    public void removeStateObserver() { observer = null; }
-    private void notifyStateObserver() {
-        if(observer != null)
-            observer.updateStateAccordingMirror(connectState);
+    public void registerStateListener(OnDeviceMirrorStateChangedListener listener) { this.listener = listener; }
+
+    private void notifyStateListener() {
+        if(listener != null)
+            listener.onUpdateDeviceStateAccordingMirrorState(connectState);
     }
 
     private void setConnectState(ConnectState connectState) {
         if(this.connectState != connectState) {
             this.connectState = connectState;
-            notifyStateObserver();
+            notifyStateListener();
         }
     }
 
