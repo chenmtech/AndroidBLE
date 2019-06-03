@@ -1,5 +1,6 @@
 package com.cmtech.android.ble.core;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -29,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
 import static com.cmtech.android.ble.common.BleConstant.MSG_CONNECT_RETRY;
 import static com.cmtech.android.ble.common.BleConstant.MSG_CONNECT_TIMEOUT;
 import static com.cmtech.android.ble.common.BleConstant.MSG_READ_DATA_RETRY;
@@ -71,8 +73,15 @@ public class DeviceMirror {
     public void registerStateListener(OnDeviceMirrorStateChangedListener listener) { this.listener = listener; }
 
     private void notifyStateListener() {
-        if(listener != null)
-            listener.onUpdateDeviceStateAccordingMirrorState(connectState);
+        if(listener != null) {
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    listener.onUpdateDeviceStateAccordingMirrorState(connectState);
+                }
+            });
+
+        }
     }
 
     private void setConnectState(ConnectState connectState) {
@@ -123,13 +132,15 @@ public class DeviceMirror {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                if(bluetoothGatt != null)
+                    bluetoothGatt.disconnect();
                 close();
                 if (connectCallback != null) {
                     if (handler != null) {
                         handler.removeCallbacksAndMessages(null);
                     }
                     ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(deviceMirror);
-                    if (status == BluetoothGatt.GATT_SUCCESS) {
+                    if (status == GATT_SUCCESS) {
                         setConnectState(ConnectState.CONNECT_DISCONNECT);
                         connectCallback.onDisconnect(isActiveDisconnect);
                     } else {
@@ -177,7 +188,7 @@ public class DeviceMirror {
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             ViseLog.i("onCharacteristicRead  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 handleSuccessData(readInfoMap, characteristic.getValue(), status, true);
             } else {
                 readFailure(new GattException(status), true);
@@ -194,7 +205,7 @@ public class DeviceMirror {
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 handleSuccessData(writeInfoMap, characteristic.getValue(), status, false);
             } else {
                 writeFailure(new GattException(status), true);
@@ -233,7 +244,7 @@ public class DeviceMirror {
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             ViseLog.i("onDescriptorRead  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 handleSuccessData(readInfoMap, descriptor.getValue(), status, true);
             } else {
                 readFailure(new GattException(status), true);
@@ -250,12 +261,12 @@ public class DeviceMirror {
         public void onDescriptorWrite(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             ViseLog.i("onDescriptorWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 handleSuccessData(writeInfoMap, descriptor.getValue(), status, false);
             } else {
                 writeFailure(new GattException(status), true);
             }
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 handleSuccessData(enableInfoMap, descriptor.getValue(), status, false);
             } else {
                 enableFailure(new GattException(status), true);
@@ -272,7 +283,7 @@ public class DeviceMirror {
         public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
             ViseLog.i("onReadRemoteRssi  status: " + status + ", rssi:" + rssi +
                     "  ,thread: " + Thread.currentThread());
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+            if (status == GATT_SUCCESS) {
                 if (rssiCallback != null) {
                     rssiCallback.onSuccess(rssi);
                 }
@@ -609,8 +620,11 @@ public class DeviceMirror {
      * 关闭GATT
      */
     public synchronized void close() {
+        ViseLog.e("BluetoothGatt is closed");
+
         if (bluetoothGatt != null) {
             bluetoothGatt.close();
+            bluetoothGatt = null;
         }
     }
 
@@ -684,7 +698,7 @@ public class DeviceMirror {
         }
         setConnectState(ConnectState.CONNECT_PROCESS);
         if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
-            bluetoothLeDevice.getDevice().connectGatt(ViseBle.getInstance().getContext(), false, coreGattCallback);
+            bluetoothLeDevice.getDevice().connectGatt(ViseBle.getInstance().getContext(), false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
         }
     }
 
@@ -810,6 +824,8 @@ public class DeviceMirror {
             } else {
                 setConnectState(ConnectState.CONNECT_FAILURE);
             }
+            if(bluetoothGatt != null)
+                bluetoothGatt.disconnect();
             close();
             if (connectCallback != null) {
                 connectCallback.onConnectFailure(bleException);
