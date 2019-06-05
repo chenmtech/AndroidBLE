@@ -6,6 +6,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
@@ -72,6 +73,9 @@ public class ViseBle {
         if (this.context == null && context != null) {
             this.context = context.getApplicationContext();
             bluetoothManager = (BluetoothManager) this.context.getSystemService(Context.BLUETOOTH_SERVICE);
+            if(bluetoothManager == null) {
+                throw new IllegalStateException();
+            }
             bluetoothAdapter = bluetoothManager.getAdapter();
             deviceMirrorPool = new DeviceMirrorPool();
         }
@@ -293,7 +297,17 @@ public class ViseBle {
      * @return 返回蓝牙适配器
      */
     public BluetoothAdapter getBluetoothAdapter() {
-        return bluetoothAdapter;
+        if(bluetoothManager == null) {
+            bluetoothManager = (BluetoothManager) this.context.getSystemService(Context.BLUETOOTH_SERVICE);
+
+            if(bluetoothManager == null) {
+                Toast.makeText(context, "bluetoothManager is null", Toast.LENGTH_LONG).show();
+                throw new IllegalStateException();
+            }
+
+            return bluetoothManager.getAdapter();
+        } else
+            return bluetoothAdapter;
     }
 
     /**
