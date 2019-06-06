@@ -120,7 +120,7 @@ public class BleGattCommand{
         private PropertyType propertyType;
         private DeviceMirror deviceMirror;
         private byte[] data;
-        private IBleCallback dataOpCallback;
+        private IBleCallback dataCallback;
         private IBleCallback notifyOpCallback;
         private boolean isInstantCommand = false;
 
@@ -142,8 +142,8 @@ public class BleGattCommand{
             return this;
         }
 
-        Builder setDataOpCallback(IBleCallback dataOpCallback) {
-            this.dataOpCallback = dataOpCallback;
+        Builder setDataCallback(IBleCallback dataCallback) {
+            this.dataCallback = dataCallback;
             return this;
         }
 
@@ -164,15 +164,15 @@ public class BleGattCommand{
 
         BleGattCommand build() {
             if(isInstantCommand) {
-                if(dataOpCallback != null) {
-                    return new BleGattCommand(null, null, dataOpCallback,
+                if(dataCallback != null) {
+                    return new BleGattCommand(null, null, dataCallback,
                             null, null, "an instant cmd.", true);
                 } else {
                     return null;
                 }
             } else {
 
-                if (deviceMirror == null || element == null || dataOpCallback == null) return null;
+                if (deviceMirror == null || element == null || dataCallback == null) return null;
 
                 if (propertyType == PropertyType.PROPERTY_WRITE
                         || propertyType == PropertyType.PROPERTY_NOTIFY
@@ -192,7 +192,7 @@ public class BleGattCommand{
                         .setCharacteristicUUID(element.getCharacteristicUuid())
                         .setDescriptorUUID(element.getDescriptorUuid()).builder();
 
-                return new BleGattCommand(deviceMirror, channel, dataOpCallback, data, notifyOpCallback, element.toString(), false);
+                return new BleGattCommand(deviceMirror, channel, dataCallback, data, notifyOpCallback, element.toString(), false);
             }
         }
     }

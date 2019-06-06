@@ -9,13 +9,9 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
-import java.util.LinkedList;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-/**
- * BleGattCommandQueue: Ble Gatt命令执行器
- * Created by bme on 2018/3/2.
- *
- */
 
 /**
   *
@@ -32,17 +28,17 @@ import java.util.LinkedList;
 class BleGattCommandQueue {
     private final static int CMD_ERROR_RETRY_TIMES = 3;      // Gatt命令执行错误可重复的次数
 
-    private DeviceMirror deviceMirror; // 执行命令的设备镜像
+    private final BlockingQueue<BleGattCommand> cmdQueue = new LinkedBlockingQueue<>(); // 要执行的命令队列
 
-    private final LinkedList<BleGattCommand> commandList = new LinkedList<>(); // 要执行的命令队列
+    private BleGattCommand command; // 当前在执行的命令
 
-    private BleGattCommand currentCommand; // 当前在执行的命令
-
-    private boolean currentCommandDone = true; // 标记当前命令是否执行完毕
+    private boolean done = true; // 标记当前命令是否执行完毕
 
     private int cmdErrorTimes = 0; // 命令执行错误的次数
 
-    // 构造器：指定设备镜像
+    private DeviceMirror deviceMirror; // 执行命令的设备镜像
+
+
     BleGattCommandQueue() {
 
     }
@@ -51,40 +47,41 @@ class BleGattCommandQueue {
         this.deviceMirror = deviceMirror;
     }
 
-    synchronized void processCommandSuccessCallback(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.d("Success to execute: " + currentCommand + " The return data is " + HexUtil.encodeHexStr(data));
+    void onCommandSuccess(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+        ViseLog.d("Success to execute: " + command + " The return data is " + HexUtil.encodeHexStr(data));
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(currentCommand != null && deviceMirror != null) {
-            deviceMirror.removeBleCallback(currentCommand.getGattInfoKey());
+        if(command != null && deviceMirror != null) {
+            deviceMirror.removeBleCallback(command.getGattInfoKey());
         }
 
         if(bleCallback != null) {
             bleCallback.onSuccess(data, bluetoothGattChannel, bluetoothLeDevice);
         }
 
-        currentCommandDone = true;
+        done = true;
 
         cmdErrorTimes = 0;
     }
 
-    synchronized boolean processCommandFailureCallback(IBleCallback bleCallback, BleException exception) {
+    boolean onCommandFailure(IBleCallback bleCallback, BleException exception) {
         boolean isStop = false;
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(currentCommand != null && deviceMirror != null) {
-            deviceMirror.removeBleCallback(currentCommand.getGattInfoKey());
+        if(command != null && deviceMirror != null) {
+            deviceMirror.removeBleCallback(command.getGattInfoKey());
         }
 
         // 有错误，且次数小于指定次数，重新执行当前命令
-        if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES && currentCommand != null) {
+        if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES && command != null) {
+            ViseLog.i("Retry Command Times: " + cmdErrorTimes);
+
             // 再次执行当前命令
-            currentCommand.execute();
+            command.execute();
 
             cmdErrorTimes++;
-            ViseLog.i("Command Retry: " + cmdErrorTimes);
         } else {
             // 错误次数大于指定次数
             cmdErrorTimes = 0;
@@ -96,66 +93,75 @@ class BleGattCommandQueue {
             if(bleCallback != null)
                 bleCallback.onFailure(exception);
         }
-        ViseLog.i(currentCommand + " is wrong: " + exception);
+        ViseLog.i(command + " is wrong: " + exception);
 
         return isStop;
     }
 
-    synchronized void addReadCommand(BleGattElement element, BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback) {
+    void addReadCommand(BleGattElement element, BleGattCommandExecutor.BleCallbackDecorator dataCallback) {
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
+
         BleGattCommand command = builder.setDeviceMirror(deviceMirror)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_READ)
-                .setDataOpCallback(dataOpCallback).build();
+                .setDataCallback(dataCallback).build();
+
         if(command != null)
             addCommandToList(command);
     }
 
-    synchronized void addWriteCommand(BleGattElement element, byte[] data, BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback) {
+    void addWriteCommand(BleGattElement element, byte[] data, BleGattCommandExecutor.BleCallbackDecorator dataCallback) {
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
+
         BleGattCommand command = builder.setDeviceMirror(deviceMirror)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_WRITE)
                 .setData(data)
-                .setDataOpCallback(dataOpCallback).build();
+                .setDataCallback(dataCallback).build();
+
         if(command != null)
             addCommandToList(command);
     }
 
     // 添加写单字节数据命令
-    synchronized void addWriteCommand(BleGattElement element, byte data, BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback) {
-        addWriteCommand(element, new byte[]{data}, dataOpCallback);
+    void addWriteCommand(BleGattElement element, byte data, BleGattCommandExecutor.BleCallbackDecorator dataCallback) {
+        addWriteCommand(element, new byte[]{data}, dataCallback);
     }
 
-    synchronized void addNotifyCommand(BleGattElement element, boolean enable
-            , BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback, IBleCallback notifyOpCallback) {
+    void addNotifyCommand(BleGattElement element, boolean enable
+            , BleGattCommandExecutor.BleCallbackDecorator dataCallback, IBleCallback notifyCallback) {
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
+
         BleGattCommand command = builder.setDeviceMirror(deviceMirror)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_NOTIFY)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})
-                .setDataOpCallback(dataOpCallback)
-                .setNotifyOpCallback(notifyOpCallback).build();
+                .setDataCallback(dataCallback)
+                .setNotifyOpCallback(notifyCallback).build();
+
         if(command != null)
             addCommandToList(command);
     }
 
-    synchronized void addIndicateCommand(BleGattElement element, boolean enable
-            , BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback, IBleCallback indicateOpCallback) {
+    void addIndicateCommand(BleGattElement element, boolean enable
+            , BleGattCommandExecutor.BleCallbackDecorator dataCallback, IBleCallback indicateCallback) {
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
+
         BleGattCommand command = builder.setDeviceMirror(deviceMirror)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_INDICATE)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})
-                .setDataOpCallback(dataOpCallback)
-                .setNotifyOpCallback(indicateOpCallback).build();
+                .setDataCallback(dataCallback)
+                .setNotifyOpCallback(indicateCallback).build();
+
         if(command != null)
             addCommandToList(command);
     }
 
     // 添加Instant命令
-    synchronized void addInstantCommand(IBleCallback dataOpCallback) {
-        BleGattCommand command = new BleGattCommand.Builder().setDataOpCallback(dataOpCallback).setInstantCommand(true).build();
+    void addInstantCommand(IBleCallback dataCallback) {
+        BleGattCommand command = new BleGattCommand.Builder().setDataCallback(dataCallback).setInstantCommand(true).build();
+
         if(command != null)
             addCommandToList(command);
     }
@@ -163,32 +169,35 @@ class BleGattCommandQueue {
     private void addCommandToList(BleGattCommand command) {
         ViseLog.d("add command: " + command);
 
-        if(!commandList.add(command))
+        if(!cmdQueue.add(command))
             throw new IllegalStateException();
 
     }
 
-    synchronized void executeNextCommand() {
-        if(currentCommandDone && !commandList.isEmpty()) {
+    void executeNextCommand() {
+        if(done && !cmdQueue.isEmpty()) {
             // 取出一条命令执行
-            currentCommand = commandList.remove();
+            command = cmdQueue.remove();
 
-            if(currentCommand != null) {
-                currentCommand.execute();
+            if(command != null) {
+                ViseLog.d("Execute: " + command);
 
-                ViseLog.d("execute command: " + currentCommand);
+                command.execute();
 
                 // 设置未完成标记
-                if (!currentCommand.isInstantCommand())
-                    currentCommandDone = false;
+                if (!command.isInstantCommand())
+                    done = false;
             }
         }
     }
 
-    synchronized void resetCommandList() {
-        commandList.clear();
-        currentCommand = null;
-        currentCommandDone = true;
+    void reset() {
+        cmdQueue.clear();
+
+        command = null;
+
+        done = true;
+
         cmdErrorTimes = 0;
     }
 

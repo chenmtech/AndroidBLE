@@ -24,31 +24,30 @@ import com.vise.log.ViseLog;
 
 public class BleGattCommandExecutor {
 
-
     // IBleCallback的装饰类，在一般的回调任务完成后，执行串行命令所需动作
-    public class BleSerialCommandCallback implements IBleCallback {
+    public class BleCallbackDecorator implements IBleCallback {
         private IBleCallback bleCallback;
 
-        BleSerialCommandCallback(IBleCallback bleCallback) {
+        BleCallbackDecorator(IBleCallback bleCallback) {
             this.bleCallback = bleCallback;
         }
 
         @Override
         public void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
 
-            commandManager.processCommandSuccessCallback(bleCallback, data, bluetoothGattChannel, bluetoothLeDevice);
+            commandQueue.onCommandSuccess(bleCallback, data, bluetoothGattChannel, bluetoothLeDevice);
 
         }
 
         @Override
         public void onFailure(BleException exception) {
-            boolean isStop = commandManager.processCommandFailureCallback(bleCallback, exception);
+            boolean isStop = commandQueue.onCommandFailure(bleCallback, exception);
 
             if(isStop) {
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                new Handler(Looper.getMainLooper()).postAtFrontOfQueue(new Runnable() {
                     @Override
                     public void run() {
-                        stop();
+                        device.disconnect();
                     }
                 });
             }
@@ -59,7 +58,9 @@ public class BleGattCommandExecutor {
 
     private Thread executeThread; // 执行命令的线程
 
-    private final BleGattCommandQueue commandManager = new BleGattCommandQueue();
+    private final BleGattCommandQueue commandQueue = new BleGattCommandQueue();
+
+
 
     BleGattCommandExecutor(BleDevice device) {
         this.device = device;
@@ -84,26 +85,26 @@ public class BleGattCommandExecutor {
             throw new NullPointerException();
         }
 
-        commandManager.setDeviceMirror(deviceMirror);
+        commandQueue.setDeviceMirror(deviceMirror);
+
+        commandQueue.reset();
 
         executeThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 ViseLog.d("Start Command Execution Thread: "+Thread.currentThread().getName());
+
                 try {
                     while (!Thread.currentThread().isInterrupted()) {
-                        commandManager.executeNextCommand();
+                        commandQueue.executeNextCommand();
                     }
                 } finally {
-                    commandManager.resetCommandList();
-
-                    ViseLog.e("executeThread finished!!!!!!");
+                    ViseLog.e("The Command Execution Thread is finished!");
                 }
             }
         });
 
         executeThread.start();
-        ViseLog.i("Success to create new GATT command executor.");
     }
 
     // 停止Gatt命令执行器
@@ -117,7 +118,7 @@ public class BleGattCommandExecutor {
                 e.printStackTrace();
             }
 
-            ViseLog.e("Command Executor is stopped");
+            ViseLog.e("The Command Executor is stopped");
         }
     }
 
@@ -127,52 +128,54 @@ public class BleGattCommandExecutor {
 
     // Gatt操作
     // 读
-    public final void read(BleGattElement element, IGattDataOpCallback dataOpCallback) {
+    public final void read(BleGattElement element, IGattDataCallback dataOpCallback) {
         IBleCallback callback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        commandManager.addReadCommand(element, new BleSerialCommandCallback(callback));
+        commandQueue.addReadCommand(element, new BleCallbackDecorator(callback));
     }
 
     // 写多字节
-    public final void write(BleGattElement element, byte[] data, IGattDataOpCallback dataOpCallback) {
+    public final void write(BleGattElement element, byte[] data, IGattDataCallback dataOpCallback) {
         IBleCallback callback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        commandManager.addWriteCommand(element, data, new BleSerialCommandCallback(callback));
+        commandQueue.addWriteCommand(element, data, new BleCallbackDecorator(callback));
     }
 
     // 写单字节
-    public final void write(BleGattElement element, byte data, IGattDataOpCallback dataOpCallback) {
+    public final void write(BleGattElement element, byte data, IGattDataCallback dataOpCallback) {
         write(element, new byte[]{data}, dataOpCallback);
     }
 
     // Notify
     private void notify(BleGattElement element, boolean enable
-            , IGattDataOpCallback dataOpCallback, IGattDataOpCallback notifyOpCallback) {
+            , IGattDataCallback dataOpCallback, IGattDataCallback notifyOpCallback) {
         IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
+
         IBleCallback notifyCallback = (notifyOpCallback == null) ? null : new BleDataOpCallbackAdapter(notifyOpCallback);
-        commandManager.addNotifyCommand(element, enable, new BleSerialCommandCallback(dataCallback), notifyCallback);
+
+        commandQueue.addNotifyCommand(element, enable, new BleCallbackDecorator(dataCallback), notifyCallback);
     }
 
     // Notify
-    public final void notify(BleGattElement element, boolean enable, IGattDataOpCallback notifyOpCallback) {
+    public final void notify(BleGattElement element, boolean enable, IGattDataCallback notifyOpCallback) {
         notify(element, enable, null, notifyOpCallback);
     }
 
     // Indicate
-    public final void indicate(BleGattElement element, boolean enable, IGattDataOpCallback indicateOpCallback) {
+    public final void indicate(BleGattElement element, boolean enable, IGattDataCallback indicateOpCallback) {
         indicate(element, enable, null, indicateOpCallback);
     }
 
     // Indicate
     private void indicate(BleGattElement element, boolean enable
-            , IGattDataOpCallback dataOpCallback, IGattDataOpCallback indicateOpCallback) {
+            , IGattDataCallback dataOpCallback, IGattDataCallback indicateOpCallback) {
         IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
         IBleCallback indicateCallback = (indicateOpCallback == null) ? null : new BleDataOpCallbackAdapter(indicateOpCallback);
-        commandManager.addIndicateCommand(element, enable, new BleSerialCommandCallback(dataCallback), indicateCallback);
+        commandQueue.addIndicateCommand(element, enable, new BleCallbackDecorator(dataCallback), indicateCallback);
     }
 
     // 不需要蓝牙通信立刻执行
-    public final void instExecute(IGattDataOpCallback dataOpCallback) {
+    public final void instExecute(IGattDataCallback dataOpCallback) {
         IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        commandManager.addInstantCommand(dataCallback);
+        commandQueue.addInstantCommand(dataCallback);
     }
 
 }
