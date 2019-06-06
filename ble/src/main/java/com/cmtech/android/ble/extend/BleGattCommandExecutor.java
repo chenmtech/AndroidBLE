@@ -59,7 +59,7 @@ public class BleGattCommandExecutor {
 
     private Thread executeThread; // 执行命令的线程
 
-    private BleGattCommandManager commandManager;
+    private final BleGattCommandQueue commandManager = new BleGattCommandQueue();
 
     BleGattCommandExecutor(BleDevice device) {
         this.device = device;
@@ -84,7 +84,7 @@ public class BleGattCommandExecutor {
             throw new NullPointerException();
         }
 
-        commandManager = new BleGattCommandManager(deviceMirror);
+        commandManager.setDeviceMirror(deviceMirror);
 
         executeThread = new Thread(new Runnable() {
             @Override

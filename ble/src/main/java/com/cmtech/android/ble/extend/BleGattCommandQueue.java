@@ -12,15 +12,15 @@ import com.vise.log.ViseLog;
 import java.util.LinkedList;
 
 /**
- * BleGattCommandManager: Ble Gatt命令执行器
+ * BleGattCommandQueue: Ble Gatt命令执行器
  * Created by bme on 2018/3/2.
  *
  */
 
 /**
   *
-  * ClassName:      BleGattCommandManager
-  * Description:    Ble Gatt命令管理器
+  * ClassName:      BleGattCommandQueue
+  * Description:    Ble Gatt命令队列
   * Author:         chenm
   * CreateDate:     2018-03-02 11:16
   * UpdateUser:     chenm
@@ -29,10 +29,10 @@ import java.util.LinkedList;
   * Version:        1.0
  */
 
-class BleGattCommandManager {
+class BleGattCommandQueue {
     private final static int CMD_ERROR_RETRY_TIMES = 3;      // Gatt命令执行错误可重复的次数
 
-    private final DeviceMirror deviceMirror; // 执行命令的设备镜像
+    private DeviceMirror deviceMirror; // 执行命令的设备镜像
 
     private final LinkedList<BleGattCommand> commandList = new LinkedList<>(); // 要执行的命令队列
 
@@ -43,7 +43,11 @@ class BleGattCommandManager {
     private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // 构造器：指定设备镜像
-    BleGattCommandManager(DeviceMirror deviceMirror) {
+    BleGattCommandQueue() {
+
+    }
+
+    void setDeviceMirror(DeviceMirror deviceMirror) {
         this.deviceMirror = deviceMirror;
     }
 
@@ -184,7 +188,7 @@ class BleGattCommandManager {
     synchronized void resetCommandList() {
         commandList.clear();
         currentCommand = null;
-        currentCommandDone = false;
+        currentCommandDone = true;
         cmdErrorTimes = 0;
     }
 
