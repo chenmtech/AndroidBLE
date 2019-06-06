@@ -32,7 +32,7 @@ import java.util.LinkedList;
 class BleGattCommandManager {
     private final static int CMD_ERROR_RETRY_TIMES = 3;      // Gatt命令执行错误可重复的次数
 
-    private DeviceMirror deviceMirror; // 执行命令的设备镜像
+    private final DeviceMirror deviceMirror; // 执行命令的设备镜像
 
     private final LinkedList<BleGattCommand> commandList = new LinkedList<>(); // 要执行的命令队列
 
@@ -43,10 +43,7 @@ class BleGattCommandManager {
     private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // 构造器：指定设备镜像
-    BleGattCommandManager() {
-    }
-
-    void setDeviceMirror(DeviceMirror deviceMirror) {
+    BleGattCommandManager(DeviceMirror deviceMirror) {
         this.deviceMirror = deviceMirror;
     }
 

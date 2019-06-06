@@ -1,5 +1,6 @@
 package com.cmtech.android.ble.extend;
 
+import android.bluetooth.BluetoothDevice;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
@@ -7,13 +8,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
+import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
+import com.cmtech.android.ble.callback.scan.IScanCallback;
 import com.cmtech.android.ble.callback.scan.ScanCallback;
 import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
+import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
@@ -36,6 +40,39 @@ import java.util.Objects;
 
 public abstract class BleDevice implements Handler.Callback {
     private final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
+
+    private class MyScanCallback implements IScanCallback {
+
+        MyScanCallback() {
+
+        }
+
+        @Override
+        public void onDeviceFound(BluetoothLeDevice bluetoothLeDevice) {
+            BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
+
+            if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
+                Toast.makeText(context, "该设备未绑定，无法使用。", Toast.LENGTH_SHORT).show();
+
+                processScanResult(false, null);
+
+            } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+                processScanResult(true, bluetoothLeDevice);
+
+            }
+        }
+
+        @Override
+        public void onScanFinish(BluetoothLeDeviceStore bluetoothLeDeviceStore) {
+
+        }
+
+        @Override
+        public void onScanTimeout() {
+            processScanResult(false, null);
+        }
+
+    }
 
     private class MyConnectCallback implements IConnectCallback {
         MyConnectCallback() {
@@ -263,7 +300,7 @@ public abstract class BleDevice implements Handler.Callback {
     private void startScan() {
         ViseLog.e("startScan in " + Thread.currentThread());
 
-        scanCallback = new SingleFilterScanCallback(new MyScanCallback(BleDevice.this)).setDeviceMac(basicInfo.getMacAddress());
+        scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(basicInfo.getMacAddress());
 
         scanCallback.setScan(true).scan();
 
