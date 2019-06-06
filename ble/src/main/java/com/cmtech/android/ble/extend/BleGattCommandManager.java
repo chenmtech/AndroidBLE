@@ -29,31 +29,29 @@ import java.util.LinkedList;
   * Version:        1.0
  */
 
-public class BleGattCommandManager {
+class BleGattCommandManager {
     private final static int CMD_ERROR_RETRY_TIMES = 3;      // Gatt命令执行错误可重复的次数
 
-    // 需要同步
-    private final DeviceMirror deviceMirror; // 执行命令的设备镜像
+    private DeviceMirror deviceMirror; // 执行命令的设备镜像
 
-    // 需要同步
     private final LinkedList<BleGattCommand> commandList = new LinkedList<>(); // 要执行的命令队列
 
-    // 需要同步
     private BleGattCommand currentCommand; // 当前在执行的命令
 
-    // 需要同步
     private boolean currentCommandDone = true; // 标记当前命令是否执行完毕
 
-    // 需要同步
     private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // 构造器：指定设备镜像
-    BleGattCommandManager(DeviceMirror deviceMirror) {
+    BleGattCommandManager() {
+    }
+
+    void setDeviceMirror(DeviceMirror deviceMirror) {
         this.deviceMirror = deviceMirror;
     }
 
     synchronized void processCommandSuccessCallback(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.d("success execute command: " + currentCommand);
+        ViseLog.d("Success to execute: " + currentCommand + " The return data is " + HexUtil.encodeHexStr(data));
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
@@ -68,8 +66,6 @@ public class BleGattCommandManager {
         currentCommandDone = true;
 
         cmdErrorTimes = 0;
-
-        ViseLog.i("Command return " + HexUtil.encodeHexStr(data));
     }
 
     synchronized boolean processCommandFailureCallback(IBleCallback bleCallback, BleException exception) {
@@ -125,7 +121,7 @@ public class BleGattCommandManager {
             addCommandToList(command);
     }
 
-    // 写单字节数据
+    // 添加写单字节数据命令
     synchronized void addWriteCommand(BleGattElement element, byte data, BleGattCommandExecutor.BleSerialCommandCallback dataOpCallback) {
         addWriteCommand(element, new byte[]{data}, dataOpCallback);
     }

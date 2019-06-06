@@ -11,9 +11,9 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
  */
 
 public class BleDataOpCallbackAdapter implements IBleCallback {
-    private IBleDataOpCallback dataOpCallback;
+    private IGattDataOpCallback dataOpCallback;
 
-    public BleDataOpCallbackAdapter(IBleDataOpCallback dataOpCallback) {
+    public BleDataOpCallbackAdapter(IGattDataOpCallback dataOpCallback) {
         if(dataOpCallback == null) {
             throw new IllegalArgumentException();
         }
@@ -28,6 +28,6 @@ public class BleDataOpCallbackAdapter implements IBleCallback {
 
     @Override
     public void onFailure(BleException exception) {
-        dataOpCallback.onFailure(new BleDataOpException(exception));
+        dataOpCallback.onFailure(new GattDataOpException(exception));
     }
 }

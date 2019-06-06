@@ -83,7 +83,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     private final List<OnBleDeviceStateListener> deviceStateListeners = new LinkedList<>(); // 设备状态观察者列表
 
-    protected final BleDeviceGattOperator gattOperator = new BleDeviceGattOperator(this); // Gatt命令执行者
+    protected final BleGattCommandExecutor gattOperator = new BleGattCommandExecutor(this); // Gatt命令执行者
 
     // 主线程Handler，包括连接相关的处理和Gatt消息的处理，都在主线程中执行
     private final Handler mainHandler = new Handler(Looper.getMainLooper(), this);
@@ -209,8 +209,8 @@ public abstract class BleDevice implements Handler.Callback {
 
         if(connectState == BleDeviceConnectState.CONNECT_SCANNING)
             stopScan();
-        else
-            disconnect();
+
+        disconnect();
 
         setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
     }

@@ -7,7 +7,7 @@ package com.cmtech.android.ble.extend;
  */
 
 public interface IBleDeviceFragmentActivity extends OnBleDeviceStateListener {
-    // 由设备的mac地址找到BleDevice对象
-    BleDevice findDevice(String mac);
-    void closeFragment(BleDeviceFragment fragment);
+    BleDevice findDevice(String mac); // 由设备的mac地址找到BleDevice对象
+
+    void closeFragment(BleDeviceFragment fragment); // 关闭Fragment
 }

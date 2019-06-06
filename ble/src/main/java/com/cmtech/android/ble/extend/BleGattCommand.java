@@ -43,12 +43,12 @@ public class BleGattCommand{
     }
 
     // 是否是instant命令
-    public boolean isInstantCommand() {
+    boolean isInstantCommand() {
         return isInstantCommand;
     }
 
     // 执行命令
-    public boolean execute() {
+    boolean execute() {
         if(isInstantCommand && dataOpCallback != null) {
             dataOpCallback.onSuccess(null, null, null);
             return true;
@@ -109,13 +109,13 @@ public class BleGattCommand{
     }
 
     // 获取Gatt信息key
-    public String getGattInfoKey() {
+    String getGattInfoKey() {
         if(isInstantCommand) return "";
 
         return channel.getGattInfoKey();
     }
 
-    public static class Builder {
+    static class Builder {
         private BleGattElement element;
         private PropertyType propertyType;
         private DeviceMirror deviceMirror;
@@ -127,42 +127,42 @@ public class BleGattCommand{
         Builder() {
         }
 
-        public Builder setDeviceMirror(DeviceMirror deviceMirror) {
+        Builder setDeviceMirror(DeviceMirror deviceMirror) {
             this.deviceMirror = deviceMirror;
             return this;
         }
 
-        public Builder setBluetoothElement(BleGattElement element) {
+        Builder setBluetoothElement(BleGattElement element) {
             this.element = element;
             return this;
         }
 
-        public Builder setPropertyType(PropertyType propertyType) {
+        Builder setPropertyType(PropertyType propertyType) {
             this.propertyType = propertyType;
             return this;
         }
 
-        public Builder setDataOpCallback(IBleCallback dataOpCallback) {
+        Builder setDataOpCallback(IBleCallback dataOpCallback) {
             this.dataOpCallback = dataOpCallback;
             return this;
         }
 
-        public Builder setData(byte[] data) {
+        Builder setData(byte[] data) {
             this.data = data;
             return this;
         }
 
-        public Builder setNotifyOpCallback(IBleCallback notifyOpCallback) {
+        Builder setNotifyOpCallback(IBleCallback notifyOpCallback) {
             this.notifyOpCallback = notifyOpCallback;
             return this;
         }
 
-        public Builder setInstantCommand(boolean isInstantCommand) {
+        Builder setInstantCommand(boolean isInstantCommand) {
             this.isInstantCommand = isInstantCommand;
             return this;
         }
 
-        public BleGattCommand build() {
+        BleGattCommand build() {
             if(isInstantCommand) {
                 if(dataOpCallback != null) {
                     return new BleGattCommand(null, null, dataOpCallback,
