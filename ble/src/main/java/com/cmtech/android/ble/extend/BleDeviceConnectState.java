@@ -13,18 +13,18 @@ import com.cmtech.android.ble.R;
   * UpdateRemark:   更新说明
   * Version:        1.0
  */
-public enum BleDeviceConnectState {
-    CONNECT_CLOSED(0x00, "设备关闭", R.mipmap.ic_disconnect_32px),
+public class BleDeviceConnectState {
+    public static final BleDeviceConnectState CONNECT_CLOSED = new BleDeviceConnectState(0x00, "设备关闭", R.mipmap.ic_disconnect_32px);
 
-    CONNECT_SCANNING(0x01, "正在扫描", R.mipmap.ic_scanning_32px),
+    public static final BleDeviceConnectState CONNECT_SCANNING = new BleDeviceConnectState(0x01, "正在扫描", R.mipmap.ic_scanning_32px);
 
-    CONNECT_CONNECTING(0x02, "正在连接", R.mipmap.ic_connecting_32px),
+    public static final BleDeviceConnectState CONNECT_CONNECTING = new BleDeviceConnectState(0x02, "正在连接", R.mipmap.ic_connecting_32px);
 
-    CONNECT_SUCCESS(0x03, "连接成功", R.mipmap.ic_connected_32px),
+    public static final BleDeviceConnectState CONNECT_SUCCESS = new BleDeviceConnectState(0x03, "连接成功", R.mipmap.ic_connected_32px);
 
-    CONNECT_FAILURE(0x04, "连接失败", R.mipmap.ic_disconnect_32px),
+    public static final BleDeviceConnectState CONNECT_FAILURE = new BleDeviceConnectState(0x04, "连接失败", R.mipmap.ic_disconnect_32px);
 
-    CONNECT_DISCONNECT(0x05, "连接断开", R.mipmap.ic_disconnect_32px);
+    public static final BleDeviceConnectState CONNECT_DISCONNECT = new BleDeviceConnectState(0x05, "连接断开", R.mipmap.ic_disconnect_32px);
 
     private int code;
 
@@ -32,7 +32,7 @@ public enum BleDeviceConnectState {
 
     private int icon;
 
-    BleDeviceConnectState(int code, String description, int icon) {
+    private BleDeviceConnectState(int code, String description, int icon) {
         this.code = code;
 
         this.description = description;
@@ -49,25 +49,15 @@ public enum BleDeviceConnectState {
         return description;
     }
 
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     public int getIcon() {
         return icon;
     }
 
-    public static String getDescriptionFromCode(int code) {
-        for(BleDeviceConnectState ele : BleDeviceConnectState.values()) {
-            if(ele.code == code) {
-                return ele.description;
-            }
-        }
-        return "";
-    }
-
-    public static BleDeviceConnectState getFromCode(int code) {
-        for(BleDeviceConnectState ele : BleDeviceConnectState.values()) {
-            if(ele.code == code) {
-                return ele;
-            }
-        }
-        return null;
+    public void setIcon(int icon) {
+        this.icon = icon;
     }
 }

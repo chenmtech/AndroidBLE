@@ -24,6 +24,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS;
+
 
 /**
   *
@@ -183,11 +187,11 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     protected boolean isConnected() {
-        return connectState == BleDeviceConnectState.CONNECT_SUCCESS;
+        return connectState == CONNECT_SUCCESS;
     }
 
     public boolean isWaitingResponse() {
-        return (connectState == BleDeviceConnectState.CONNECT_SCANNING) || (connectState == BleDeviceConnectState.CONNECT_CONNECTING);
+        return (connectState == CONNECT_SCANNING) || (connectState == CONNECT_CONNECTING);
     }
 
     public String getConnectStateDescription() {
@@ -244,7 +248,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         closing = true;
 
-        if(connectState == BleDeviceConnectState.CONNECT_SCANNING)
+        if(connectState == CONNECT_SCANNING)
             stopScan();
 
         disconnect();
@@ -256,24 +260,24 @@ public abstract class BleDevice implements Handler.Callback {
     final boolean switchState() {
         ViseLog.i("switchDeviceState");
 
+        CONNECT_SUCCESS.setDescription("hi, all");
+
         boolean canSwitch = true;
 
-        switch (connectState) {
-            case CONNECT_SUCCESS:
-                removeCallbacksAndMessages();
-                disconnect();
-                break;
+        if(connectState == CONNECT_SUCCESS) {
+            removeCallbacksAndMessages();
 
-            case CONNECT_SCANNING:
-            case CONNECT_CONNECTING:
-                canSwitch = false;
-                break;
+            disconnect();
 
-            default:
-                removeCallbacksAndMessages();
-                curReconnectTimes = 0;
-                startScan();
-                break;
+        } else if(connectState == CONNECT_SCANNING || connectState == CONNECT_CONNECTING) {
+            canSwitch = false;
+
+        } else {
+            removeCallbacksAndMessages();
+
+            curReconnectTimes = 0;
+
+            startScan();
         }
 
         return canSwitch;
@@ -304,7 +308,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         scanCallback.setScan(true).scan();
 
-        setConnectState(BleDeviceConnectState.CONNECT_SCANNING);
+        setConnectState(CONNECT_SCANNING);
     }
 
 
@@ -316,7 +320,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         BleDeviceUtil.connect(bluetoothLeDevice, connectCallback);
 
-        setConnectState(BleDeviceConnectState.CONNECT_CONNECTING);
+        setConnectState(CONNECT_CONNECTING);
     }
 
     // 断开连接
@@ -366,7 +370,7 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     // 处理扫描结果
-    void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
+    private void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
         ViseLog.e("ProcessScanResult: " + canConnect + " in " + Thread.currentThread());
 
         if(closing) {
@@ -406,7 +410,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         curReconnectTimes = 0;
 
-        setConnectState(BleDeviceConnectState.CONNECT_SUCCESS);
+        setConnectState(CONNECT_SUCCESS);
     }
 
     // 处理连接错误
@@ -419,7 +423,7 @@ public abstract class BleDevice implements Handler.Callback {
 
             executeAfterConnectFailure();
 
-            bluetoothLeDevice = null;
+            //bluetoothLeDevice = null;
 
             setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
 

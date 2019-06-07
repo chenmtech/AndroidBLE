@@ -36,4 +36,16 @@ public class BleDeviceConfig {
         BleConfig.getInstance().setOperateRetryCount(opDataRetryCount);
     }
 
+    public static void addSupportedDeviceType(BleDeviceType deviceType) {
+        BleDeviceType.addSupportedType(deviceType);
+    }
+
+    public static void setConnectStateDescription(BleDeviceConnectState connectState, String description) {
+        connectState.setDescription(description);
+    }
+
+    public static void setConnectStateIcon(BleDeviceConnectState connectState, int icon) {
+        connectState.setIcon(icon);
+    }
+
 }

@@ -9,17 +9,23 @@ import java.util.List;
  */
 
 public class BleDeviceType {
-    private static List<BleDeviceType> supportedTypes = new ArrayList<>(); // 所有支持的设备类型
+    private static List<BleDeviceType> supportedTypes = new ArrayList<>(); // 支持的设备类型数组
 
     private String uuid;                  // 设备16位UUID字符串
+
     private int defaultImage;             // 缺省图标
+
     private String defaultNickname;       // 缺省设备名
+
     private String factoryClassName;      // 设备工厂类名
 
     public BleDeviceType(String uuid, int defaultImage, String defaultNickname, String factoryClassName) {
         this.uuid = uuid;
+
         this.defaultImage = defaultImage;
+
         this.defaultNickname = defaultNickname;
+
         this.factoryClassName = factoryClassName;
     }
 
@@ -36,6 +42,7 @@ public class BleDeviceType {
                 return type;
             }
         }
+
         return null;
     }
 
@@ -56,11 +63,13 @@ public class BleDeviceType {
         if(factoryClassName == null) return null;
 
         AbstractBleDeviceFactory factory;
+
         try {
             factory = (AbstractBleDeviceFactory) Class.forName(factoryClassName).newInstance();
         } catch (Exception e) {
             factory = null;
         }
+
         return factory;
     }
 }

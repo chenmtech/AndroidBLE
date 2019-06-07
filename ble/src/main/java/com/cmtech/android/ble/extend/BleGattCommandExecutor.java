@@ -82,7 +82,8 @@ public class BleGattCommandExecutor {
         DeviceMirror deviceMirror = device.getDeviceMirror();
 
         if(deviceMirror == null) {
-            throw new NullPointerException();
+            stop();
+            return;
         }
 
         commandQueue.setDeviceMirror(deviceMirror);
