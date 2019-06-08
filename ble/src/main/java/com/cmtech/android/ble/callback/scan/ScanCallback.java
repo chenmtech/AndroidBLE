@@ -2,6 +2,7 @@ package com.cmtech.android.ble.callback.scan;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.os.Handler;
 import android.os.Looper;
 

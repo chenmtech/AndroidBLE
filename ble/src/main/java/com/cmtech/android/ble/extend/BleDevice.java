@@ -260,8 +260,6 @@ public abstract class BleDevice implements Handler.Callback {
     final boolean switchState() {
         ViseLog.i("switchDeviceState");
 
-        CONNECT_SUCCESS.setDescription("hi, all");
-
         boolean canSwitch = true;
 
         if(connectState == CONNECT_SUCCESS) {
@@ -290,10 +288,6 @@ public abstract class BleDevice implements Handler.Callback {
 
     protected void removeCallbacksAndMessages() {
         mainHandler.removeCallbacksAndMessages(null);
-    }
-
-    protected void postDelayed(Runnable runnable, long delay) {
-        mainHandler.postDelayed(runnable, delay);
     }
 
     protected void post(Runnable runnable) {
@@ -461,7 +455,7 @@ public abstract class BleDevice implements Handler.Callback {
                 curReconnectTimes++;
             }
 
-            postDelayed(new Runnable() {
+            mainHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
                     if(!isConnected())
