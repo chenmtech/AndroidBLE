@@ -60,4 +60,9 @@ public class BleDeviceConnectState {
     public void setIcon(int icon) {
         this.icon = icon;
     }
+
+    @Override
+    public String toString() {
+        return description;
+    }
 }
