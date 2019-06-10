@@ -22,10 +22,10 @@ import com.vise.log.ViseLog;
  * Version:        1.0
  */
 
-public class BleGattCommandExecutor {
+class BleGattCommandExecutor {
 
     // IBleCallback的装饰类，在一般的回调任务完成后，执行串行命令所需动作
-    public class BleCallbackDecorator implements IBleCallback {
+    class BleCallbackDecorator implements IBleCallback {
         private IBleCallback bleCallback;
 
         BleCallbackDecorator(IBleCallback bleCallback) {
@@ -61,22 +61,22 @@ public class BleGattCommandExecutor {
     private final BleGattCommandQueue commandQueue = new BleGattCommandQueue();
 
 
-
     BleGattCommandExecutor(BleDevice device) {
         this.device = device;
     }
 
-    // 检测Gatt Element是否存在于device中
-    public boolean checkElements(BleGattElement[] elements) {
+    // 检测设备中是否包含Gatt Elements
+    boolean checkElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
-            if(BleDeviceUtil.getGattObject(device, element) == null) return false;
+            if( element == null || element.retrieveGattObject(device) == null )
+                return false;
         }
 
         return true;
     }
 
     // 启动Gatt命令执行器
-    public void start() {
+    void start() {
         if(isAlive()) return;
 
         DeviceMirror deviceMirror = device.getDeviceMirror();
@@ -109,7 +109,7 @@ public class BleGattCommandExecutor {
     }
 
     // 停止Gatt命令执行器
-    public void stop() {
+    void stop() {
         if(isAlive()) {
             executeThread.interrupt();
 
@@ -123,59 +123,63 @@ public class BleGattCommandExecutor {
         }
     }
 
-    public boolean isAlive() {
+    // 是否还在运行
+    boolean isAlive() {
         return ((executeThread != null) && executeThread.isAlive());
     }
 
     // Gatt操作
     // 读
-    public final void read(BleGattElement element, IGattDataCallback dataOpCallback) {
-        IBleCallback callback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        commandQueue.addReadCommand(element, new BleCallbackDecorator(callback));
+    final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
+        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+
+        commandQueue.addReadCommand(element, new BleCallbackDecorator(dataCallback));
     }
 
     // 写多字节
-    public final void write(BleGattElement element, byte[] data, IGattDataCallback dataOpCallback) {
-        IBleCallback callback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        commandQueue.addWriteCommand(element, data, new BleCallbackDecorator(callback));
+    final void write(BleGattElement element, byte[] data, IGattDataCallback gattDataCallback) {
+        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+
+        commandQueue.addWriteCommand(element, data, new BleCallbackDecorator(dataCallback));
     }
 
     // 写单字节
-    public final void write(BleGattElement element, byte data, IGattDataCallback dataOpCallback) {
-        write(element, new byte[]{data}, dataOpCallback);
+    final void write(BleGattElement element, byte data, IGattDataCallback gattDataCallback) {
+        write(element, new byte[]{data}, gattDataCallback);
     }
 
     // Notify
-    private void notify(BleGattElement element, boolean enable
-            , IGattDataCallback dataOpCallback, IGattDataCallback notifyOpCallback) {
-        IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
+    final void notify(BleGattElement element, boolean enable, IGattDataCallback notifyOpCallback) {
+        notify(element, enable, null, notifyOpCallback);
+    }
 
-        IBleCallback notifyCallback = (notifyOpCallback == null) ? null : new BleDataOpCallbackAdapter(notifyOpCallback);
+    private void notify(BleGattElement element, boolean enable
+            , IGattDataCallback gattDataCallback, IGattDataCallback notifyOpCallback) {
+        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+
+        IBleCallback notifyCallback = (notifyOpCallback == null) ? null : new GattDataCallbackAdapter(notifyOpCallback);
 
         commandQueue.addNotifyCommand(element, enable, new BleCallbackDecorator(dataCallback), notifyCallback);
     }
 
-    // Notify
-    public final void notify(BleGattElement element, boolean enable, IGattDataCallback notifyOpCallback) {
-        notify(element, enable, null, notifyOpCallback);
-    }
-
     // Indicate
-    public final void indicate(BleGattElement element, boolean enable, IGattDataCallback indicateOpCallback) {
+    final void indicate(BleGattElement element, boolean enable, IGattDataCallback indicateOpCallback) {
         indicate(element, enable, null, indicateOpCallback);
     }
 
-    // Indicate
     private void indicate(BleGattElement element, boolean enable
-            , IGattDataCallback dataOpCallback, IGattDataCallback indicateOpCallback) {
-        IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
-        IBleCallback indicateCallback = (indicateOpCallback == null) ? null : new BleDataOpCallbackAdapter(indicateOpCallback);
+            , IGattDataCallback gattDataCallback, IGattDataCallback indicateOpCallback) {
+        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+
+        IBleCallback indicateCallback = (indicateOpCallback == null) ? null : new GattDataCallbackAdapter(indicateOpCallback);
+
         commandQueue.addIndicateCommand(element, enable, new BleCallbackDecorator(dataCallback), indicateCallback);
     }
 
-    // 不需要蓝牙通信立刻执行
-    public final void instExecute(IGattDataCallback dataOpCallback) {
-        IBleCallback dataCallback = (dataOpCallback == null) ? null : new BleDataOpCallbackAdapter(dataOpCallback);
+    // 无需蓝牙通信立刻执行
+    final void instExecute(IGattDataCallback gattDataCallback) {
+        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+
         commandQueue.addInstantCommand(dataCallback);
     }
 

@@ -8,7 +8,7 @@ import com.cmtech.android.ble.exception.BleException;
  */
 
 public class GattDataException extends BleException {
-    public GattDataException(BleException exception) {
+    GattDataException(BleException exception) {
         super(exception.getCode(), exception.getDescription());
     }
 

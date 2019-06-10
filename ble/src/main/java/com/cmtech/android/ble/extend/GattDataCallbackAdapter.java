@@ -6,19 +6,19 @@ import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 
 /**
- * BleDataOpCallbackAdapter: Ble数据操作回调适配器，将IGattDataOpCallback适配为ViseBle包中的IBleCallback
+ * GattDataCallbackAdapter: Ble数据操作回调适配器，将IGattDataOpCallback适配为ViseBle包中的IBleCallback
  * Created by bme on 2018/3/1.
  */
 
-public class BleDataOpCallbackAdapter implements IBleCallback {
+class GattDataCallbackAdapter implements IBleCallback {
     private IGattDataCallback dataOpCallback;
 
-    public BleDataOpCallbackAdapter(IGattDataCallback dataOpCallback) {
-        if(dataOpCallback == null) {
+    GattDataCallbackAdapter(IGattDataCallback gattDataCallback) {
+        if(gattDataCallback == null) {
             throw new IllegalArgumentException();
         }
 
-        this.dataOpCallback = dataOpCallback;
+        this.dataOpCallback = gattDataCallback;
     }
 
     @Override

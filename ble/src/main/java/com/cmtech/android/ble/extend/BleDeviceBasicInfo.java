@@ -109,7 +109,7 @@ public class BleDeviceBasicInfo implements Serializable{
         SharedPreferences.Editor editor = pref.edit();
         Set<String> addressSet = new HashSet<>();
         addressSet = pref.getStringSet("addressSet", addressSet);
-        if(addressSet.isEmpty() || !addressSet.contains(macAddress)) {
+        if((addressSet != null) && (addressSet.isEmpty() || !addressSet.contains(macAddress))) {
             addressSet.add(macAddress);
             editor.putStringSet("addressSet", addressSet);
         }
@@ -130,7 +130,7 @@ public class BleDeviceBasicInfo implements Serializable{
         SharedPreferences.Editor editor = pref.edit();
         Set<String> addressSet = new HashSet<>();
         addressSet = pref.getStringSet("addressSet", addressSet);
-        if(!addressSet.isEmpty() && addressSet.contains(macAddress)) {
+        if((addressSet != null) && !addressSet.isEmpty() && addressSet.contains(macAddress)) {
             addressSet.remove(macAddress);
             editor.putStringSet("addressSet", addressSet);
         }
@@ -148,7 +148,7 @@ public class BleDeviceBasicInfo implements Serializable{
     public static List<BleDeviceBasicInfo> createAllFromPref(SharedPreferences pref) {
         Set<String> addressSet = new HashSet<>();
         addressSet = pref.getStringSet("addressSet", addressSet);
-        if(addressSet.isEmpty()) {
+        if(addressSet == null || addressSet.isEmpty()) {
             return null;
         }
         // 转为数组排序

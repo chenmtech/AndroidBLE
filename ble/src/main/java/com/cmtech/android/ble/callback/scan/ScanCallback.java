@@ -5,8 +5,8 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.common.BleConfig;
+import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 
@@ -47,6 +47,8 @@ public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilte
     }
 
     public void scan() {
+        BluetoothAdapter adapter = null;
+
         if (isScan) {
             if (isScanning) {
                 return;
@@ -76,14 +78,18 @@ public class ScanCallback implements BluetoothAdapter.LeScanCallback, IScanFilte
 
             isScanning = true;
 
-            if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().startLeScan(ScanCallback.this);
+            adapter = ViseBle.getInstance().getBluetoothAdapter();
+
+            if (adapter != null) {
+                adapter.startLeScan(ScanCallback.this);
             }
         } else {
             isScanning = false;
 
-            if (ViseBle.getInstance().getBluetoothAdapter() != null) {
-                ViseBle.getInstance().getBluetoothAdapter().stopLeScan(ScanCallback.this);
+            adapter = ViseBle.getInstance().getBluetoothAdapter();
+
+            if (adapter != null) {
+                adapter.stopLeScan(ScanCallback.this);
             }
         }
     }

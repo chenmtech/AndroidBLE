@@ -58,18 +58,5 @@ public class BleDeviceType {
         return defaultNickname;
     }
 
-    // 创建设备类型对应的工厂
-    AbstractBleDeviceFactory createDeviceFactory() {
-        if(factoryClassName == null) return null;
-
-        AbstractBleDeviceFactory factory;
-
-        try {
-            factory = (AbstractBleDeviceFactory) Class.forName(factoryClassName).newInstance();
-        } catch (Exception e) {
-            factory = null;
-        }
-
-        return factory;
-    }
+    public String getFactoryClassName() { return factoryClassName; }
 }

@@ -7,6 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 
+import com.cmtech.android.ble.callback.scan.ScanCallback;
+import com.cmtech.android.ble.core.ViseBle;
+
 /**
  * @Description: 蓝牙基础操作工具类
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
@@ -32,6 +35,26 @@ public class BleUtil {
         }
         BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
         return manager.getAdapter().isEnabled();
+    }
+
+    // 开始扫描
+    public static void startScan(ScanCallback scanCallback) {
+        ViseBle.getInstance().startScan(scanCallback);
+    }
+
+    // 停止扫描
+    public static void stopScan(ScanCallback scanCallback) {
+        ViseBle.getInstance().stopScan(scanCallback);
+    }
+
+    // 断开所有设备连接
+    public static void disconnectAllDevice() {
+        ViseBle.getInstance().disconnect();
+    }
+
+    // 清除所有设备资源
+    public static void clearAllDevice() {
+        ViseBle.getInstance().clear();
     }
 
 }

@@ -15,6 +15,7 @@ import com.cmtech.android.ble.callback.scan.IScanCallback;
 import com.cmtech.android.ble.callback.scan.ScanCallback;
 import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
+import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
@@ -122,9 +123,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态，初始化为关闭状态
 
-    private final List<OnBleDeviceStateListener> deviceStateListeners = new LinkedList<>(); // 设备状态观察者列表
-
-    protected final BleGattCommandExecutor gattCmdExecutor = new BleGattCommandExecutor(this); // Gatt命令执行者
+    private final List<OnBleDeviceListener> deviceStateListeners = new LinkedList<>(); // 设备状态观察者列表
 
     // 主线程Handler，包括连接相关的处理和Gatt消息的处理，都在主线程中执行
     private final Handler mainHandler = new Handler(Looper.getMainLooper(), this);
@@ -135,14 +134,13 @@ public abstract class BleDevice implements Handler.Callback {
 
     private boolean closing = false; // 标记设备是否正在关闭
 
+    private final BleGattCommandExecutor gattCmdExecutor = new BleGattCommandExecutor(this); // Gatt命令执行者
 
 
     public BleDevice(Context context, BleDeviceBasicInfo basicInfo) {
         this.context = context;
         this.basicInfo = basicInfo;
     }
-
-    public Context getContext() {return context;}
 
     public BleDeviceBasicInfo getBasicInfo() {
         return basicInfo;
@@ -178,15 +176,27 @@ public abstract class BleDevice implements Handler.Callback {
         }
     }
 
+    // 登记设备状态观察者
+    public final void addConnectStateListener(OnBleDeviceListener listener) {
+        if(!deviceStateListeners.contains(listener)) {
+            deviceStateListeners.add(listener);
+        }
+    }
+
+    // 删除设备状态观察者
+    public final void removeConnectStateListener(OnBleDeviceListener listener) {
+        deviceStateListeners.remove(listener);
+    }
+
     DeviceMirror getDeviceMirror() {
-        return (bluetoothLeDevice == null) ? null : BleDeviceUtil.getDeviceMirror(bluetoothLeDevice);
+        return ViseBle.getInstance().getDeviceMirror(bluetoothLeDevice);
     }
 
     public boolean isClosed() {
         return connectState == BleDeviceConnectState.CONNECT_CLOSED;
     }
 
-    protected boolean isConnected() {
+    public boolean isConnected() {
         return connectState == CONNECT_SUCCESS;
     }
 
@@ -216,12 +226,12 @@ public abstract class BleDevice implements Handler.Callback {
         return battery;
     }
 
-    protected void setBattery(final int battery) {
+    public void setBattery(final int battery) {
         this.battery = battery;
 
-        for(final OnBleDeviceStateListener listener : deviceStateListeners) {
+        for(final OnBleDeviceListener listener : deviceStateListeners) {
             if(listener != null) {
-                listener.onDeviceBatteryUpdated(BleDevice.this);
+                listener.onBatteryUpdated(BleDevice.this);
             }
         }
     }
@@ -257,10 +267,10 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     // 切换设备状态
-    final boolean switchState() {
+    public final boolean switchState() {
         ViseLog.i("switchDeviceState");
 
-        boolean canSwitch = true;
+        boolean switched = true;
 
         if(connectState == CONNECT_SUCCESS) {
             removeCallbacksAndMessages();
@@ -268,7 +278,7 @@ public abstract class BleDevice implements Handler.Callback {
             disconnect();
 
         } else if(connectState == CONNECT_SCANNING || connectState == CONNECT_CONNECTING) {
-            canSwitch = false;
+            switched = false;
 
         } else {
             removeCallbacksAndMessages();
@@ -278,11 +288,11 @@ public abstract class BleDevice implements Handler.Callback {
             startScan();
         }
 
-        return canSwitch;
+        return switched;
     }
 
-    // 发送Gatt消息给工作线程
-    public final void sendGattMessage(int what, Object obj) {
+    // 发送Gatt消息
+    protected final void sendMessage(int what, Object obj) {
         Message.obtain(mainHandler, what, obj).sendToTarget();
     }
 
@@ -292,6 +302,46 @@ public abstract class BleDevice implements Handler.Callback {
 
     protected void post(Runnable runnable) {
         mainHandler.post(runnable);
+    }
+
+    protected void startGattExecutor() {
+        gattCmdExecutor.start();
+    }
+
+    protected void stopGattExecutor() {
+        gattCmdExecutor.stop();
+    }
+
+    protected boolean checkElements(BleGattElement[] elements) {
+        return gattCmdExecutor.checkElements(elements);
+    }
+
+    protected boolean isGattExecutorAlive() {
+        return gattCmdExecutor.isAlive();
+    }
+
+    protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
+        gattCmdExecutor.read(element, gattDataCallback);
+    }
+
+    protected final void write(BleGattElement element, byte[] data, IGattDataCallback gattDataCallback) {
+        gattCmdExecutor.write(element, data, gattDataCallback);
+    }
+
+    protected final void write(BleGattElement element, byte data, IGattDataCallback gattDataCallback) {
+        gattCmdExecutor.write(element, data, gattDataCallback);
+    }
+
+    protected final void notify(BleGattElement element, boolean enable, IGattDataCallback notifyOpCallback) {
+        gattCmdExecutor.notify(element, enable, notifyOpCallback);
+    }
+
+    protected final void indicate(BleGattElement element, boolean enable, IGattDataCallback indicateOpCallback) {
+        gattCmdExecutor.indicate(element, enable, indicateOpCallback);
+    }
+
+    protected final void instExecute(IGattDataCallback gattDataCallback) {
+        gattCmdExecutor.instExecute(gattDataCallback);
     }
 
     // 开始扫描
@@ -312,7 +362,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         MyConnectCallback connectCallback = new MyConnectCallback();
 
-        BleDeviceUtil.connect(bluetoothLeDevice, connectCallback);
+        ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
         setConnectState(CONNECT_CONNECTING);
     }
@@ -325,40 +375,23 @@ public abstract class BleDevice implements Handler.Callback {
 
         removeCallbacksAndMessages();
 
-        BleDeviceUtil.disconnect(bluetoothLeDevice);
-    }
-
-    // 登记设备状态观察者
-    public final void registerConnectStateListener(OnBleDeviceStateListener listener) {
-        if(!deviceStateListeners.contains(listener)) {
-            deviceStateListeners.add(listener);
-        }
-    }
-
-    // 删除设备状态观察者
-    public final void removeConnectStateListener(OnBleDeviceStateListener listener) {
-        deviceStateListeners.remove(listener);
+        ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
     }
 
     // 通知设备状态观察者
-    final void updateConnectState() {
-        for(OnBleDeviceStateListener listener : deviceStateListeners) {
+    public final void updateConnectState() {
+        for(OnBleDeviceListener listener : deviceStateListeners) {
             if(listener != null) {
-                listener.onDeviceConnectStateUpdated(this);
+                listener.onConnectStateUpdated(this);
             }
         }
     }
 
     // 通知设备状态观察者重连失败，是否报警
-    public final void notifyReconnectFailureObservers(final boolean isWarn) {
-        for(final OnBleDeviceStateListener observer : deviceStateListeners) {
-            if(observer != null) {
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        observer.onReconnectFailureNotify(BleDevice.this, isWarn);
-                    }
-                });
+    public final void notifyReconnectFailure(final boolean isWarn) {
+        for(final OnBleDeviceListener listener : deviceStateListeners) {
+            if(listener != null) {
+                listener.onReconnectFailureNotified(BleDevice.this, isWarn);
             }
         }
     }
@@ -446,7 +479,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         if(canReconnectTimes != -1 && curReconnectTimes >= canReconnectTimes) {
             if(basicInfo.isWarnAfterReconnectFailure()) {
-                notifyReconnectFailureObservers(true); // 重连失败后通知报警
+                notifyReconnectFailure(true); // 重连失败后通知报警
             }
 
             setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
@@ -468,10 +501,13 @@ public abstract class BleDevice implements Handler.Callback {
     /*
      * 抽象方法
      */
-    public abstract boolean executeAfterConnectSuccess(); // 连接成功后执行的操作
-    public abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
-    public abstract void executeAfterDisconnect(); // 断开连接后执行的操作
-    public abstract void processGattMessage(Message msg); // 处理Gatt消息函数
+    protected abstract boolean executeAfterConnectSuccess(); // 连接成功后执行的操作
+
+    protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
+
+    protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
+
+    protected abstract void processMessage(Message msg); // 处理消息函数
 
     /**
      * 私有方法
@@ -487,7 +523,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     @Override
     public boolean handleMessage(Message message) {
-        processGattMessage(message);
+        processMessage(message);
 
         return false;
     }
