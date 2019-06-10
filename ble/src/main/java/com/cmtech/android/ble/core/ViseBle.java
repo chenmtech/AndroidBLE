@@ -1,4 +1,4 @@
-package com.cmtech.android.ble;
+package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
@@ -14,8 +14,6 @@ import com.cmtech.android.ble.callback.scan.ScanCallback;
 import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
-import com.cmtech.android.ble.core.DeviceMirror;
-import com.cmtech.android.ble.core.DeviceMirrorPool;
 import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;

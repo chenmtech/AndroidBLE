@@ -15,7 +15,7 @@ public class BleConstant {
     public static final int DEFAULT_OPERATE_TIME = 5000;
 
     public static final int DEFAULT_RETRY_INTERVAL = 1000;
-    public static final int DEFAULT_RETRY_COUNT = 3;
+    public static final int DEFAULT_RETRY_COUNT = 0;
 
     public static final int DEFAULT_MAX_CONNECT_COUNT = 5;
 

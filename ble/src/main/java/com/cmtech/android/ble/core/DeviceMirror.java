@@ -9,7 +9,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
-import com.cmtech.android.ble.ViseBle;
 import com.cmtech.android.ble.callback.IBleCallback;
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.IRssiCallback;

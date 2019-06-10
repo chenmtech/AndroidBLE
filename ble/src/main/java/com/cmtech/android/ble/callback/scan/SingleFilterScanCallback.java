@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback.scan;
 
-import com.cmtech.android.ble.ViseBle;
+import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 
 import java.util.concurrent.atomic.AtomicBoolean;

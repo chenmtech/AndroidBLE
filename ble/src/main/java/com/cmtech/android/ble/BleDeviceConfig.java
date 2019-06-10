@@ -1,14 +1,25 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble;
+
+import android.content.Context;
 
 import com.cmtech.android.ble.common.BleConfig;
+import com.cmtech.android.ble.core.ViseBle;
+import com.cmtech.android.ble.extend.BleDeviceConnectState;
+import com.cmtech.android.ble.extend.BleDeviceType;
 
 /**
- * BleDeviceConfig: 进行一些viseBle包内部的配置
+ * BleDeviceConfig: 进行一些初始化和配置
  * Created by bme on 2018/10/22.
  */
 
 public class BleDeviceConfig {
+
     private BleDeviceConfig() {
+
+    }
+
+    public static void initialize(Context context) {
+        ViseBle.getInstance().init(context);
     }
 
     // 配置扫描超时时间
@@ -19,21 +30,6 @@ public class BleDeviceConfig {
     // 配置连接超时时间
     public static void setConnectTimeout(int connectTimeout) {
         BleConfig.getInstance().setConnectTimeout(connectTimeout);
-    }
-
-    // 配置重连时间间隔
-    public static void setReconnectInterval(int reconnectInterval) {
-        BleConfig.getInstance().setConnectRetryInterval(reconnectInterval);
-    }
-
-    // 配置重连次数
-    public static void setConnectRetryCount(int connectRetryCount) {
-        BleConfig.getInstance().setConnectRetryCount(connectRetryCount);
-    }
-
-    // 配置数据操作重复次数
-    public static void setOpDataRetryCount(int opDataRetryCount) {
-        BleConfig.getInstance().setOperateRetryCount(opDataRetryCount);
     }
 
     public static void addSupportedDeviceType(BleDeviceType deviceType) {

@@ -3,7 +3,7 @@ package com.cmtech.android.ble.extend;
 import android.app.Activity;
 import android.content.Context;
 
-import com.cmtech.android.ble.ViseBle;
+import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.ScanCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
