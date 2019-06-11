@@ -113,7 +113,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
 
-    private DeviceMirror deviceMirror = null; // 设备镜像，连接到设备后会赋值
+    //private DeviceMirror deviceMirror = null; // 设备镜像，连接到设备后会赋值
 
     // 扫描回调适配器，将IScanCallback适配为BluetoothAdapter.LeScanCallback，每次新的扫描必须创建新的实例
     private ScanCallback scanCallback;
@@ -185,7 +185,7 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     DeviceMirror getDeviceMirror() {
-        return deviceMirror;
+        return ViseBle.getInstance().getDeviceMirror(bluetoothLeDevice);
     }
 
     public boolean isClosed() {
@@ -371,8 +371,7 @@ public abstract class BleDevice implements Handler.Callback {
 
         removeCallbacksAndMessages();
 
-        if(deviceMirror != null)
-            deviceMirror.disconnect();
+        ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
     }
 
     // 通知设备状态观察者
@@ -420,10 +419,8 @@ public abstract class BleDevice implements Handler.Callback {
             return;
         }
 
-        deviceMirror = mirror;
-
         if(isConnected()) {
-            deviceMirror.clear();
+            mirror.disconnect();
         } else {
 
             removeCallbacksAndMessages();
