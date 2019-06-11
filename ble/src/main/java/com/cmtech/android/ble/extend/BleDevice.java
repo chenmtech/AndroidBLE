@@ -8,7 +8,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.v4.content.ContextCompat;
-import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
@@ -57,8 +56,6 @@ public abstract class BleDevice implements Handler.Callback {
             BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
 
             if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                Toast.makeText(context, "该设备未绑定，无法使用。", Toast.LENGTH_SHORT).show();
-
                 processScanResult(false, null);
 
             } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
@@ -112,11 +109,11 @@ public abstract class BleDevice implements Handler.Callback {
         }
     }
 
-    private Context context;
-
     private BleDeviceBasicInfo basicInfo; // 设备基本信息对象
 
     private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
+
+    private DeviceMirror deviceMirror = null; // 设备镜像，连接到设备后会赋值
 
     // 扫描回调适配器，将IScanCallback适配为BluetoothAdapter.LeScanCallback，每次新的扫描必须创建新的实例
     private ScanCallback scanCallback;
@@ -137,8 +134,7 @@ public abstract class BleDevice implements Handler.Callback {
     private final BleGattCommandExecutor gattCmdExecutor = new BleGattCommandExecutor(this); // Gatt命令执行者
 
 
-    public BleDevice(Context context, BleDeviceBasicInfo basicInfo) {
-        this.context = context;
+    public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
     }
 
@@ -166,7 +162,7 @@ public abstract class BleDevice implements Handler.Callback {
         return basicInfo.getImagePath();
     }
 
-    public Drawable getImageDrawable() {
+    public Drawable getImageDrawable(Context context) {
         if(getImagePath().equals("")) {
             int imageId = BleDeviceType.getFromUuid(getUuidString()).getDefaultImage();
 
@@ -189,7 +185,7 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     DeviceMirror getDeviceMirror() {
-        return ViseBle.getInstance().getDeviceMirror(bluetoothLeDevice);
+        return deviceMirror;
     }
 
     public boolean isClosed() {
@@ -375,7 +371,8 @@ public abstract class BleDevice implements Handler.Callback {
 
         removeCallbacksAndMessages();
 
-        ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
+        if(deviceMirror != null)
+            deviceMirror.disconnect();
     }
 
     // 通知设备状态观察者
@@ -423,17 +420,19 @@ public abstract class BleDevice implements Handler.Callback {
             return;
         }
 
+        deviceMirror = mirror;
+
         if(isConnected()) {
-            mirror.disconnect();
-            return;
-        }
+            deviceMirror.clear();
+        } else {
 
-        removeCallbacksAndMessages();
+            removeCallbacksAndMessages();
 
-        // 设备执行连接后处理，如果出错则断开
-        if (!executeAfterConnectSuccess()) {
-            disconnect();
-            return;
+            // 设备执行连接后处理，如果出错则断开
+            if (!executeAfterConnectSuccess()) {
+                disconnect();
+                return;
+            }
         }
 
         curReconnectTimes = 0;
