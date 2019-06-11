@@ -424,6 +424,7 @@ public abstract class BleDevice implements Handler.Callback {
         }
 
         if(isConnected()) {
+            mirror.disconnect();
             return;
         }
 
