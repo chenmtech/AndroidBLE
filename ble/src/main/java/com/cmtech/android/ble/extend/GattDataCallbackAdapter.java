@@ -23,7 +23,7 @@ class GattDataCallbackAdapter implements IBleCallback {
 
     @Override
     public void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-        dataOpCallback.onSuccess(data);
+        dataOpCallback.onSuccess(data, bluetoothLeDevice);
     }
 
     @Override
