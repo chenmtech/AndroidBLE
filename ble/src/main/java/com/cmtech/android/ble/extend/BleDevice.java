@@ -341,7 +341,7 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     // 开始扫描
-    private void startScan() {
+    protected void startScan() {
         ViseLog.e("startScan in " + Thread.currentThread());
 
         scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(basicInfo.getMacAddress());
