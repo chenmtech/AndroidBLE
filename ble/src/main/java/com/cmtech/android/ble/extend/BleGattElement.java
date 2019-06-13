@@ -73,20 +73,26 @@ public class BleGattElement {
         if(deviceMirror == null || deviceMirror.getBluetoothGatt() == null) return null;
 
         BluetoothGatt gatt = deviceMirror.getBluetoothGatt();
+
         BluetoothGattService service;
+
         BluetoothGattCharacteristic characteristic;
+
         BluetoothGattDescriptor descriptor;
 
         Object element = null;
         if( (service = gatt.getService(serviceUuid)) != null) {
             element = service;
+
             if( (characteristic = service.getCharacteristic(characteristicUuid)) != null ) {
                 element = characteristic;
+
                 if( (descriptor = characteristic.getDescriptor(descriptorUuid)) != null ) {
                     element = descriptor;
                 }
             }
         }
+
         return element;
     }
 
