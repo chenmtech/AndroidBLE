@@ -99,11 +99,13 @@ class BleGattCommandExecutor {
                     while (!Thread.currentThread().isInterrupted()) {
                         commandQueue.executeNextCommand();
                     }
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 } finally {
                     ViseLog.e("The Command Execution Thread is finished!");
                 }
             }
-        });
+        }, "MyThread_Cmd_Exec");
 
         executeThread.start();
     }

@@ -47,7 +47,7 @@ class BleGattCommandQueue {
         this.deviceMirror = deviceMirror;
     }
 
-    void onCommandSuccess(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+    synchronized void onCommandSuccess(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
         ViseLog.d("Success to execute: " + command + " The return data is " + HexUtil.encodeHexStr(data));
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
@@ -63,9 +63,11 @@ class BleGattCommandQueue {
         done = true;
 
         cmdErrorTimes = 0;
+
+        notifyAll();
     }
 
-    boolean onCommandFailure(IBleCallback bleCallback, BleException exception) {
+    synchronized boolean onCommandFailure(IBleCallback bleCallback, BleException exception) {
         boolean isStop = false;
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
@@ -166,32 +168,37 @@ class BleGattCommandQueue {
             addCommandToList(command);
     }
 
-    private void addCommandToList(BleGattCommand command) {
+    private synchronized void addCommandToList(BleGattCommand command) {
         ViseLog.d("add command: " + command);
 
         if(!cmdQueue.add(command))
             throw new IllegalStateException();
 
+        notifyAll();
     }
 
-    void executeNextCommand() {
-        if(done && !cmdQueue.isEmpty()) {
-            // 取出一条命令执行
-            command = cmdQueue.remove();
-
-            if(command != null) {
-                ViseLog.d("Execute: " + command);
-
-                command.execute();
-
-                // 设置未完成标记
-                if (!command.isInstantCommand())
-                    done = false;
-            }
+    synchronized void executeNextCommand() throws InterruptedException{
+        while (!done || cmdQueue.isEmpty()) {
+            wait();
         }
+
+        // 取出一条命令执行
+        command = cmdQueue.remove();
+
+        if(command != null) {
+            ViseLog.d("Execute: " + command);
+
+            command.execute();
+
+            // 设置未完成标记
+            if (!command.isInstantCommand())
+                done = false;
+        }
+
+        notifyAll();
     }
 
-    void reset() {
+    synchronized void reset() {
         cmdQueue.clear();
 
         command = null;
