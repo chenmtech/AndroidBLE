@@ -20,11 +20,11 @@ import com.cmtech.android.ble.utils.HexUtil;
  */
 
 class BleGattCommand{
-    protected final DeviceMirror deviceMirror;          // 执行命令的设备镜像
+    final DeviceMirror deviceMirror;          // 执行命令的设备镜像
 
     private final BluetoothGattChannel channel;       // 执行命令的通道
 
-    private final IBleCallback dataOpCallback;        // 数据操作回调
+    IBleCallback dataOpCallback;        // 数据操作回调
 
     private final byte[] writtenData;                 // 如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable数据
 
@@ -53,6 +53,9 @@ class BleGattCommand{
     }
 
     BleGattCommand(BleGattCommand gattCommand) {
+        if(gattCommand == null)
+            throw new NullPointerException();
+
         this.deviceMirror = gattCommand.deviceMirror;
 
         this.channel = gattCommand.channel;
@@ -111,21 +114,28 @@ class BleGattCommand{
                 break;
 
             case PROPERTY_NOTIFY:
-            case PROPERTY_INDICATE:
-                boolean isIndication = true;
-
-                if(channel.getPropertyType() == PropertyType.PROPERTY_NOTIFY) {
-                    isIndication = false;
-                }
-
                 deviceMirror.bindChannel( dataOpCallback, channel);
 
                 if(writtenData[0] == 1) {
-                    deviceMirror.registerNotify(isIndication);
+                    deviceMirror.registerNotify(false);
 
                     deviceMirror.setNotifyListener(channel.getGattInfoKey(), notifyOpCallback);
                 } else {
-                    deviceMirror.unregisterNotify(isIndication);
+                    deviceMirror.unregisterNotify(false);
+
+                    deviceMirror.removeReceiveCallback(channel.getGattInfoKey());
+                }
+                break;
+
+            case PROPERTY_INDICATE:
+                deviceMirror.bindChannel( dataOpCallback, channel);
+
+                if(writtenData[0] == 1) {
+                    deviceMirror.registerNotify(true);
+
+                    deviceMirror.setNotifyListener(channel.getGattInfoKey(), notifyOpCallback);
+                } else {
+                    deviceMirror.unregisterNotify(true);
 
                     deviceMirror.removeReceiveCallback(channel.getGattInfoKey());
                 }
@@ -167,11 +177,17 @@ class BleGattCommand{
 
     static class Builder {
         private BleGattElement element;
+
         private PropertyType propertyType;
+
         private DeviceMirror deviceMirror;
+
         private byte[] data;
+
         private IBleCallback dataCallback;
+
         private IBleCallback notifyOpCallback;
+
         private boolean isInstantCommand = false;
 
         Builder() {
@@ -179,36 +195,43 @@ class BleGattCommand{
 
         Builder setDeviceMirror(DeviceMirror deviceMirror) {
             this.deviceMirror = deviceMirror;
+
             return this;
         }
 
         Builder setBluetoothElement(BleGattElement element) {
             this.element = element;
+
             return this;
         }
 
         Builder setPropertyType(PropertyType propertyType) {
             this.propertyType = propertyType;
+
             return this;
         }
 
         Builder setDataCallback(IBleCallback dataCallback) {
             this.dataCallback = dataCallback;
+
             return this;
         }
 
         Builder setData(byte[] data) {
             this.data = data;
+
             return this;
         }
 
         Builder setNotifyOpCallback(IBleCallback notifyOpCallback) {
             this.notifyOpCallback = notifyOpCallback;
+
             return this;
         }
 
         Builder setInstantCommand(boolean isInstantCommand) {
             this.isInstantCommand = isInstantCommand;
+
             return this;
         }
 
@@ -222,7 +245,9 @@ class BleGattCommand{
                 }
             } else {
 
-                if (deviceMirror == null || element == null || dataCallback == null) return null;
+                if (deviceMirror == null || element == null) return null;
+
+                if(propertyType != PropertyType.PROPERTY_NOTIFY && propertyType != PropertyType.PROPERTY_INDICATE  && dataCallback == null) return null;
 
                 if (propertyType == PropertyType.PROPERTY_WRITE
                         || propertyType == PropertyType.PROPERTY_NOTIFY

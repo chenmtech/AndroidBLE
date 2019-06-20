@@ -131,7 +131,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     private boolean closing = false; // 标记设备是否正在关闭
 
-    private final BleGattCommandExecutor gattCmdExecutor = new BleGattCommandExecutor(this); // Gatt命令执行者
+    private final BleSerialGattCommandExecutor gattCmdExecutor = new BleSerialGattCommandExecutor(this); // Gatt命令执行者
 
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
@@ -427,7 +427,10 @@ public abstract class BleDevice implements Handler.Callback {
 
             // 设备执行连接后处理，如果出错则断开
             if (!executeAfterConnectSuccess()) {
+                ViseLog.e("executeAfterConnectSuccess is wrong.");
+
                 disconnect();
+
                 return;
             }
         }

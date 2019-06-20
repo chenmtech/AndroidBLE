@@ -68,7 +68,7 @@ public class BleGattElement {
     }
 
     // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
-    private Object retrieveGattObject(DeviceMirror deviceMirror) {
+    Object retrieveGattObject(DeviceMirror deviceMirror) {
 
         if(deviceMirror == null || deviceMirror.getBluetoothGatt() == null) return null;
 
