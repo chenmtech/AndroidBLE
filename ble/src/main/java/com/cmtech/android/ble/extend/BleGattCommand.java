@@ -20,7 +20,7 @@ import com.cmtech.android.ble.utils.HexUtil;
  */
 
 class BleGattCommand{
-    private final DeviceMirror deviceMirror;          // 执行命令的设备镜像
+    protected final DeviceMirror deviceMirror;          // 执行命令的设备镜像
 
     private final BluetoothGattChannel channel;       // 执行命令的通道
 
@@ -52,6 +52,22 @@ class BleGattCommand{
         this.isInstantCommand = isInstantCommand;
     }
 
+    BleGattCommand(BleGattCommand gattCommand) {
+        this.deviceMirror = gattCommand.deviceMirror;
+
+        this.channel = gattCommand.channel;
+
+        this.dataOpCallback = gattCommand.dataOpCallback;
+
+        this.writtenData = gattCommand.writtenData;
+
+        this.notifyOpCallback = gattCommand.notifyOpCallback;
+
+        this.elementDescription = gattCommand.elementDescription;
+
+        this.isInstantCommand = gattCommand.isInstantCommand;
+    }
+
     // 获取命令用的channel
     public BluetoothGattChannel getChannel() {
         return channel;
@@ -68,8 +84,12 @@ class BleGattCommand{
     }
 
     // 执行命令
-    boolean execute() {
-        if(isInstantCommand && dataOpCallback != null) {
+    boolean execute() throws InterruptedException{
+        if(isInstantCommand) {
+            if(dataOpCallback == null) {
+                throw new NullPointerException();
+            }
+
             dataOpCallback.onSuccess(null, null, null);
 
             return true;
@@ -114,7 +134,8 @@ class BleGattCommand{
             default:
                 break;
         }
-        return true;
+
+        return false;
     }
 
     @Override
@@ -215,6 +236,7 @@ class BleGattCommand{
                 }
 
                 BluetoothGattChannel.Builder builder = new BluetoothGattChannel.Builder();
+
                 BluetoothGattChannel channel = builder.setBluetoothGatt(deviceMirror.getBluetoothGatt())
                         .setPropertyType(propertyType)
                         .setServiceUUID(element.getServiceUuid())
