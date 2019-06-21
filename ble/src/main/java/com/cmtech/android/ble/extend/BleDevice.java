@@ -46,9 +46,7 @@ public abstract class BleDevice implements Handler.Callback {
     private final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
 
     private class MyScanCallback implements IScanCallback {
-
         MyScanCallback() {
-
         }
 
         @Override
@@ -133,6 +131,8 @@ public abstract class BleDevice implements Handler.Callback {
 
     private final BleSerialGattCommandExecutor gattCmdExecutor = new BleSerialGattCommandExecutor(this); // Gatt命令执行者
 
+    private boolean waitingResponse = false;
+
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
@@ -197,7 +197,7 @@ public abstract class BleDevice implements Handler.Callback {
     }
 
     public boolean isWaitingResponse() {
-        return (connectState == CONNECT_SCANNING) || (connectState == CONNECT_CONNECTING);
+        return waitingResponse;
     }
 
     public String getConnectStateDescription() {
@@ -210,7 +210,7 @@ public abstract class BleDevice implements Handler.Callback {
 
     private void setConnectState(BleDeviceConnectState connectState) {
         if(this.connectState != connectState) {
-            ViseLog.e(connectState + " in " + Thread.currentThread());
+            ViseLog.e(connectState);
 
             this.connectState = connectState;
 
@@ -308,13 +308,14 @@ public abstract class BleDevice implements Handler.Callback {
         gattCmdExecutor.stop();
     }
 
+    protected boolean isGattExecutorAlive() {
+        return gattCmdExecutor.isAlive();
+    }
+
     protected boolean checkElements(BleGattElement[] elements) {
         return gattCmdExecutor.checkElements(elements);
     }
 
-    protected boolean isGattExecutorAlive() {
-        return gattCmdExecutor.isAlive();
-    }
 
     protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
         gattCmdExecutor.read(element, gattDataCallback);
@@ -342,36 +343,61 @@ public abstract class BleDevice implements Handler.Callback {
 
     // 开始扫描
     private void startScan() {
-        ViseLog.e("startScan in " + Thread.currentThread());
+        if(waitingResponse) return;
 
-        scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(basicInfo.getMacAddress());
+        post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("startScan...");
 
-        scanCallback.setScan(true).scan();
+                waitingResponse = true;
 
-        setConnectState(CONNECT_SCANNING);
+                scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(basicInfo.getMacAddress());
+
+                scanCallback.setScan(true).scan();
+
+                setConnectState(CONNECT_SCANNING);
+            }
+        });
     }
 
 
     // 开始连接，有些资料说最好放到UI线程中执行连接
     private void startConnect() {
-        ViseLog.e("startConnect in " + Thread.currentThread());
+        if(waitingResponse) return;
 
-        MyConnectCallback connectCallback = new MyConnectCallback();
+        post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("startConnect...");
 
-        ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+                waitingResponse = true;
 
-        setConnectState(CONNECT_CONNECTING);
+                MyConnectCallback connectCallback = new MyConnectCallback();
+
+                ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+
+                setConnectState(CONNECT_CONNECTING);
+            }
+        });
     }
 
     // 断开连接
     protected void disconnect() {
-        ViseLog.e("disconnect in " + Thread.currentThread());
+        post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("disconnect...");
 
-        executeAfterDisconnect();
+                waitingResponse = true;
 
-        removeCallbacksAndMessages();
+                executeAfterDisconnect();
 
-        ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
+                removeCallbacksAndMessages();
+
+                ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
+            }
+        });
     }
 
     // 通知设备状态观察者
@@ -394,7 +420,9 @@ public abstract class BleDevice implements Handler.Callback {
 
     // 处理扫描结果
     private void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.e("ProcessScanResult: " + canConnect + " in " + Thread.currentThread());
+        ViseLog.e("ProcessScanResult: " + canConnect);
+
+        waitingResponse = false;
 
         if(closing) {
             return;
@@ -413,7 +441,9 @@ public abstract class BleDevice implements Handler.Callback {
 
     // 处理连接成功回调
     private void processConnectSuccess(DeviceMirror mirror) {
-        ViseLog.e("processConnectSuccess in " + Thread.currentThread());
+        ViseLog.e("processConnectSuccess");
+
+        waitingResponse = false;
 
         if (closing) {
             return;
@@ -442,7 +472,9 @@ public abstract class BleDevice implements Handler.Callback {
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
-        ViseLog.e("processConnectFailure in " + Thread.currentThread() + " with " +bleException );
+        ViseLog.e("processConnectFailure with " +bleException );
+
+        waitingResponse = false;
 
         if (!closing) {
             // 仍然有可能会连续执行两次下面语句
@@ -460,7 +492,9 @@ public abstract class BleDevice implements Handler.Callback {
 
     // 处理连接断开
     private void processDisconnect(boolean isActive) {
-        ViseLog.e("processDisconnect: " + isActive+ " in " + Thread.currentThread() );
+        ViseLog.e("processDisconnect: " + isActive);
+
+        waitingResponse = false;
 
         if (!closing) {
             if (!isActive) {
@@ -534,8 +568,11 @@ public abstract class BleDevice implements Handler.Callback {
 
         ViseLog.i("stopScan in " + Thread.currentThread());
 
-        if(scanCallback != null)
+        if(scanCallback != null && scanCallback.isScanning()) {
             scanCallback.setScan(false).scan();
+
+            waitingResponse = false;
+        }
     }
 
     @Override
