@@ -247,8 +247,6 @@ class BleGattCommand{
 
                 if (deviceMirror == null || element == null) return null;
 
-                if(propertyType != PropertyType.PROPERTY_NOTIFY && propertyType != PropertyType.PROPERTY_INDICATE  && dataCallback == null) return null;
-
                 if (propertyType == PropertyType.PROPERTY_WRITE
                         || propertyType == PropertyType.PROPERTY_NOTIFY
                         || propertyType == PropertyType.PROPERTY_INDICATE) {

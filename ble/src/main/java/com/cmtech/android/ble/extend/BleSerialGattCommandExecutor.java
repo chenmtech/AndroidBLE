@@ -2,6 +2,7 @@ package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleCallback;
 import com.cmtech.android.ble.common.PropertyType;
+import com.vise.log.ViseLog;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
