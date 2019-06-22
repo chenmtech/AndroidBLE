@@ -51,53 +51,72 @@ public class BleDeviceBasicInfo implements Serializable{
     public BleDeviceBasicInfo(String macAddress, String nickName, String uuidString, String imagePath,
                               boolean autoConnect, int reconnectTimes, boolean warnAfterReconnectFailure) {
         this.macAddress = macAddress;
+
         this.nickName = nickName;
+
         this.uuidString = uuidString;
+
         this.imagePath = imagePath;
+
         this.autoConnect = autoConnect;
+
         this.reconnectTimes = reconnectTimes;
+
         this.warnAfterReconnectFailure = warnAfterReconnectFailure;
     }
 
     public String getMacAddress() {
         return macAddress;
     }
+
     public void setMacAddress(String macAddress) {
         this.macAddress = macAddress;
     }
+
     public String getNickName() {
         return nickName;
     }
+
     public void setNickName(String nickName) {
         this.nickName = nickName;
     }
+
     public String getUuidString() {
         return uuidString;
     }
+
     public void setUuidString(String uuidString) {
         this.uuidString = uuidString;
     }
+
     public String getImagePath() {
         return imagePath;
     }
+
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
+
     public boolean autoConnect() {
         return autoConnect;
     }
+
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
+
     public int getReconnectTimes() {
         return reconnectTimes;
     }
+
     public void setReconnectTimes(int reconnectTimes) {
         this.reconnectTimes = reconnectTimes;
     }
+
     public boolean isWarnAfterReconnectFailure() {
         return warnAfterReconnectFailure;
     }
+
     public void setWarnAfterReconnectFailure(boolean warnAfterReconnectFailure) {
         this.warnAfterReconnectFailure = warnAfterReconnectFailure;
     }
@@ -107,19 +126,31 @@ public class BleDeviceBasicInfo implements Serializable{
         if(TextUtils.isEmpty(macAddress)) return false;
 
         SharedPreferences.Editor editor = pref.edit();
+
         Set<String> addressSet = new HashSet<>();
+
         addressSet = pref.getStringSet("addressSet", addressSet);
+
         if((addressSet != null) && (addressSet.isEmpty() || !addressSet.contains(macAddress))) {
             addressSet.add(macAddress);
+
             editor.putStringSet("addressSet", addressSet);
         }
+
         editor.putString(macAddress+"_macAddress", macAddress);
+
         editor.putString(macAddress+"_nickName", nickName);
+
         editor.putString(macAddress+"_uuidString", uuidString);
+
         editor.putString(macAddress+"_imagePath", imagePath);
+
         editor.putBoolean(macAddress+"_autoConnect", autoConnect);
+
         editor.putInt(macAddress+"_reconnectTimes", reconnectTimes);
+
         editor.putBoolean(macAddress+"_warnAfterReconnectFailure", warnAfterReconnectFailure);
+
         return editor.commit();
     }
 
@@ -128,38 +159,58 @@ public class BleDeviceBasicInfo implements Serializable{
         if(TextUtils.isEmpty(macAddress)) return false;
 
         SharedPreferences.Editor editor = pref.edit();
+
         Set<String> addressSet = new HashSet<>();
+
         addressSet = pref.getStringSet("addressSet", addressSet);
+
         if((addressSet != null) && !addressSet.isEmpty() && addressSet.contains(macAddress)) {
             addressSet.remove(macAddress);
+
             editor.putStringSet("addressSet", addressSet);
         }
+
         editor.remove(macAddress+"_macAddress");
+
         editor.remove(macAddress+"_nickName");
+
         editor.remove(macAddress+"_uuidString");
+
         editor.remove(macAddress+"_imagePath");
+
         editor.remove(macAddress+"_autoConnect");
+
         editor.remove(macAddress+"_reconnectTimes");
+
         editor.remove(macAddress+"_warnAfterReconnectFailure");
+
         return editor.commit();
     }
 
     // 从Pref创建所有的设备基本信息
     public static List<BleDeviceBasicInfo> createAllFromPref(SharedPreferences pref) {
         Set<String> addressSet = new HashSet<>();
+
         addressSet = pref.getStringSet("addressSet", addressSet);
+
         if(addressSet == null || addressSet.isEmpty()) {
             return null;
         }
+
         // 转为数组排序
         String[] addressArr = addressSet.toArray(new String[0]);
+
         Arrays.sort(addressArr);
+
         List<BleDeviceBasicInfo> infoList = new ArrayList<>();
+
         for(String macAddress : addressArr) {
             BleDeviceBasicInfo basicInfo = createFromPref(pref, macAddress);
+
             if(basicInfo != null)
                 infoList.add(basicInfo);
         }
+
         return infoList;
     }
 
@@ -168,22 +219,32 @@ public class BleDeviceBasicInfo implements Serializable{
         if(TextUtils.isEmpty(macAddress)) return null;
 
         String address = pref.getString(macAddress+"_macAddress", "");
+
         if("".equals(address)) return null;
+
         String nickName = pref.getString(macAddress+"_nickName", DEFAULT_DEVICE_NICKNAME);
+
         String uuidString = pref.getString(macAddress+"_uuidString", "");
+
         String imagePath = pref.getString(macAddress+"_imagePath", DEFAULT_DEVICE_IMAGEPATH);
+
         boolean autoConnect = pref.getBoolean(macAddress+"_autoConnect", DEFAULT_DEVICE_AUTOCONNECT);
+
         int reconnectTimes = pref.getInt(macAddress+"_reconnectTimes", DEFAULT_DEVICE_RECONNECT_TIMES);
+
         boolean warnAfterRecconnectFailure = pref.getBoolean(macAddress+"_warnAfterReconnectFailure", DEFAULT_WARN_AFTER_RECONNECT_FAILURE);
+
         return new BleDeviceBasicInfo(address, nickName, uuidString, imagePath, autoConnect, reconnectTimes, warnAfterRecconnectFailure);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
+
         if (o == null || getClass() != o.getClass()) return false;
 
         BleDeviceBasicInfo that = (BleDeviceBasicInfo) o;
+
         return macAddress.equalsIgnoreCase(that.macAddress);
     }
 

@@ -42,7 +42,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
  */
 
 
-public abstract class BleDevice implements Handler.Callback {
+public abstract class BleDevice {
     private final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
 
     private class MyScanCallback implements IScanCallback {
@@ -121,7 +121,7 @@ public abstract class BleDevice implements Handler.Callback {
     private final List<OnBleDeviceListener> deviceStateListeners = new LinkedList<>(); // 设备状态观察者列表
 
     // 主线程Handler，包括连接相关的处理和Gatt消息的处理，都在主线程中执行
-    private final Handler mainHandler = new Handler(Looper.getMainLooper(), this);
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private int battery = -1; // 设备电池电量
 
@@ -164,7 +164,13 @@ public abstract class BleDevice implements Handler.Callback {
 
     public Drawable getImageDrawable(Context context) {
         if(getImagePath().equals("")) {
-            int imageId = BleDeviceType.getFromUuid(getUuidString()).getDefaultImage();
+            BleDeviceType deviceType = BleDeviceType.getFromUuid(getUuidString());
+
+            if(deviceType == null) {
+                throw new NullPointerException("The device type can't be found out.");
+            }
+
+            int imageId = deviceType.getDefaultImage();
 
             return ContextCompat.getDrawable(context, imageId);
         } else {
@@ -222,14 +228,19 @@ public abstract class BleDevice implements Handler.Callback {
         return battery;
     }
 
-    public void setBattery(final int battery) {
-        this.battery = battery;
+    protected void setBattery(final int battery) {
+        post(new Runnable() {
+            @Override
+            public void run() {
+                BleDevice.this.battery = battery;
 
-        for(final OnBleDeviceListener listener : deviceStateListeners) {
-            if(listener != null) {
-                listener.onBatteryUpdated(BleDevice.this);
+                for(final OnBleDeviceListener listener : deviceStateListeners) {
+                    if(listener != null) {
+                        listener.onBatteryUpdated(BleDevice.this);
+                    }
+                }
             }
-        }
+        });
     }
 
     // 打开设备
@@ -285,11 +296,6 @@ public abstract class BleDevice implements Handler.Callback {
         }
 
         return switched;
-    }
-
-    // 发送Gatt消息
-    protected final void sendMessage(int what, Object obj) {
-        Message.obtain(mainHandler, what, obj).sendToTarget();
     }
 
     protected void removeCallbacksAndMessages() {
@@ -541,26 +547,6 @@ public abstract class BleDevice implements Handler.Callback {
 
     protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
 
-    protected abstract void processMessage(Message msg); // 处理消息函数
-
-    /**
-     * 私有方法
-     */
-    // 创建工作线程，输出Handler
-    /*private Handler createWorkHandler(String threadName) {
-        HandlerThread thread = new HandlerThread(threadName);
-
-        thread.start();
-
-        return new Handler(thread.getLooper(), this);
-    }*/
-
-    @Override
-    public boolean handleMessage(Message message) {
-        processMessage(message);
-
-        return false;
-    }
 
     // 停止扫描
     private void stopScan() {

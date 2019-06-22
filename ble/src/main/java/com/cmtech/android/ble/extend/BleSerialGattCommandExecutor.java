@@ -82,14 +82,12 @@ class BleSerialGattCommandExecutor {
     final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
         if(device.getDeviceMirror() == null) return;
 
-        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
         BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_READ)
-                .setDataCallback(dataCallback).build();
+                .setDataCallback(GattDataCallbackAdapter.create(gattDataCallback)).build();
 
         executeCommand(new BleSerialGattCommand(command));
     }
@@ -98,15 +96,13 @@ class BleSerialGattCommandExecutor {
     final void write(BleGattElement element, byte[] data, IGattDataCallback gattDataCallback) {
         if(device.getDeviceMirror() == null) return;
 
-        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
         BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_WRITE)
                 .setData(data)
-                .setDataCallback(dataCallback).build();
+                .setDataCallback(GattDataCallbackAdapter.create(gattDataCallback)).build();
 
         executeCommand(new BleSerialGattCommand(command));
     }
@@ -125,18 +121,14 @@ class BleSerialGattCommandExecutor {
             , IGattDataCallback gattDataCallback, IGattDataCallback notifyOpCallback) {
         if(device.getDeviceMirror() == null) return;
 
-        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-
-        IBleCallback notifyCallback = (notifyOpCallback == null) ? null : new GattDataCallbackAdapter(notifyOpCallback);
-
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
         BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_NOTIFY)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})
-                .setDataCallback(dataCallback)
-                .setNotifyOpCallback(notifyCallback).build();
+                .setDataCallback(GattDataCallbackAdapter.create(gattDataCallback))
+                .setNotifyOpCallback(GattDataCallbackAdapter.create(notifyOpCallback)).build();
 
         executeCommand(new BleSerialGattCommand(command));
     }
@@ -150,27 +142,22 @@ class BleSerialGattCommandExecutor {
             , IGattDataCallback gattDataCallback, IGattDataCallback indicateOpCallback) {
         if(device.getDeviceMirror() == null) return;
 
-        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-
-        IBleCallback indicateCallback = (indicateOpCallback == null) ? null : new GattDataCallbackAdapter(indicateOpCallback);
-
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
         BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_INDICATE)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})
-                .setDataCallback(dataCallback)
-                .setNotifyOpCallback(indicateCallback).build();
+                .setDataCallback(GattDataCallbackAdapter.create(gattDataCallback))
+                .setNotifyOpCallback(GattDataCallbackAdapter.create(indicateOpCallback)).build();
 
         executeCommand(new BleSerialGattCommand(command));
     }
 
     // 无需蓝牙响应立刻执行
     final void instExecute(IGattDataCallback gattDataCallback) {
-        IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-
-        BleGattCommand command = new BleGattCommand.Builder().setDataCallback(dataCallback).setInstantCommand(true).build();
+        BleGattCommand command = new BleGattCommand.Builder().setDataCallback(GattDataCallbackAdapter.create(gattDataCallback))
+                .setInstantCommand(true).build();
 
         executeCommand(new BleSerialGattCommand(command));
     }
