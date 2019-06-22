@@ -56,11 +56,11 @@ class BleSerialGattCommand extends BleGattCommand {
             wait();
         }
 
-        return done;
+        return true;
     }
 
     private synchronized void onCommandSuccess(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.d("Cmd Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
+        ViseLog.d("Command Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
@@ -78,7 +78,7 @@ class BleSerialGattCommand extends BleGattCommand {
     }
 
     private void onCommandFailure(IBleCallback bleCallback, BleException exception) {
-        ViseLog.e("Cmd Failure: <" + this + "> Exception: " + exception);
+        ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
@@ -86,9 +86,9 @@ class BleSerialGattCommand extends BleGattCommand {
             deviceMirror.removeBleCallback(getGattInfoKey());
         }
 
-        if(deviceMirror != null) deviceMirror.disconnect();
-
         if(bleCallback != null)
             bleCallback.onFailure(exception);
+
+        if(deviceMirror != null) deviceMirror.disconnect();
     }
 }

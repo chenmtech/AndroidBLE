@@ -2,7 +2,6 @@ package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleCallback;
 import com.cmtech.android.ble.common.PropertyType;
-import com.vise.log.ViseLog;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -31,7 +30,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 检测设备中是否包含Gatt Elements
-    boolean checkElements(BleGattElement[] elements) {
+    final boolean checkElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
             if( element == null || element.retrieveGattObject(device) == null )
                 return false;
@@ -41,15 +40,12 @@ class BleSerialGattCommandExecutor {
     }
 
     // 启动Gatt命令执行器
-    void start() {
-        if(device.getDeviceMirror() == null) return;
+    final void start() {
+        if(device.getDeviceMirror() == null) {
+            throw new NullPointerException("The device mirror of BleSerialGattCommandExecutor must not be null when it is started.");
+        }
 
         if(gattCmdService != null && !gattCmdService.isTerminated()) return;
-
-        if(device.getDeviceMirror() == null) {
-            stop();
-            return;
-        }
 
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
@@ -60,7 +56,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 停止Gatt命令执行器
-    void stop() {
+    final void stop() {
         if(gattCmdService != null) {
             gattCmdService.shutdownNow();
 
@@ -77,7 +73,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 是否还在运行
-    boolean isAlive() {
+    final boolean isAlive() {
         return ((gattCmdService != null) && !gattCmdService.isShutdown());
     }
 
@@ -95,9 +91,7 @@ class BleSerialGattCommandExecutor {
                 .setPropertyType(PropertyType.PROPERTY_READ)
                 .setDataCallback(dataCallback).build();
 
-        if(command != null) {
-            executeCommand(new BleSerialGattCommand(command));
-        }
+        executeCommand(new BleSerialGattCommand(command));
     }
 
     // 写多字节
@@ -114,9 +108,7 @@ class BleSerialGattCommandExecutor {
                 .setData(data)
                 .setDataCallback(dataCallback).build();
 
-        if(command != null) {
-            executeCommand(new BleSerialGattCommand(command));
-        }
+        executeCommand(new BleSerialGattCommand(command));
     }
 
     // 写单字节
@@ -146,9 +138,7 @@ class BleSerialGattCommandExecutor {
                 .setDataCallback(dataCallback)
                 .setNotifyOpCallback(notifyCallback).build();
 
-        if(command != null) {
-            executeCommand(new BleSerialGattCommand(command));
-        }
+        executeCommand(new BleSerialGattCommand(command));
     }
 
     // Indicate
@@ -173,30 +163,30 @@ class BleSerialGattCommandExecutor {
                 .setDataCallback(dataCallback)
                 .setNotifyOpCallback(indicateCallback).build();
 
-        if(command != null)
-            executeCommand(new BleSerialGattCommand(command));
+        executeCommand(new BleSerialGattCommand(command));
     }
 
-    // 无需蓝牙通信立刻执行
+    // 无需蓝牙响应立刻执行
     final void instExecute(IGattDataCallback gattDataCallback) {
         IBleCallback dataCallback = (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
 
         BleGattCommand command = new BleGattCommand.Builder().setDataCallback(dataCallback).setInstantCommand(true).build();
 
-        if(command != null)
-            executeCommand(command);
+        executeCommand(new BleSerialGattCommand(command));
     }
 
     private void executeCommand(final BleGattCommand command) {
-        gattCmdService.execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    command.execute();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        if(command != null && isAlive()) {
+            gattCmdService.execute(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        command.execute();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 }
