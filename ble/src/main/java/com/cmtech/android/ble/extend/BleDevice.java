@@ -318,8 +318,14 @@ public abstract class BleDevice {
         return gattCmdExecutor.isAlive();
     }
 
+    // 检测设备中是否包含Gatt Elements
     protected boolean checkElements(BleGattElement[] elements) {
-        return gattCmdExecutor.checkElements(elements);
+        for(BleGattElement element : elements) {
+            if( element == null || element.retrieveGattObject(this) == null )
+                return false;
+        }
+
+        return true;
     }
 
 

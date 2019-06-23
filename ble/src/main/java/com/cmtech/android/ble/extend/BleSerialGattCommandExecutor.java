@@ -29,16 +29,6 @@ class BleSerialGattCommandExecutor {
         this.device = device;
     }
 
-    // 检测设备中是否包含Gatt Elements
-    final boolean checkElements(BleGattElement[] elements) {
-        for(BleGattElement element : elements) {
-            if( element == null || element.retrieveGattObject(device) == null )
-                return false;
-        }
-
-        return true;
-    }
-
     // 启动Gatt命令执行器
     final void start() {
         if(device.getDeviceMirror() == null) {
@@ -84,7 +74,7 @@ class BleSerialGattCommandExecutor {
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
-        BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
+        BleGattCommand command = builder.setDevice(device)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_READ)
                 .setDataCallback(GattDataCallbackAdapter.create(gattDataCallback)).build();
@@ -98,7 +88,7 @@ class BleSerialGattCommandExecutor {
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
-        BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
+        BleGattCommand command = builder.setDevice(device)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_WRITE)
                 .setData(data)
@@ -123,7 +113,7 @@ class BleSerialGattCommandExecutor {
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
-        BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
+        BleGattCommand command = builder.setDevice(device)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_NOTIFY)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})
@@ -144,7 +134,7 @@ class BleSerialGattCommandExecutor {
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
-        BleGattCommand command = builder.setDeviceMirror(device.getDeviceMirror())
+        BleGattCommand command = builder.setDevice(device)
                 .setBluetoothElement(element)
                 .setPropertyType(PropertyType.PROPERTY_INDICATE)
                 .setData((enable) ? new byte[]{0x01} : new byte[]{0x00})

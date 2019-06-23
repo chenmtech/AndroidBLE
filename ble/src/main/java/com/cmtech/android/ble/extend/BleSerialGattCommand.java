@@ -21,7 +21,11 @@ import com.vise.log.ViseLog;
  */
 
 class BleSerialGattCommand extends BleGattCommand {
+    private final static int CMD_ERROR_RETRY_TIMES = 3;      // Gatt命令执行错误可重复的次数
+
     private boolean done = true; // 标记命令是否执行完毕
+
+    private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // IBleCallback的装饰类，在一般的回调任务完成后，执行串行命令所需动作
     private class BleCallbackDecorator implements IBleCallback {
@@ -64,8 +68,8 @@ class BleSerialGattCommand extends BleGattCommand {
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(deviceMirror != null) {
-            deviceMirror.removeBleCallback(getGattInfoKey());
+        if(device != null && device.getDeviceMirror() != null) {
+            device.getDeviceMirror().removeBleCallback(getGattInfoKey());
         }
 
         if(bleCallback != null) {
@@ -74,21 +78,36 @@ class BleSerialGattCommand extends BleGattCommand {
 
         done = true;
 
+        cmdErrorTimes = 0;
+
         notifyAll();
     }
 
-    private void onCommandFailure(IBleCallback bleCallback, BleException exception) {
+    private synchronized void onCommandFailure(IBleCallback bleCallback, BleException exception) {
         ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(deviceMirror != null) {
-            deviceMirror.removeBleCallback(getGattInfoKey());
+        if(device != null && device.getDeviceMirror() != null) {
+            device.getDeviceMirror().removeBleCallback(getGattInfoKey());
         }
 
-        if(bleCallback != null)
-            bleCallback.onFailure(exception);
+        if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES) {
+            // 再次执行当前命令
+            try {
+                super.execute();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-        if(deviceMirror != null) deviceMirror.disconnect();
+            cmdErrorTimes++;
+        } else {
+            if(bleCallback != null)
+                bleCallback.onFailure(exception);
+
+            if(device != null) {
+                device.disconnect();
+            }
+        }
     }
 }
