@@ -71,22 +71,6 @@ class BleGattCommand{
         this.isInstantCommand = gattCommand.isInstantCommand;
     }
 
-    // 获取命令用的channel
-    public BluetoothGattChannel getChannel() {
-        return channel;
-    }
-
-    // 获取命令属性
-    public PropertyType getPropertyType() {
-        return channel.getPropertyType();
-    }
-
-    // 是否是instant命令
-    boolean isInstantCommand() {
-        return isInstantCommand;
-    }
-
-
     /**
      * 执行命令。执行完一条命令不仅需要发送命令，还需要收到对方响应或者立即执行返回
      * @return 是否已经执行完命令，true-执行完 false-需要等待对方响应
@@ -239,7 +223,7 @@ class BleGattCommand{
                 }
 
                 return new BleGattCommand(null, null, dataCallback,
-                        null, null, "an instant command.", true);
+                        null, null, "An instant command.", true);
 
             } else {
 

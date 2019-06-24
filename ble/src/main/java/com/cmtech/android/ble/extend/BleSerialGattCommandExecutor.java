@@ -1,6 +1,5 @@
 package com.cmtech.android.ble.extend;
 
-import com.cmtech.android.ble.callback.IBleCallback;
 import com.cmtech.android.ble.common.PropertyType;
 
 import java.util.concurrent.ExecutorService;
@@ -21,9 +20,9 @@ import java.util.concurrent.TimeUnit;
  */
 
 class BleSerialGattCommandExecutor {
-    private final BleDevice device;
+    private final BleDevice device; // 设备
 
-    private ExecutorService gattCmdService;
+    private ExecutorService gattCmdService; // 命令执行Service
 
     BleSerialGattCommandExecutor(BleDevice device) {
         this.device = device;
@@ -31,11 +30,11 @@ class BleSerialGattCommandExecutor {
 
     // 启动Gatt命令执行器
     final void start() {
-        if(device.getDeviceMirror() == null) {
+        if(device == null || device.getDeviceMirror() == null) {
             throw new NullPointerException("The device mirror of BleSerialGattCommandExecutor must not be null when it is started.");
         }
 
-        if(gattCmdService != null && !gattCmdService.isTerminated()) return;
+        if(gattCmdService != null && !gattCmdService.isShutdown()) return;
 
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
@@ -57,7 +56,8 @@ class BleSerialGattCommandExecutor {
                     isTerminated = gattCmdService.awaitTermination(1, TimeUnit.SECONDS);
                 }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                gattCmdService.shutdownNow();
+                Thread.currentThread().interrupt();
             }
         }
     }
@@ -145,7 +145,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 无需蓝牙响应立刻执行
-    final void instExecute(IGattDataCallback gattDataCallback) {
+    final void executeInstantly(IGattDataCallback gattDataCallback) {
         BleGattCommand command = new BleGattCommand.Builder().setDataCallback(GattDataCallbackAdapter.create(gattDataCallback))
                 .setInstantCommand(true).build();
 

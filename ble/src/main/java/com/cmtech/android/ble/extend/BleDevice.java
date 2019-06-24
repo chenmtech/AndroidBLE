@@ -6,7 +6,6 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
@@ -137,6 +136,8 @@ public abstract class BleDevice {
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
     }
+
+
 
     public BleDeviceBasicInfo getBasicInfo() {
         return basicInfo;
@@ -306,6 +307,10 @@ public abstract class BleDevice {
         mainHandler.post(runnable);
     }
 
+    protected void postDelayed(Runnable runnable, long delay) {
+        mainHandler.postDelayed(runnable, delay);
+    }
+
     protected void startGattExecutor() {
         gattCmdExecutor.start();
     }
@@ -328,7 +333,6 @@ public abstract class BleDevice {
         return true;
     }
 
-
     protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
         gattCmdExecutor.read(element, gattDataCallback);
     }
@@ -349,19 +353,19 @@ public abstract class BleDevice {
         gattCmdExecutor.indicate(element, enable, indicateOpCallback);
     }
 
-    protected final void instExecute(IGattDataCallback gattDataCallback) {
-        gattCmdExecutor.instExecute(gattDataCallback);
+    protected final void executeInstantly(IGattDataCallback gattDataCallback) {
+        gattCmdExecutor.executeInstantly(gattDataCallback);
     }
 
     // 开始扫描
-    private void startScan() {
+    protected void startScan() {
+        ViseLog.e("startScan...");
+
         if(waitingResponse) return;
 
         post(new Runnable() {
             @Override
             public void run() {
-                ViseLog.e("startScan...");
-
                 waitingResponse = true;
 
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(basicInfo.getMacAddress());
@@ -405,7 +409,7 @@ public abstract class BleDevice {
 
                 executeAfterDisconnect();
 
-                removeCallbacksAndMessages();
+                //removeCallbacksAndMessages();
 
                 ViseBle.getInstance().getDeviceMirrorPool().disconnect(bluetoothLeDevice);
             }
