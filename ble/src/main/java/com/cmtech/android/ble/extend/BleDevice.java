@@ -110,10 +110,7 @@ public abstract class BleDevice {
 
     private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
 
-    //private DeviceMirror deviceMirror = null; // 设备镜像，连接到设备后会赋值
-
-    // 扫描回调适配器，将IScanCallback适配为BluetoothAdapter.LeScanCallback，每次新的扫描必须创建新的实例
-    private ScanCallback scanCallback;
+    private ScanCallback scanCallback; // 扫描回调适配器，将IScanCallback适配为BluetoothAdapter.LeScanCallback，每次新的扫描必须创建新的实例
 
     private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态，初始化为关闭状态
 
@@ -130,7 +127,7 @@ public abstract class BleDevice {
 
     private final BleSerialGattCommandExecutor gattCmdExecutor = new BleSerialGattCommandExecutor(this); // Gatt命令执行者
 
-    private boolean waitingResponse = false;
+    private volatile boolean waitingResponse = false;
 
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
