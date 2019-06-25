@@ -36,7 +36,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
 
 
 public abstract class BleDevice {
-    private final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
+    public final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
 
     private BleDeviceBasicInfo basicInfo; // 设备基本信息对象
 
@@ -58,10 +58,18 @@ public abstract class BleDevice {
 
     private final BleDeviceScanCommand scanCommand;
 
+    private final BleDeviceConnectCommand connectCommand;
+
+    private final BleDeviceDisconnectCommand disconnectCommand;
+
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
 
         scanCommand = new BleDeviceScanCommand(this);
+
+        connectCommand = new BleDeviceConnectCommand(this);
+
+        disconnectCommand = new BleDeviceDisconnectCommand(this);
     }
 
     public BleDeviceBasicInfo getBasicInfo() {
@@ -167,11 +175,11 @@ public abstract class BleDevice {
     }
 
     protected void setBattery(final int battery) {
-        BleDevice.this.battery = battery;
+        this.battery = battery;
 
         for(final OnBleDeviceListener listener : deviceStateListeners) {
             if(listener != null) {
-                listener.onBatteryUpdated(BleDevice.this);
+                listener.onBatteryUpdated(this);
             }
         }
     }
@@ -183,7 +191,7 @@ public abstract class BleDevice {
         if(!isClosed())
             return;
 
-        HandlerThread handlerThread = new HandlerThread("MY_Conn_Dev");
+        HandlerThread handlerThread = new HandlerThread("MT_Conn_Device");
 
         handlerThread.start();
 
@@ -260,11 +268,7 @@ public abstract class BleDevice {
         connectHandle.post(new Runnable() {
             @Override
             public void run() {
-                try {
-                    new BleDeviceConnectCommand(BleDevice.this).execute();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                connectCommand.execute();
             }
         });
     }
@@ -275,11 +279,7 @@ public abstract class BleDevice {
         connectHandle.post(new Runnable() {
             @Override
             public void run() {
-                try {
-                    new BleDeviceDisconnectCommand(BleDevice.this).execute();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+                disconnectCommand.execute();
             }
         });
     }
@@ -292,8 +292,6 @@ public abstract class BleDevice {
             if(basicInfo.isWarnAfterReconnectFailure()) {
                 notifyReconnectFailure(true); // 重连失败后通知报警
             }
-
-            setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
         } else {
             if(curReconnectTimes < totalReconnectTimes) {
                 curReconnectTimes++;

@@ -9,9 +9,10 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
 
-class BleDeviceScanCommand extends BleDeviceConnectRelatedCommand {
+class BleDeviceScanCommand extends BleDeviceCommand {
 
     private class MyScanCallback implements IScanCallback {
         MyScanCallback() {
@@ -78,6 +79,8 @@ class BleDeviceScanCommand extends BleDeviceConnectRelatedCommand {
 
             device.startConnect(); // 扫描成功，启动连接
         } else {
+            device.setConnectState(CONNECT_FAILURE);
+
             device.reconnect();
         }
 
