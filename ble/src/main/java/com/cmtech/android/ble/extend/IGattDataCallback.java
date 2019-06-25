@@ -8,7 +8,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
  */
 
 public interface IGattDataCallback {
-    void onSuccess(byte[] data, BluetoothLeDevice bluetoothLeDevice); // 数据操作成功
+    void onSuccess(byte[] data); // 数据操作成功
 
     void onFailure(GattDataException exception); // 数据操作失败
 }
