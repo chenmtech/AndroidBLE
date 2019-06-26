@@ -259,10 +259,12 @@ class BleDeviceCommandExecutor {
     // 处理连接成功回调
     private void processConnectSuccess(DeviceMirror mirror) {
         // 防止重复连接成功
-        if(device.getConnectState() == CONNECT_SUCCESS && device.getDeviceMirror() != mirror) {
+        if(device.getConnectState() == CONNECT_SUCCESS) {
             ViseLog.e("Connect Success again");
 
-            ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
+            if(device.getDeviceMirror() != mirror) {
+                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
+            }
 
             return;
         }
