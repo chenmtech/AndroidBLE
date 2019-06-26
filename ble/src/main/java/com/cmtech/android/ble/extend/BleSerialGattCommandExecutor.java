@@ -1,6 +1,7 @@
 package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.common.PropertyType;
+import com.cmtech.android.ble.utils.ExecutorServiceUtil;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -39,27 +40,14 @@ class BleSerialGattCommandExecutor {
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "MT_Gatt_Execute");
+                return new Thread(runnable, "MT_Gatt_Cmd");
             }
         });
     }
 
     // 停止Gatt命令执行器
     final void stop() {
-        if(gattCmdService != null) {
-            gattCmdService.shutdownNow();
-
-            try {
-                boolean isTerminated = false;
-
-                while(!isTerminated) {
-                    isTerminated = gattCmdService.awaitTermination(1, TimeUnit.SECONDS);
-                }
-            } catch (InterruptedException e) {
-                gattCmdService.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
+        ExecutorServiceUtil.shutdownNowAndAwaitTerminate(gattCmdService);
     }
 
     // 是否还在运行
