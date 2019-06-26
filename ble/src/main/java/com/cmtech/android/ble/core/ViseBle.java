@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.text.TextUtils;
 import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
@@ -116,10 +115,10 @@ public class ViseBle {
         }
         if (deviceMirrorPool != null && !deviceMirrorPool.isContainDevice(bluetoothLeDevice)) {
             DeviceMirror deviceMirror = new DeviceMirror(bluetoothLeDevice);
-            if (lastDeviceMirror != null && !TextUtils.isEmpty(lastDeviceMirror.getUniqueSymbol())
+            /*if (lastDeviceMirror != null && !TextUtils.isEmpty(lastDeviceMirror.getUniqueSymbol())
                     && lastDeviceMirror.getUniqueSymbol().equals(deviceMirror.getUniqueSymbol())) {
                 deviceMirror = lastDeviceMirror;//防止重复创建设备镜像
-            }
+            }*/
             deviceMirror.connect(connectCallback);
             lastDeviceMirror = deviceMirror;
         } else {

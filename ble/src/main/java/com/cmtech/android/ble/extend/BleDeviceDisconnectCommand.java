@@ -1,5 +1,7 @@
 package com.cmtech.android.ble.extend;
 
+import android.os.Handler;
+
 import com.cmtech.android.ble.core.ViseBle;
 import com.vise.log.ViseLog;
 
@@ -22,25 +24,37 @@ class BleDeviceDisconnectCommand extends BleDeviceCommand {
     }
 
     @Override
-    synchronized void execute() {
-        ViseLog.e("disconnect...");
+    void execute(Handler handler) {
+        if(handler == null)
+            throw new NullPointerException();
 
-        waitingResponse = true;
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("disconnect...");
 
-        ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getBluetoothLeDevice());
+                waitingResponse = true;
 
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+                ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getBluetoothLeDevice());
 
-        if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
-            device.executeAfterDisconnect();
+                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getBluetoothLeDevice());
 
-            device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
-        }
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-        waitingResponse = false;
+                if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
+                    device.executeAfterDisconnect();
+
+                    device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
+                }
+
+                resetReconnectTimes();
+
+                waitingResponse = false;
+            }
+        });
     }
 }

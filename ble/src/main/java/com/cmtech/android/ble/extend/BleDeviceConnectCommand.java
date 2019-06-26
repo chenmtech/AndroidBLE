@@ -1,5 +1,7 @@
 package com.cmtech.android.ble.extend;
 
+import android.os.Handler;
+
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.ViseBle;
@@ -41,28 +43,48 @@ class BleDeviceConnectCommand extends BleDeviceCommand {
         }
     }
 
+
     BleDeviceConnectCommand(BleDevice device) {
         super(device);
     }
 
     @Override
-    synchronized void execute() {
-        ViseLog.e("startConnect...");
+    void execute(Handler handler) {
+        if(handler == null)
+            throw new NullPointerException();
 
-        MyConnectCallback connectCallback = new MyConnectCallback();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("startConnect...");
 
-        ViseBle.getInstance().connect(device.getBluetoothLeDevice(), connectCallback);
+                MyConnectCallback connectCallback = new MyConnectCallback();
 
-        device.setConnectState(CONNECT_CONNECTING);
+                ViseBle.getInstance().connect(device.getBluetoothLeDevice(), connectCallback);
 
-        waitingResponse = true;
+                device.setConnectState(CONNECT_CONNECTING);
+
+                waitingResponse = true;
+            }
+        });
     }
 
     // 处理连接成功回调
-    private synchronized void processConnectSuccess(DeviceMirror mirror) {
+    private void processConnectSuccess(DeviceMirror mirror) {
+        // 防止重复连接成功
+        if(device.getConnectState() == CONNECT_SUCCESS && device.getDeviceMirror() != mirror) {
+            ViseLog.e("Connect Success again");
+
+            ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(mirror);
+
+            return;
+        }
+
         ViseLog.e("processConnectSuccess");
 
         device.setConnectState(CONNECT_SUCCESS);
+
+        resetReconnectTimes();
 
         waitingResponse = false;
 
@@ -75,17 +97,16 @@ class BleDeviceConnectCommand extends BleDeviceCommand {
     }
 
     // 处理连接错误
-    private synchronized void processConnectFailure(final BleException bleException) {
+    private void processConnectFailure(final BleException bleException) {
         ViseLog.e("processConnectFailure with " + bleException );
 
         device.setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
 
         waitingResponse = false;
 
-        // 仍然有可能会连续执行两次下面语句
         device.executeAfterConnectFailure();
 
-        device.reconnect();
+        reconnect();
     }
 
     // 处理连接断开

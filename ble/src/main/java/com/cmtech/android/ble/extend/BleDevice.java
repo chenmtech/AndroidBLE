@@ -36,31 +36,29 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
 
 
 public abstract class BleDevice {
-    public final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED;
+    public final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED; // 初始连接状态
 
     private BleDeviceBasicInfo basicInfo; // 设备基本信息对象
 
     private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
 
-    private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态，初始化为关闭状态
+    private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态
 
     private final List<OnBleDeviceListener> deviceStateListeners = new LinkedList<>(); // 设备状态观察者列表
 
     private int battery = -1; // 设备电池电量
 
-    private int curReconnectTimes = 0; // 当前重连次数
-
     private final BleSerialGattCommandExecutor gattCmdExecutor = new BleSerialGattCommandExecutor(this); // 串行Gatt命令执行器
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper()); // 主线程Handler
 
-    private Handler connectHandle; // 连接线程Handler
+    private Handler deviceCmdHandle; // 设备连接相关命令线程Handler
 
-    private final BleDeviceScanCommand scanCommand;
+    private final BleDeviceScanCommand scanCommand; // 扫描命令
 
-    private final BleDeviceConnectCommand connectCommand;
+    private final BleDeviceConnectCommand connectCommand; // 连接命令
 
-    private final BleDeviceDisconnectCommand disconnectCommand;
+    private final BleDeviceDisconnectCommand disconnectCommand; // 断开命令
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
@@ -90,6 +88,10 @@ public abstract class BleDevice {
 
     public String getUuidString() {
         return basicInfo.getUuidString();
+    }
+
+    int getReconnectTimes() {
+        return basicInfo.getReconnectTimes();
     }
 
     public String getImagePath() {
@@ -195,11 +197,9 @@ public abstract class BleDevice {
 
         handlerThread.start();
 
-        connectHandle = new Handler(handlerThread.getLooper());
+        deviceCmdHandle = new Handler(handlerThread.getLooper());
 
         if(basicInfo.autoConnect()) {
-            curReconnectTimes = 0;
-
             startScan();
         }
     }
@@ -208,14 +208,23 @@ public abstract class BleDevice {
     public void close() {
         ViseLog.i(getMacAddress() + ": close()");
 
-        if(connectState == CONNECT_SCANNING)
+        if(isClosed()) return;
+
+        if(deviceCmdHandle == null) return;
+
+        if (connectState == CONNECT_SCANNING)
             stopScan();
 
         disconnect();
 
-        connectHandle.getLooper().quit();
+        deviceCmdHandle.post(new Runnable() {
+            @Override
+            public void run() {
+                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+            }
+        });
 
-        setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+        deviceCmdHandle.getLooper().quitSafely();
     }
 
     // 切换设备状态
@@ -229,10 +238,7 @@ public abstract class BleDevice {
 
         } else if(connectState == CONNECT_SCANNING || connectState == CONNECT_CONNECTING) {
             switched = false;
-
         } else {
-            curReconnectTimes = 0;
-
             startScan();
         }
 
@@ -245,60 +251,22 @@ public abstract class BleDevice {
 
     // 开始扫描
     protected void startScan() {
-        connectHandle.post(new Runnable() {
-            @Override
-            public void run() {
-                scanCommand.execute();
-            }
-        });
+        scanCommand.execute(deviceCmdHandle);
     }
 
     // 停止扫描
     private void stopScan() {
-        connectHandle.post(new Runnable() {
-            @Override
-            public void run() {
-                scanCommand.stop();
-            }
-        });
+        scanCommand.stop(deviceCmdHandle);
     }
 
     // 开始连接，有些资料说最好放到UI线程中执行连接
     void startConnect() {
-        connectHandle.post(new Runnable() {
-            @Override
-            public void run() {
-                connectCommand.execute();
-            }
-        });
+        connectCommand.execute(deviceCmdHandle);
     }
 
     // 断开连接
     protected void disconnect() {
-
-        connectHandle.post(new Runnable() {
-            @Override
-            public void run() {
-                disconnectCommand.execute();
-            }
-        });
-    }
-
-    // 重新连接
-    void reconnect() {
-        int totalReconnectTimes = basicInfo.getReconnectTimes();
-
-        if(totalReconnectTimes != -1 && curReconnectTimes >= totalReconnectTimes) {
-            if(basicInfo.isWarnAfterReconnectFailure()) {
-                notifyReconnectFailure(true); // 重连失败后通知报警
-            }
-        } else {
-            if(curReconnectTimes < totalReconnectTimes) {
-                curReconnectTimes++;
-            }
-
-            startScan();
-        }
+        disconnectCommand.execute(deviceCmdHandle);
     }
 
     /*
@@ -318,6 +286,12 @@ public abstract class BleDevice {
             if(listener != null) {
                 listener.onConnectStateUpdated(this);
             }
+        }
+    }
+
+    public final void notifyReconnectFailure() {
+        if(basicInfo.isWarnAfterReconnectFailure()) {
+            notifyReconnectFailure(true);
         }
     }
 

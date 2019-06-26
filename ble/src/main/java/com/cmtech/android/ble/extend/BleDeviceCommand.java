@@ -1,5 +1,9 @@
 package com.cmtech.android.ble.extend;
 
+import android.os.Handler;
+
+import com.vise.log.ViseLog;
+
 /**
   *
   * ClassName:      BleDeviceCommand
@@ -13,7 +17,9 @@ package com.cmtech.android.ble.extend;
  */
 
 abstract class BleDeviceCommand {
-    boolean waitingResponse = false;
+    static volatile boolean waitingResponse = false; // 是否在等待响应
+
+    private static int curReconnectTimes = 0; // 重连次数
 
     final BleDevice device;
 
@@ -21,5 +27,28 @@ abstract class BleDeviceCommand {
         this.device = device;
     }
 
-    abstract void execute() throws InterruptedException;
+    abstract void execute(Handler handler);
+
+    static synchronized void resetReconnectTimes() {
+        curReconnectTimes = 0;
+    }
+
+    static synchronized void addReconnectTimes() {
+        curReconnectTimes++;
+    }
+
+    synchronized void reconnect() {
+        int totalReconnectTimes = device.getReconnectTimes();
+
+        if(totalReconnectTimes != -1 && curReconnectTimes >= totalReconnectTimes) {
+            device.notifyReconnectFailure();
+
+            device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
+
+            curReconnectTimes = 0;
+        } else {
+            device.startScan();
+            ViseLog.e("reconnect times: " + curReconnectTimes);
+        }
+    }
 }

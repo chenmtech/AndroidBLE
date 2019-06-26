@@ -1,6 +1,7 @@
 package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import com.cmtech.android.ble.callback.scan.IScanCallback;
 import com.cmtech.android.ble.callback.scan.ScanCallback;
@@ -11,6 +12,18 @@ import com.vise.log.ViseLog;
 
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
+
+/**
+ *
+ * ClassName:      BleDeviceScanCommand
+ * Description:    表示扫描BLE设备命令
+ * Author:         chenm
+ * CreateDate:     2019-06-25 17:54
+ * UpdateUser:     chenm
+ * UpdateDate:     2019-06-25 17:54
+ * UpdateRemark:   更新说明
+ * Version:        1.0
+ */
 
 class BleDeviceScanCommand extends BleDeviceCommand {
 
@@ -49,29 +62,55 @@ class BleDeviceScanCommand extends BleDeviceCommand {
         super(device);
     }
 
-    synchronized void stop() {
-        if(scanCallback != null && scanCallback.isScanning()) {
-            scanCallback.removeHandlerMsg();
+    void stop(Handler handler) {
+        if(handler == null)
+            throw new NullPointerException();
 
-            scanCallback.setScan(false).scan();
-        }
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if(scanCallback != null && scanCallback.isScanning()) {
+                    waitingResponse = true;
 
-        waitingResponse = false;
+                    scanCallback.removeHandlerMsg();
+
+                    scanCallback.setScan(false).scan();
+
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                waitingResponse = false;
+            }
+        });
     }
 
     @Override
-    synchronized void execute() {
-        scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
+    void execute(Handler handler) {
+        if(handler == null)
+            throw new NullPointerException();
 
-        scanCallback.setScan(true).scan();
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
-        device.setConnectState(CONNECT_SCANNING);
+                scanCallback.setScan(true).scan();
 
-        waitingResponse = true;
+                device.setConnectState(CONNECT_SCANNING);
+
+                addReconnectTimes();
+
+                waitingResponse = true;
+            }
+        });
     }
 
     // 处理扫描结果
-    private synchronized void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
+    private void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
         ViseLog.e("ProcessScanResult: " + canConnect);
 
         if (canConnect) {
@@ -81,7 +120,7 @@ class BleDeviceScanCommand extends BleDeviceCommand {
         } else {
             device.setConnectState(CONNECT_FAILURE);
 
-            device.reconnect();
+            reconnect();
         }
 
         waitingResponse = false;
