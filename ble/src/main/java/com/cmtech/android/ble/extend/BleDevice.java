@@ -3,8 +3,6 @@ package com.cmtech.android.ble.extend;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.core.DeviceMirror;
@@ -24,7 +22,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
 /**
   *
   * ClassName:      BleDevice
-  * Description:    表示低功耗蓝牙设备
+  * Description:    低功耗蓝牙设备类
   * Author:         chenm
   * CreateDate:     2018-02-19 07:02
   * UpdateUser:     chenm
@@ -37,7 +35,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
 public abstract class BleDevice {
     public final static BleDeviceConnectState DEVICE_INIT_STATE = BleDeviceConnectState.CONNECT_CLOSED; // 初始连接状态
 
-    private BleDeviceBasicInfo basicInfo; // 设备基本信息对象
+    private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
     private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
 
@@ -47,8 +45,7 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceListener> deviceStateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-
-    private final BleDeviceCommandExecutor devCmdExecutor; // 设备命令执行器，在内部的一个HandlerThread中执行
+    private final BleDeviceCommandExecutor devCmdExecutor; // 设备命令执行器，在一个HandlerThread中执行
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行
 
@@ -181,12 +178,12 @@ public abstract class BleDevice {
 
     // 打开设备
     public void open() {
-        ViseLog.i(getMacAddress() + ": open()");
+        ViseLog.i(getMacAddress() + ": start()");
 
         if(!isClosed())
             return;
 
-        devCmdExecutor.open();
+        devCmdExecutor.start();
 
         if(basicInfo.autoConnect()) {
             startScan();
@@ -195,12 +192,12 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
-        ViseLog.i(getMacAddress() + ": close()");
+        ViseLog.i(getMacAddress() + ": stop()");
 
         if(isClosed()) return;
 
         if(devCmdExecutor != null)
-            devCmdExecutor.close();
+            devCmdExecutor.stop();
 
     }
 
