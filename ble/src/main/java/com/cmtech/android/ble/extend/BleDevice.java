@@ -6,8 +6,6 @@ import android.graphics.drawable.Drawable;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.core.DeviceMirror;
-import com.cmtech.android.ble.core.ViseBle;
-import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
@@ -37,7 +35,7 @@ public abstract class BleDevice {
 
     private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
-    private BluetoothLeDevice bluetoothLeDevice = null; // 设备BluetoothLeDevice，当扫描到设备后会赋值
+    private DeviceMirror deviceMirror = null; // 设备镜像，连接成功后赋值
 
     private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态
 
@@ -104,15 +102,11 @@ public abstract class BleDevice {
     }
 
     DeviceMirror getDeviceMirror() {
-        return ViseBle.getInstance().getDeviceMirror(bluetoothLeDevice);
+        return deviceMirror;
     }
 
-    BluetoothLeDevice getBluetoothLeDevice() {
-        return bluetoothLeDevice;
-    }
-
-    void setBluetoothLeDevice(BluetoothLeDevice bluetoothLeDevice) {
-        this.bluetoothLeDevice = bluetoothLeDevice;
+    void setDeviceMirror(DeviceMirror deviceMirror) {
+        this.deviceMirror = deviceMirror;
     }
 
     public boolean isClosed() {
@@ -192,7 +186,7 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
-        ViseLog.i(getMacAddress() + ": stop()");
+        ViseLog.i(getMacAddress() + ": close()");
 
         if(isClosed()) return;
 
@@ -231,9 +225,9 @@ public abstract class BleDevice {
     }
 
     // 开始连接，有些资料说最好放到UI线程中执行连接
-    void startConnect() {
+    /*void startConnect() {
         devCmdExecutor.startConnect();
-    }
+    }*/
 
     // 断开连接
     protected void disconnect() {

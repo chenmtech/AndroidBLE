@@ -124,6 +124,8 @@ class BleDeviceCommandExecutor {
         handler.post(new Runnable() {
             @Override
             public void run() {
+                ViseLog.e("start scanning...");
+
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
                 scanCallback.setScan(true).scan();
@@ -164,15 +166,15 @@ class BleDeviceCommandExecutor {
     }
 
     // 开始连接
-    void startConnect() {
+    private void startConnect(final BluetoothLeDevice bluetoothLeDevice) {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                ViseLog.e("startConnect...");
+                ViseLog.e("start connecting...");
 
                 MyConnectCallback connectCallback = new MyConnectCallback();
 
-                ViseBle.getInstance().connect(device.getBluetoothLeDevice(), connectCallback);
+                ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
                 device.setConnectState(CONNECT_CONNECTING);
 
@@ -187,13 +189,13 @@ class BleDeviceCommandExecutor {
         handler.post(new Runnable() {
             @Override
             public void run() {
-                ViseLog.e("disconnect...");
+                ViseLog.e("disconnecting...");
 
                 waitingResponse = true;
 
-                ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getBluetoothLeDevice());
+                ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
 
-                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getBluetoothLeDevice());
+                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
 
                 try {
                     Thread.sleep(1000);
@@ -268,12 +270,10 @@ class BleDeviceCommandExecutor {
 
     // 处理扫描结果
     private synchronized void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.e("ProcessScanResult: " + canConnect);
+        ViseLog.e("processScanResult: " + canConnect + '-' + bluetoothLeDevice);
 
         if (canConnect) {
-            device.setBluetoothLeDevice(bluetoothLeDevice);
-
-            device.startConnect(); // 连接
+            startConnect(bluetoothLeDevice); // 连接
         } else {
             device.setConnectState(CONNECT_FAILURE);
 
@@ -285,9 +285,11 @@ class BleDeviceCommandExecutor {
 
     // 处理连接成功回调
     private synchronized void processConnectSuccess(DeviceMirror mirror) {
+        ViseLog.e("processConnectSuccess: " + mirror);
+
         // 防止重复连接成功
         if(device.getConnectState() == CONNECT_SUCCESS) {
-            ViseLog.e("Connect Success again");
+            ViseLog.e("device connected again!!!!!!");
 
             if(device.getDeviceMirror().getUniqueSymbol().equals(mirror.getUniqueSymbol())) {
                 ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(mirror);
@@ -296,7 +298,7 @@ class BleDeviceCommandExecutor {
             return;
         }
 
-        ViseLog.e("processConnectSuccess");
+        device.setDeviceMirror(mirror);
 
         device.setConnectState(CONNECT_SUCCESS);
 
@@ -311,7 +313,7 @@ class BleDeviceCommandExecutor {
 
     // 处理连接错误
     private synchronized void processConnectFailure(final BleException bleException) {
-        ViseLog.e("processConnectFailure with " + bleException );
+        ViseLog.e("processConnectFailure: " + bleException );
 
         device.setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
 
@@ -320,6 +322,8 @@ class BleDeviceCommandExecutor {
         device.executeAfterConnectFailure();
 
         device.stopGattExecutor();
+
+        device.setDeviceMirror(null);
 
         reconnect();
     }
@@ -335,5 +339,7 @@ class BleDeviceCommandExecutor {
         device.executeAfterDisconnect();
 
         device.stopGattExecutor();
+
+        device.setDeviceMirror(null);
     }
 }
