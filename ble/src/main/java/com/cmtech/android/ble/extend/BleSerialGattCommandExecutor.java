@@ -6,7 +6,6 @@ import com.cmtech.android.ble.utils.ExecutorServiceUtil;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -133,7 +132,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 无需蓝牙响应立刻执行
-    final void executeInstantly(IGattDataCallback gattDataCallback) {
+    final void runInstantly(IGattDataCallback gattDataCallback) {
         BleGattCommand command = new BleGattCommand.Builder().setDataCallback(GattDataCallbackAdapter.create(gattDataCallback))
                 .setInstantCommand(true).build();
 

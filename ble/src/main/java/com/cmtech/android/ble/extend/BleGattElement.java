@@ -77,9 +77,7 @@ public class BleGattElement {
     Object retrieveGattObject(BleDevice device) {
         if(device == null) return null;
 
-        DeviceMirror deviceMirror = device.getDeviceMirror();
-
-        return retrieveGattObject(deviceMirror);
+        return retrieveGattObject(device.getDeviceMirror());
     }
 
     // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
