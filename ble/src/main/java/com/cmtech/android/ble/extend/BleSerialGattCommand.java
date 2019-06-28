@@ -26,7 +26,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
     private boolean done = true; // 标记命令是否执行完毕
 
-    private int cmdErrorTimes = 0; // 命令执行错误的次数
+    //private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // IBleCallback的装饰类，在一般的回调响应任务完成后，执行串行命令所需动作
     private class BleSerialCommandCallbackDecorator implements IBleCallback {
@@ -96,7 +96,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
         done = true;
 
-        cmdErrorTimes = 0;
+        //cmdErrorTimes = 0;
 
         notifyAll();
     }
@@ -106,7 +106,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
         removeBleCallback();
 
-        if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES) {
+        /*if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES) {
             // 再次执行当前命令
             ViseLog.e("Retry the command <" + this + ">");
 
@@ -124,6 +124,13 @@ class BleSerialGattCommand extends BleGattCommand {
             if(device != null) {
                 device.disconnect();
             }
+        }*/
+
+        if(bleCallback != null)
+            bleCallback.onFailure(exception);
+
+        if(device != null) {
+            device.disconnect();
         }
     }
 }

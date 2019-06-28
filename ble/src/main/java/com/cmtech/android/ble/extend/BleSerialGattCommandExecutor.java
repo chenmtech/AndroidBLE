@@ -2,6 +2,7 @@ package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.utils.ExecutorUtil;
+import com.vise.log.ViseLog;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,11 +43,17 @@ class BleSerialGattCommandExecutor {
                 return new Thread(runnable, "MT_Gatt_Cmd");
             }
         });
+
+        ViseLog.e("gattCmdExecutor starts.");
     }
 
     // 停止Gatt命令执行器
     final void stop() {
-        ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
+        if(isAlive()) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
+
+            ViseLog.e("gattCmdExecutor stops.");
+        }
     }
 
     // 是否还在运行

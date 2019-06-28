@@ -173,7 +173,7 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
-        ViseLog.i("close: " + getMacAddress());
+        ViseLog.e("close: " + getMacAddress());
 
         if(isClosed()) return;
 
@@ -235,6 +235,10 @@ public abstract class BleDevice {
         }
 
         return true;
+    }
+
+    protected boolean isContainGattElement(BleGattElement element) {
+        return !( element == null || element.retrieveGattObject(this) == null );
     }
 
     protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {

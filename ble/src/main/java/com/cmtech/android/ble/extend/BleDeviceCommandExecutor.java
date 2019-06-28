@@ -125,6 +125,8 @@ class BleDeviceCommandExecutor {
 
             quitHandlerWhenStoping = false;
         }
+
+        ViseLog.e("devCmdExecutor starts.");
     }
 
     // 停止
@@ -151,6 +153,8 @@ class BleDeviceCommandExecutor {
                 }
             }
         }
+
+        ViseLog.e("devCmdExecutor stops.");
     }
 
     // 开始扫描
