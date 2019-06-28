@@ -13,6 +13,7 @@ import com.cmtech.android.ble.R;
   * UpdateRemark:   更新说明
   * Version:        1.0
  */
+
 public class BleDeviceConnectState {
     static final BleDeviceConnectState CONNECT_CLOSED = new BleDeviceConnectState(0x00, "已关闭", R.mipmap.ic_disconnect_32px);
 

@@ -1,10 +1,15 @@
 package com.cmtech.android.ble.extend;
 
-import com.cmtech.android.ble.model.BluetoothLeDevice;
-
 /**
- * IGattDataCallback: Gatt数据操作回调接口
- * Created by bme on 2018/3/1.
+  *
+  * ClassName:      IGattDataCallback
+  * Description:    Gatt数据操作回调接口
+  * Author:         chenm
+  * CreateDate:     2019-06-28 08:48
+  * UpdateUser:     chenm
+  * UpdateDate:     2019-06-28 08:48
+  * UpdateRemark:   更新说明
+  * Version:        1.0
  */
 
 public interface IGattDataCallback {

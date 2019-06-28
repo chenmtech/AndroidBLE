@@ -1,6 +1,7 @@
 package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleCallback;
+import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
@@ -11,7 +12,7 @@ import com.vise.log.ViseLog;
  *
  * ClassName:      BleSerialGattCommandExecutor
  * Description:    串行Gatt命令，所谓串行是指当命令发出后，并不立即执行下一条命令。
- *                 而是等待直到接收到蓝牙设备返回的响应后，才算执行完成，然后继续执行下一条命令
+ *                 而是等待接收到蓝牙设备返回的响应后，才继续执行下一条命令
  * Author:         chenm
  * CreateDate:     2019-06-20 07:02
  * UpdateUser:     chenm
@@ -46,10 +47,27 @@ class BleSerialGattCommand extends BleGattCommand {
         }
     }
 
-    BleSerialGattCommand(BleGattCommand gattCommand) {
+    private BleSerialGattCommand(BleGattCommand gattCommand) {
         super(gattCommand);
 
         dataOpCallback = new BleSerialCommandCallbackDecorator(dataOpCallback);
+    }
+
+    static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
+                                IGattDataCallback dataCallback, IGattDataCallback notifyCallback, boolean isInstantCommand) {
+        if(device.getDeviceMirror() == null) return null;
+
+        BleGattCommand.Builder builder = new BleGattCommand.Builder();
+
+        BleGattCommand command = builder.setDevice(device)
+                .setBluetoothElement(element)
+                .setPropertyType(propertyType)
+                .setData(data)
+                .setDataCallback(GattDataCallbackAdapter.create(dataCallback))
+                .setNotifyOpCallback(GattDataCallbackAdapter.create(notifyCallback))
+                .setInstantCommand(isInstantCommand).build();
+
+        return new BleSerialGattCommand(command);
     }
 
     @Override

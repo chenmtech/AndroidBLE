@@ -3,9 +3,17 @@ package com.cmtech.android.ble.extend;
 import java.util.ArrayList;
 import java.util.List;
 
+
 /**
- * BleDeviceType：Ble设备类型
- * Created by bme on 2018/10/13.
+  *
+  * ClassName:      BleDeviceType
+  * Description:    Ble设备类型类
+  * Author:         chenm
+  * CreateDate:     2018-10-13 08:55
+  * UpdateUser:     chenm
+  * UpdateDate:     2019-06-28 08:55
+  * UpdateRemark:   更新说明
+  * Version:        1.0
  */
 
 public class BleDeviceType {

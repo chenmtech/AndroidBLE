@@ -9,7 +9,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 /**
   *
   * ClassName:      GattDataCallbackAdapter
-  * Description:    Gatt数据操作回调适配器，将IGattDataOpCallback适配为ViseBle包中的IBleCallback
+  * Description:    Gatt数据操作回调适配器，将IGattDataOpCallback适配为ViseBle包所需的IBleCallback
   * Author:         chenm
   * CreateDate:     2018-03-01 16:51
   * UpdateUser:     chenm
@@ -29,6 +29,10 @@ class GattDataCallbackAdapter implements IBleCallback {
         this.dataOpCallback = gattDataCallback;
     }
 
+    public static GattDataCallbackAdapter create(IGattDataCallback gattDataCallback) {
+        return (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
+    }
+
     @Override
     public void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
         dataOpCallback.onSuccess(data);
@@ -39,7 +43,4 @@ class GattDataCallbackAdapter implements IBleCallback {
         dataOpCallback.onFailure(new GattDataException(exception));
     }
 
-    public static GattDataCallbackAdapter create(IGattDataCallback gattDataCallback) {
-        return (gattDataCallback == null) ? null : new GattDataCallbackAdapter(gattDataCallback);
-    }
 }

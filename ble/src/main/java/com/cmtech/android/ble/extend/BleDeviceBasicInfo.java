@@ -11,9 +11,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+
 /**
- *  BleDeviceBasicInfo: 设备基本信息，字段信息将保存在数据库或Preference中
- *  Created by bme on 2018/6/27.
+  *
+  * ClassName:      BleDeviceBasicInfo
+  * Description:    设备基本信息，字段信息将保存在数据库或Preference中
+  * Author:         chenm
+  * CreateDate:     2018-06-27 08:56
+  * UpdateUser:     chenm
+  * UpdateDate:     2019-06-28 08:56
+  * UpdateRemark:   更新说明
+  * Version:        1.0
  */
 
 public class BleDeviceBasicInfo implements Serializable{
@@ -21,13 +29,9 @@ public class BleDeviceBasicInfo implements Serializable{
 
     // 下面五个参数用于登记设备基本信息
     public static final String DEFAULT_DEVICE_NICKNAME = ""; // 缺省设备名
-
     public static final String DEFAULT_DEVICE_IMAGEPATH = ""; // 缺省设备图标路径名
-
     public static final boolean DEFAULT_DEVICE_AUTOCONNECT = true; // 设备打开时是否自动连接
-
     public static final int DEFAULT_DEVICE_RECONNECT_TIMES = 3; // 连接失败后的重连次数
-
     public static final boolean DEFAULT_WARN_AFTER_RECONNECT_FAILURE = true; // 重连失败后是否报警
 
     private String macAddress = ""; // 设备mac地址
