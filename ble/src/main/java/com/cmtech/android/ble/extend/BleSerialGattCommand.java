@@ -88,11 +88,7 @@ class BleSerialGattCommand extends BleGattCommand {
             ViseLog.i("Command Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
         }
 
-        // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
-        // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(device != null && device.getDeviceMirror() != null) {
-            device.getDeviceMirror().removeBleCallback(getGattInfoKey());
-        }
+        removeBleCallback();
 
         if(bleCallback != null) {
             bleCallback.onSuccess(data, bluetoothGattChannel, bluetoothLeDevice);
@@ -108,11 +104,7 @@ class BleSerialGattCommand extends BleGattCommand {
     private synchronized void onSerialCommandFailure(IBleCallback bleCallback, BleException exception) {
         ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
-        // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
-        // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(device != null && device.getDeviceMirror() != null) {
-            device.getDeviceMirror().removeBleCallback(getGattInfoKey());
-        }
+        removeBleCallback();
 
         if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES) {
             // 再次执行当前命令

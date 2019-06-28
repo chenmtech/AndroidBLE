@@ -31,7 +31,7 @@ class BleSerialGattCommandExecutor {
     // 启动Gatt命令执行器
     final void start() {
         if(device == null || device.getDeviceMirror() == null) {
-            throw new NullPointerException("The device mirror of BleSerialGattCommandExecutor must not be null when it is started.");
+            throw new NullPointerException("The device mirror must not be null when BleSerialGattCommandExecutor is started.");
         }
 
         if(isAlive()) return;
@@ -116,7 +116,7 @@ class BleSerialGattCommandExecutor {
     }
 
     private void executeCommand(final BleGattCommand command) {
-        if(command != null && isAlive()) {
+        if(isAlive()) {
             gattCmdService.execute(new Runnable() {
                 @Override
                 public void run() {

@@ -15,6 +15,8 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
+import java.util.List;
+
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
@@ -72,10 +74,12 @@ class BleDeviceCommandExecutor {
         public void onConnectSuccess(final DeviceMirror deviceMirror) {
             processConnectSuccess(deviceMirror);
         }
+
         @Override
         public void onConnectFailure(final BleException exception) {
             processConnectFailure(exception);
         }
+
         @Override
         public void onDisconnect(final boolean isActive) {
             processDisconnect(isActive);
@@ -86,7 +90,7 @@ class BleDeviceCommandExecutor {
 
     private Handler handler; // 执行命令的线程句柄
 
-    private boolean quitHandlerWhenClosing; // 关闭时是否终止Handler
+    private boolean quitHandlerWhenStoping; // 关闭时是否终止Handler
 
     private ScanCallback scanCallback; // 扫描回调
 
@@ -95,6 +99,10 @@ class BleDeviceCommandExecutor {
     private int curReconnectTimes = 0; // 重连次数
 
     BleDeviceCommandExecutor(BleDevice device) {
+        if(device == null) {
+            throw new NullPointerException();
+        }
+
         this.device = device;
     }
 
@@ -111,11 +119,37 @@ class BleDeviceCommandExecutor {
 
             this.handler = new Handler(handlerThread.getLooper());
 
-            quitHandlerWhenClosing = true;
+            quitHandlerWhenStoping = true;
         } else {
             this.handler = handler;
 
-            quitHandlerWhenClosing = false;
+            quitHandlerWhenStoping = false;
+        }
+    }
+
+    // 停止
+    void stop() {
+        if(handler == null) return;
+
+        disconnect();
+
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                device.setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+            }
+        });
+
+        if(quitHandlerWhenStoping) {
+            handler.getLooper().quitSafely();
+        } else {
+            while(device.getConnectState() != CONNECT_CLOSED) {
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
@@ -193,9 +227,11 @@ class BleDeviceCommandExecutor {
 
                 waitingResponse = true;
 
-                ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+                if(device.getDeviceMirror() != null) {
+                    ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
 
-                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+                    ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+                }
 
                 try {
                     Thread.sleep(1000);
@@ -216,32 +252,6 @@ class BleDeviceCommandExecutor {
                 waitingResponse = false;
             }
         });
-    }
-
-    // 停止
-    void stop() {
-        if(handler == null) return;
-
-        disconnect();
-
-        handler.post(new Runnable() {
-            @Override
-            public void run() {
-                device.setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
-            }
-        });
-
-        if(quitHandlerWhenClosing) {
-            handler.getLooper().quitSafely();
-        } else {
-            while(device.getConnectState() != CONNECT_CLOSED) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
     }
 
     private synchronized void clearReconnectTimes() {
@@ -290,6 +300,13 @@ class BleDeviceCommandExecutor {
         // 防止重复连接成功
         if(device.getConnectState() == CONNECT_SUCCESS) {
             ViseLog.e("device connected again!!!!!!");
+
+            List<DeviceMirror> deviceMirrors = ViseBle.getInstance().getDeviceMirrorPool().getDeviceMirrorList();
+
+            ViseLog.e("Current DeviceMirror List: ");
+            for(DeviceMirror deviceMirror : deviceMirrors) {
+                ViseLog.e(deviceMirror);
+            }
 
             if(device.getDeviceMirror().getUniqueSymbol().equals(mirror.getUniqueSymbol())) {
                 ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(mirror);

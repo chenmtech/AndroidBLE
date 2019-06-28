@@ -38,7 +38,7 @@ public abstract class BleDevice {
 
     private DeviceMirror deviceMirror = null; // 设备镜像，连接成功后赋值
 
-    private BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态
+    private volatile BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态
 
     private int battery = -1; // 设备电池电量
 

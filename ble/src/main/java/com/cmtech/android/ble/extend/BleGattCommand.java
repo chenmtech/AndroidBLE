@@ -32,7 +32,7 @@ class BleGattCommand{
 
     private final String elementString; // 命令操作的element的描述符
 
-    private final boolean isInstantCommand; // 是否是立刻执行的命令，即不需要通过蓝牙通信的命令
+    private final boolean isInstantCommand; // 是否是即刻命令，即不需要等待蓝牙响应的命令
 
     private BleGattCommand(BleDevice device, BluetoothGattChannel channel,
                            IBleCallback dataOpCallback,
@@ -72,8 +72,8 @@ class BleGattCommand{
     }
 
     /**
-     * 执行命令。执行完一条命令不仅需要发送命令，还需要收到对方响应或者立即执行返回
-     * @return 是否已经执行完命令，true-执行完 false-需要等待对方响应
+     * 执行命令。执行完一条命令不仅需要发送命令，还需要收到设备响应或者立即执行返回
+     * @return 是否已经执行完命令，true-执行完 false-等待对方响应
      */
     boolean execute() throws InterruptedException{
         if(isInstantCommand) {
@@ -149,11 +149,14 @@ class BleGattCommand{
         }
     }
 
-    // 获取Gatt信息key
-    String getGattInfoKey() {
-        if(isInstantCommand) return "";
+    void removeBleCallback() {
+        if(isInstantCommand) return;
 
-        return channel.getGattInfoKey();
+        // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
+        // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
+        if(device != null && device.getDeviceMirror() != null) {
+            device.getDeviceMirror().removeBleCallback(channel.getGattInfoKey());
+        }
     }
 
     static class Builder {
@@ -223,7 +226,7 @@ class BleGattCommand{
                 }
 
                 return new BleGattCommand(null, null, dataCallback,
-                        null, null, "An instant command.", true);
+                        null, null, "This is an instant command.", true);
 
             } else {
 
