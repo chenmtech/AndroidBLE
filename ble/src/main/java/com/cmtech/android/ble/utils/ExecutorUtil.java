@@ -9,7 +9,7 @@ public class ExecutorUtil {
 
     // 关闭线程池并等待它终止
     public static void shutdownNowAndAwaitTerminate(ExecutorService pool) {
-        if (pool != null) {
+        if (pool != null && !pool.isTerminated()) {
             pool.shutdownNow();
 
             try {

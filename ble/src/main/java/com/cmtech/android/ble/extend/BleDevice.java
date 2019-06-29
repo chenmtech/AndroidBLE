@@ -179,7 +179,7 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
-        ViseLog.e("close: " + getMacAddress());
+        ViseLog.e("BleDevice close()");
 
         if(isClosed()) return;
 
