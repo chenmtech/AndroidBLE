@@ -44,9 +44,15 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    private final BleDeviceCommandExecutor devCmdExecutor; // 设备命令执行器，在一个HandlerThread中执行
+    /** 设备命令执行器，在一个HandlerThread中执行
+     *  当设备打开时启动，设备关闭时停止
+     */
+    private final BleDeviceCommandExecutor devCmdExecutor;
 
-    private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行
+    /** Gatt命令执行器，在内部的一个单线程池中执行
+     *  设备连接成功后启动，设备连接失败或者断开时停止
+     */
+    private final BleSerialGattCommandExecutor gattCmdExecutor;
 
 
 
