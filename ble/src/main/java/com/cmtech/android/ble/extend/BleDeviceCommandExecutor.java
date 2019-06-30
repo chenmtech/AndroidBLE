@@ -16,6 +16,7 @@ import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
@@ -133,25 +134,28 @@ class BleDeviceCommandExecutor {
     void stop() {
         if(handler == null) return;
 
-        disconnect();
+        //disconnect();
+
+        final CountDownLatch lock = new CountDownLatch(1);
 
         handler.post(new Runnable() {
             @Override
             public void run() {
                 device.setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+
+                lock.countDown();
+
             }
         });
 
+        try {
+            lock.await();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
         if(quitHandlerWhenStoping) {
             handler.getLooper().quitSafely();
-        } else {
-            while(device.getConnectState() != CONNECT_CLOSED) {
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
         }
 
         ViseLog.e("devCmdExecutor stops.");

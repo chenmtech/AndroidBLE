@@ -165,7 +165,7 @@ public abstract class BleDevice {
 
     // 打开设备
     public void open() {
-        ViseLog.i("open: " + getMacAddress());
+        ViseLog.e("BleDevice open()");
 
         if(!isClosed())
             return;
