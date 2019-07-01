@@ -17,6 +17,7 @@ import com.vise.log.ViseLog;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
@@ -26,8 +27,8 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
 
 /**
   *
-  * ClassName:      BleDeviceCommandExecutor
-  * Description:    设备命令执行器
+  * ClassName:      BleConnectCommandExecutor
+  * Description:    设备连接相关命令执行器
   * Author:         chenm
   * CreateDate:     2019-06-25 17:54
   * UpdateUser:     chenm
@@ -36,7 +37,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
   * Version:        1.0
  */
 
-class BleDeviceCommandExecutor {
+class BleConnectCommandExecutor {
 
     private class MyScanCallback implements IScanCallback {
         MyScanCallback() {
@@ -91,15 +92,15 @@ class BleDeviceCommandExecutor {
 
     private Handler handler; // 执行命令的线程句柄
 
-    private boolean quitHandlerWhenStoping; // 关闭时是否终止Handler
+    private boolean quitHandlerWhenStoping; // 停止时是否终止Handler
 
-    private ScanCallback scanCallback; // 扫描回调
+    private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
     private volatile boolean waitingResponse = false; // 是否在等待响应
 
     private int curReconnectTimes = 0; // 重连次数
 
-    BleDeviceCommandExecutor(BleDevice device) {
+    BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
             throw new NullPointerException();
         }
@@ -134,8 +135,6 @@ class BleDeviceCommandExecutor {
     void stop() {
         if(handler == null) return;
 
-        //disconnect();
-
         final CountDownLatch lock = new CountDownLatch(1);
 
         handler.post(new Runnable() {
@@ -148,10 +147,14 @@ class BleDeviceCommandExecutor {
             }
         });
 
+        boolean timeout = false;
         try {
-            lock.await();
+            timeout = !lock.await(1, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        } finally {
+            if(timeout)
+                device.setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
         }
 
         if(quitHandlerWhenStoping) {
@@ -195,7 +198,7 @@ class BleDeviceCommandExecutor {
                     scanCallback.setScan(false).scan();
 
                     try {
-                        Thread.sleep(1000);
+                        Thread.sleep(100);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -312,6 +315,7 @@ class BleDeviceCommandExecutor {
             List<DeviceMirror> deviceMirrors = ViseBle.getInstance().getDeviceMirrorPool().getDeviceMirrorList();
 
             ViseLog.e("Current DeviceMirror List: ");
+
             for(DeviceMirror deviceMirror : deviceMirrors) {
                 ViseLog.e(deviceMirror);
             }

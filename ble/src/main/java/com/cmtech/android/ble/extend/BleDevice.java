@@ -44,13 +44,13 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    /** 设备命令执行器，在一个HandlerThread中执行
-     *  当设备打开时启动，设备关闭时停止
+    /** 设备连接命令执行器，在一个HandlerThread中执行。HandlerThread可以在其内部产生，也可以从外部传递给它。
+     *  当BleDevice打开时启动，设备关闭时停止
      */
-    private final BleDeviceCommandExecutor devCmdExecutor;
+    private final BleConnectCommandExecutor connCmdExecutor;
 
     /** Gatt命令执行器，在内部的一个单线程池中执行
-     *  设备连接成功后启动，设备连接失败或者断开时停止
+     *  设备连接成功后被启动，设备连接失败或者断开时被停止
      */
     private final BleSerialGattCommandExecutor gattCmdExecutor;
 
@@ -59,7 +59,7 @@ public abstract class BleDevice {
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
 
-        devCmdExecutor = new BleDeviceCommandExecutor(this);
+        connCmdExecutor = new BleConnectCommandExecutor(this);
 
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
     }
@@ -114,11 +114,11 @@ public abstract class BleDevice {
         this.deviceMirror = deviceMirror;
     }
 
-    BleDeviceConnectState getConnectState() {
+    synchronized BleDeviceConnectState getConnectState() {
         return connectState;
     }
 
-    void setConnectState(BleDeviceConnectState connectState) {
+    synchronized void setConnectState(BleDeviceConnectState connectState) {
         if(this.connectState != connectState) {
             ViseLog.e(connectState);
 
@@ -170,7 +170,7 @@ public abstract class BleDevice {
         if(!isClosed())
             return;
 
-        devCmdExecutor.start();
+        connCmdExecutor.start();
 
         if(basicInfo.autoConnect()) {
             startScan();
@@ -183,8 +183,8 @@ public abstract class BleDevice {
 
         if(isClosed()) return;
 
-        if(devCmdExecutor != null)
-            devCmdExecutor.stop();
+        if(connCmdExecutor != null)
+            connCmdExecutor.stop();
     }
 
     // 切换设备状态
@@ -198,19 +198,19 @@ public abstract class BleDevice {
         }
     }
 
-    // 开始扫描，扫描到设备后连接
-    protected void startScan() {
-        devCmdExecutor.startScan();
+    // 开始扫描，扫描到设备后会自动连接
+    void startScan() {
+        connCmdExecutor.startScan();
     }
 
     // 停止扫描
     private void stopScan() {
-        devCmdExecutor.stopScan();
+        connCmdExecutor.stopScan();
     }
 
     // 断开连接
     protected void disconnect() {
-        devCmdExecutor.disconnect();
+        connCmdExecutor.disconnect();
     }
 
 
@@ -233,7 +233,6 @@ public abstract class BleDevice {
         gattCmdExecutor.stop();
     }
 
-    // 检测设备中是否包含所有Gatt Elements
     protected boolean isContainGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
             if( element == null || element.retrieveGattObject(this) == null )
