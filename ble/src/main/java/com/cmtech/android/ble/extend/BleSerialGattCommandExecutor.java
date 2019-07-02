@@ -57,7 +57,7 @@ class BleSerialGattCommandExecutor {
     }
 
     // 是否还在运行
-    private boolean isAlive() {
+    boolean isAlive() {
         return ((gattCmdService != null) && !gattCmdService.isShutdown());
     }
 

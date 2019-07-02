@@ -235,6 +235,10 @@ public abstract class BleDevice {
         gattCmdExecutor.stop();
     }
 
+    protected boolean isGattExecutorAlive() {
+        return gattCmdExecutor.isAlive();
+    }
+
     protected boolean isContainGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
             if( element == null || element.retrieveGattObject(this) == null )
