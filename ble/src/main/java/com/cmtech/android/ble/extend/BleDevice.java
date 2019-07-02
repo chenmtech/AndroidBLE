@@ -3,6 +3,8 @@ package com.cmtech.android.ble.extend;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.core.DeviceMirror;
@@ -170,7 +172,7 @@ public abstract class BleDevice {
         if(!isClosed())
             return;
 
-        connCmdExecutor.start();
+        connCmdExecutor.start(new Handler(Looper.getMainLooper()));
 
         if(basicInfo.autoConnect()) {
             startScan();
