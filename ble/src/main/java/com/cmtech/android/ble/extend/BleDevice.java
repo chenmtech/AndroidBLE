@@ -46,8 +46,9 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    /** 设备连接命令执行器，在一个HandlerThread中执行。HandlerThread可以在其内部产生，也可以从外部传递给它。
-     *  当BleDevice打开时启动，设备关闭时停止
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
+    /** 设备连接命令执行器，在Main Handler中执行命令
      */
     private final BleConnectCommandExecutor connCmdExecutor;
 
@@ -172,8 +173,6 @@ public abstract class BleDevice {
         if(!isClosed())
             return;
 
-        connCmdExecutor.start(new Handler(Looper.getMainLooper()));
-
         if(basicInfo.autoConnect()) {
             startScan();
         }
@@ -185,8 +184,12 @@ public abstract class BleDevice {
 
         if(isClosed()) return;
 
-        if(connCmdExecutor != null)
-            connCmdExecutor.stop();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+            }
+        });
     }
 
     // 切换设备状态
@@ -202,17 +205,35 @@ public abstract class BleDevice {
 
     // 开始扫描，扫描到设备后会自动连接
     void startScan() {
-        connCmdExecutor.startScan();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                connCmdExecutor.startScan();
+            }
+        });
+
     }
 
     // 停止扫描
     private void stopScan() {
-        connCmdExecutor.stopScan();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                connCmdExecutor.stopScan();
+            }
+        });
+
     }
 
     // 断开连接
     protected void disconnect() {
-        connCmdExecutor.disconnect();
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                connCmdExecutor.disconnect();
+            }
+        });
+
     }
 
 

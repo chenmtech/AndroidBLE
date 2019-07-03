@@ -106,30 +106,12 @@ class BleSerialGattCommand extends BleGattCommand {
 
         removeBleCallback();
 
-        /*if(cmdErrorTimes < CMD_ERROR_RETRY_TIMES) {
-            // 再次执行当前命令
-            ViseLog.e("Retry the command <" + this + ">");
-
-            try {
-                super.execute();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            cmdErrorTimes++;
-        } else {
-            if(bleCallback != null)
-                bleCallback.onFailure(exception);
-
-            if(device != null) {
-                device.disconnect();
-            }
-        }*/
-
         if(bleCallback != null)
             bleCallback.onFailure(exception);
 
         if(device != null) {
+            device.stopGattExecutor();
+
             device.disconnect();
         }
     }
