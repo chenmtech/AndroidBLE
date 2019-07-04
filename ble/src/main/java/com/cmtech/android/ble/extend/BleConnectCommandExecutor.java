@@ -2,7 +2,7 @@ package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
-import android.os.HandlerThread;
+import android.os.Looper;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
@@ -16,10 +16,7 @@ import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
-import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
@@ -90,6 +87,8 @@ class BleConnectCommandExecutor {
 
     private final BleDevice device; // 设备
 
+    private final Handler handler = new Handler(Looper.myLooper()); // 执行命令的Handler
+
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
     private volatile boolean waitingResponse = false; // 是否在等待响应
@@ -106,80 +105,104 @@ class BleConnectCommandExecutor {
 
     // 开始扫描
     void startScan() {
-        ViseLog.e("start scanning...");
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("start scanning...");
 
-        scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
+                scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
-        scanCallback.setScan(true).scan();
+                scanCallback.setScan(true).scan();
 
-        device.setConnectState(CONNECT_SCANNING);
+                device.setConnectState(CONNECT_SCANNING);
 
-        incrementReconnectTimes();
+                incrementReconnectTimes();
 
-        waitingResponse = true;
+                waitingResponse = true;
+            }
+        });
+
     }
 
     // 停止扫描
     void stopScan() {
-        if(scanCallback != null && scanCallback.isScanning()) {
-            waitingResponse = true;
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                if(scanCallback != null && scanCallback.isScanning()) {
+                    waitingResponse = true;
 
-            scanCallback.removeHandlerMsg();
+                    scanCallback.removeHandlerMsg();
 
-            scanCallback.setScan(false).scan();
+                    scanCallback.setScan(false).scan();
 
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                waitingResponse = false;
             }
-        }
+        });
 
-        waitingResponse = false;
     }
 
     // 开始连接
     private void startConnect(final BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.e("start connecting...");
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("start connecting...");
 
-        MyConnectCallback connectCallback = new MyConnectCallback();
+                MyConnectCallback connectCallback = new MyConnectCallback();
 
-        ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+                ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
-        device.setConnectState(CONNECT_CONNECTING);
+                device.setConnectState(CONNECT_CONNECTING);
 
-        waitingResponse = true;
+                waitingResponse = true;
+            }
+        });
+
     }
 
     // 断开连接
     void disconnect() {
-        ViseLog.e("BleDevice disconnect()");
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                ViseLog.e("BleDevice disconnect()");
 
-        waitingResponse = true;
+                waitingResponse = true;
 
-        if(device.getDeviceMirror() != null) {
-            ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+                if(device.getDeviceMirror() != null) {
+                    ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
 
-            ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
-        }
+                    ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+                }
 
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
 
-        if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
-            device.executeAfterDisconnect();
+                if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
+                    device.executeAfterDisconnect();
 
-            device.stopGattExecutor();
+                    device.stopGattExecutor();
 
-            device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
-        }
+                    device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
+                }
 
-        clearReconnectTimes();
+                clearReconnectTimes();
 
-        waitingResponse = false;
+                waitingResponse = false;
+            }
+        });
+
     }
 
     private synchronized void clearReconnectTimes() {
