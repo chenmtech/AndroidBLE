@@ -105,6 +105,8 @@ class BleConnectCommandExecutor {
 
     // 开始扫描
     void startScan() {
+        handler.removeCallbacksAndMessages(null);
+
         handler.post(new Runnable() {
             @Override
             public void run() {
