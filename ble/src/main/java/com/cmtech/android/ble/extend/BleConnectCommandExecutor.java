@@ -105,11 +105,11 @@ class BleConnectCommandExecutor {
 
     // 开始扫描
     void startScan() {
-        handler.removeCallbacksAndMessages(null);
-
         handler.post(new Runnable() {
             @Override
             public void run() {
+                handler.removeCallbacksAndMessages(null);
+
                 ViseLog.e("start scanning...");
 
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
