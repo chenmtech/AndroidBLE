@@ -189,7 +189,7 @@ public abstract class BleDevice {
         ViseLog.i("switchState");
 
         if(isConnected()) {
-            disconnect();
+            disconnect(false);
         } else if(!isWaitingResponse()) {
             startScan();
         }
@@ -206,21 +206,9 @@ public abstract class BleDevice {
     }
 
     // 断开连接
-    protected void disconnect() {
-        connCmdExecutor.disconnect();
+    protected void disconnect(boolean isReconnect) {
+        connCmdExecutor.disconnect(isReconnect);
     }
-
-
-
-    protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作
-
-    protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
-
-    protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
-
-
-
-
 
     void startGattExecutor() {
         gattCmdExecutor.start();
@@ -233,6 +221,17 @@ public abstract class BleDevice {
     protected boolean isGattExecutorAlive() {
         return gattCmdExecutor.isAlive();
     }
+
+    protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作
+
+    protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
+
+    protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
+
+
+
+
+
 
     protected boolean isContainGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {

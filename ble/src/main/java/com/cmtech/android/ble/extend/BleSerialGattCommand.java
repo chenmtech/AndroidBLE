@@ -110,9 +110,7 @@ class BleSerialGattCommand extends BleGattCommand {
             bleCallback.onFailure(exception);
 
         if(device != null) {
-            device.stopGattExecutor();
-
-            device.disconnect();
+            device.disconnect(true);
         }
     }
 }

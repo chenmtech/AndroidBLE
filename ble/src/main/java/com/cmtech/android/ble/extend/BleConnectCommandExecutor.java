@@ -15,8 +15,6 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
-import java.util.List;
-
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
@@ -87,7 +85,7 @@ class BleConnectCommandExecutor {
 
     private final BleDevice device; // 设备
 
-    private final Handler handler = new Handler(Looper.myLooper()); // 执行命令的Handler
+    private final Handler handler = new Handler(Looper.getMainLooper()); // 执行命令的Handler
 
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
@@ -171,7 +169,7 @@ class BleConnectCommandExecutor {
     }
 
     // 断开连接
-    void disconnect() {
+    void disconnect(final boolean isReconnect) {
         handler.post(new Runnable() {
             @Override
             public void run() {
@@ -186,7 +184,7 @@ class BleConnectCommandExecutor {
                 }
 
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(300);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -202,6 +200,10 @@ class BleConnectCommandExecutor {
                 clearReconnectTimes();
 
                 waitingResponse = false;
+
+                if(isReconnect) {
+                    startScan();
+                }
             }
         });
 
@@ -254,7 +256,7 @@ class BleConnectCommandExecutor {
         if(device.getConnectState() == CONNECT_SUCCESS) {
             ViseLog.e("device connected again!!!!!!");
 
-            List<DeviceMirror> deviceMirrors = ViseBle.getInstance().getDeviceMirrorPool().getDeviceMirrorList();
+            /*List<DeviceMirror> deviceMirrors = ViseBle.getInstance().getDeviceMirrorPool().getDeviceMirrorList();
 
             ViseLog.e("Current DeviceMirror List: ");
 
@@ -264,7 +266,7 @@ class BleConnectCommandExecutor {
 
             if(device.getDeviceMirror().getUniqueSymbol().equals(mirror.getUniqueSymbol())) {
                 ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(mirror);
-            }
+            }*/
 
             return;
         }
