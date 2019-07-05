@@ -256,18 +256,6 @@ class BleConnectCommandExecutor {
         if(device.getConnectState() == CONNECT_SUCCESS) {
             ViseLog.e("device connected again!!!!!!");
 
-            /*List<DeviceMirror> deviceMirrors = ViseBle.getInstance().getDeviceMirrorPool().getDeviceMirrorList();
-
-            ViseLog.e("Current DeviceMirror List: ");
-
-            for(DeviceMirror deviceMirror : deviceMirrors) {
-                ViseLog.e(deviceMirror);
-            }
-
-            if(device.getDeviceMirror().getUniqueSymbol().equals(mirror.getUniqueSymbol())) {
-                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(mirror);
-            }*/
-
             return;
         }
 
