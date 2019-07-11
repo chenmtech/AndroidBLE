@@ -52,7 +52,7 @@ class BleSerialGattCommandExecutor {
         if(isAlive()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
 
-            ViseLog.e("gattCmdExecutor stops.");
+            ViseLog.e("The gattCmdExecutor stopped.");
         }
     }
 

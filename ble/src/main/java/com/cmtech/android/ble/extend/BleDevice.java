@@ -192,6 +192,10 @@ public abstract class BleDevice {
 
         if(isClosed()) return;
 
+        if(connectState == CONNECT_SCANNING) {
+            stopScan();
+        }
+
         if(isConnected()) {
             disconnect(false);
         }
@@ -202,7 +206,7 @@ public abstract class BleDevice {
                 while(connectState != CONNECT_DISCONNECT);
                 setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
             }
-        });
+        }).start();
     }
 
     // 切换设备状态

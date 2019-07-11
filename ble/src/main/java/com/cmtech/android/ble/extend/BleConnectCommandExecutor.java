@@ -15,6 +15,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
@@ -211,7 +212,8 @@ class BleConnectCommandExecutor {
                 device.postDelayedWithMainHandler(new Runnable() {
                     @Override
                     public void run() {
-                        if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
+                        if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT && device.getConnectState() != CONNECT_CLOSED) {
+
                             device.stopGattExecutor();
 
                             device.executeAfterDisconnect();
@@ -284,8 +286,6 @@ class BleConnectCommandExecutor {
 
         device.setDeviceMirror(mirror);
 
-        device.setConnectState(CONNECT_SUCCESS);
-
         clearReconnectTimes();
 
         waitingResponse = false;
@@ -293,13 +293,13 @@ class BleConnectCommandExecutor {
         device.startGattExecutor();
 
         device.executeAfterConnectSuccess();
+
+        device.setConnectState(CONNECT_SUCCESS);
     }
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
         ViseLog.e("processConnectFailure: " + bleException );
-
-        device.setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
 
         waitingResponse = false;
 
@@ -309,14 +309,14 @@ class BleConnectCommandExecutor {
 
         device.setDeviceMirror(null);
 
+        device.setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
+
         reconnect();
     }
 
     // 处理连接断开
     private void processDisconnect(boolean isActive) {
         ViseLog.e("processDisconnect: " + isActive);
-
-        device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
 
         waitingResponse = false;
 
@@ -325,5 +325,8 @@ class BleConnectCommandExecutor {
         device.executeAfterDisconnect();
 
         device.setDeviceMirror(null);
+
+        device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
+
     }
 }
