@@ -3,6 +3,8 @@ package com.cmtech.android.ble.extend;
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.core.DeviceMirror;
@@ -14,6 +16,7 @@ import java.util.Objects;
 
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS;
 
@@ -44,8 +47,10 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
+    protected final Handler mainHandler = new Handler(Looper.getMainLooper());
+
     /** 设备连接命令执行器
-     *  在Main Handler中执行命令
+     *  在mainHandler中执行命令
      */
     private final BleConnectCommandExecutor connCmdExecutor;
 
@@ -161,7 +166,13 @@ public abstract class BleDevice {
     }
 
 
+    protected void postWithMainHandler(Runnable runnable) {
+        mainHandler.post(runnable);
+    }
 
+    protected void postDelayedWithMainHandler(Runnable runnable, int delayMs) {
+        mainHandler.postDelayed(runnable, delayMs);
+    }
 
     // 打开设备
     public void open() {
@@ -181,7 +192,17 @@ public abstract class BleDevice {
 
         if(isClosed()) return;
 
-        setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+        if(isConnected()) {
+            disconnect(false);
+        }
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while(connectState != CONNECT_DISCONNECT);
+                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+            }
+        });
     }
 
     // 切换设备状态
@@ -197,6 +218,8 @@ public abstract class BleDevice {
 
     // 开始扫描，扫描到设备后会自动连接
     void startScan() {
+        mainHandler.removeCallbacksAndMessages(null);
+
         connCmdExecutor.startScan();
     }
 
@@ -210,6 +233,18 @@ public abstract class BleDevice {
         connCmdExecutor.disconnect(isReconnect);
     }
 
+    protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作
+
+    protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
+
+    protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
+
+
+
+
+
+
+
     void startGattExecutor() {
         gattCmdExecutor.start();
     }
@@ -221,17 +256,6 @@ public abstract class BleDevice {
     protected boolean isGattExecutorAlive() {
         return gattCmdExecutor.isAlive();
     }
-
-    protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作
-
-    protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
-
-    protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
-
-
-
-
-
 
     protected boolean isContainGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
@@ -269,6 +293,9 @@ public abstract class BleDevice {
     protected final void runInstantly(IGattDataCallback gattDataCallback) {
         gattCmdExecutor.runInstantly(gattDataCallback);
     }
+
+
+
 
 
 

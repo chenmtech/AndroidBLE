@@ -43,7 +43,7 @@ class BleConnectCommandExecutor {
             BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
 
             if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                handler.post(new Runnable() {
+                device.postWithMainHandler(new Runnable() {
                     @Override
                     public void run() {
                         processScanResult(false, null);
@@ -51,7 +51,7 @@ class BleConnectCommandExecutor {
                 });
 
             } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                handler.post(new Runnable() {
+                device.postWithMainHandler(new Runnable() {
                     @Override
                     public void run() {
                         processScanResult(true, bluetoothLeDevice);
@@ -67,13 +67,12 @@ class BleConnectCommandExecutor {
 
         @Override
         public void onScanTimeout() {
-            handler.post(new Runnable() {
+            device.postWithMainHandler(new Runnable() {
                 @Override
                 public void run() {
                     processScanResult(false, null);
                 }
             });
-
         }
 
     }
@@ -84,7 +83,7 @@ class BleConnectCommandExecutor {
 
         @Override
         public void onConnectSuccess(final DeviceMirror deviceMirror) {
-            handler.post(new Runnable() {
+            device.postWithMainHandler(new Runnable() {
                 @Override
                 public void run() {
                     processConnectSuccess(deviceMirror);
@@ -94,7 +93,7 @@ class BleConnectCommandExecutor {
 
         @Override
         public void onConnectFailure(final BleException exception) {
-            handler.post(new Runnable() {
+            device.postWithMainHandler(new Runnable() {
                 @Override
                 public void run() {
                     processConnectFailure(exception);
@@ -104,7 +103,7 @@ class BleConnectCommandExecutor {
 
         @Override
         public void onDisconnect(final boolean isActive) {
-            handler.post(new Runnable() {
+            device.postWithMainHandler(new Runnable() {
                 @Override
                 public void run() {
                     processDisconnect(isActive);
@@ -114,8 +113,6 @@ class BleConnectCommandExecutor {
     }
 
     private final BleDevice device; // 设备
-
-    private final Handler handler = new Handler(Looper.getMainLooper()); // 执行命令的Handler
 
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
@@ -133,11 +130,9 @@ class BleConnectCommandExecutor {
 
     // 开始扫描
     void startScan() {
-        handler.post(new Runnable() {
+        device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
-                handler.removeCallbacksAndMessages(null);
-
                 ViseLog.e("start scanning...");
 
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
@@ -156,7 +151,7 @@ class BleConnectCommandExecutor {
 
     // 停止扫描
     void stopScan() {
-        handler.post(new Runnable() {
+        device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
                 if(scanCallback != null && scanCallback.isScanning()) {
@@ -181,7 +176,7 @@ class BleConnectCommandExecutor {
 
     // 开始连接
     private void startConnect(final BluetoothLeDevice bluetoothLeDevice) {
-        handler.post(new Runnable() {
+        device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
                 ViseLog.e("start connecting...");
@@ -200,7 +195,7 @@ class BleConnectCommandExecutor {
 
     // 断开连接
     void disconnect(final boolean isReconnect) {
-        handler.post(new Runnable() {
+        device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
                 ViseLog.e("BleDevice disconnect()");
@@ -213,7 +208,7 @@ class BleConnectCommandExecutor {
                     ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
                 }
 
-                handler.postDelayed(new Runnable() {
+                device.postDelayedWithMainHandler(new Runnable() {
                     @Override
                     public void run() {
                         if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT) {
