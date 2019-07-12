@@ -1,8 +1,6 @@
 package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothDevice;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
