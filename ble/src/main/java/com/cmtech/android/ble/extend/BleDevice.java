@@ -15,10 +15,16 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_DISCONNECT;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_DISCONNECT_CODE;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS;
+import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS_CODE;
 
 
 /**
@@ -178,10 +184,7 @@ public abstract class BleDevice {
     public void open() {
         ViseLog.e("BleDevice open()");
 
-        if(!isClosed())
-            return;
-
-        if(basicInfo.autoConnect()) {
+        if(isClosed() && basicInfo.autoConnect()) {
             startScan();
         }
     }
@@ -190,23 +193,45 @@ public abstract class BleDevice {
     public void close() {
         ViseLog.e("BleDevice close()");
 
-        if(isClosed()) return;
+        mainHandler.removeCallbacksAndMessages(null);
 
-        if(connectState == CONNECT_SCANNING) {
-            stopScan();
-        }
+        switch(connectState.getCode()) {
+            case CONNECT_CLOSED_CODE:
+                return;
 
-        if(isConnected()) {
-            disconnect(false);
-        }
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while(connectState != CONNECT_DISCONNECT);
+            case CONNECT_SCANNING_CODE:
+                stopScan();
                 setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
-            }
-        }).start();
+                return;
+
+            case CONNECT_DISCONNECT_CODE:
+                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+                return;
+
+            case CONNECT_SUCCESS_CODE:
+                disconnect(false);
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        while(connectState != CONNECT_DISCONNECT);
+                        setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+                    }
+                }).start();
+
+                return;
+
+            case CONNECT_FAILURE_CODE:
+                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+                return;
+
+            case CONNECT_CONNECTING_CODE:
+                return;
+
+                default:
+                    return;
+
+        }
     }
 
     // 切换设备状态

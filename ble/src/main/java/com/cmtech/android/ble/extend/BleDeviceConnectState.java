@@ -15,17 +15,24 @@ import com.cmtech.android.ble.R;
  */
 
 public class BleDeviceConnectState {
-    static final BleDeviceConnectState CONNECT_CLOSED = new BleDeviceConnectState(0x00, "已关闭", R.mipmap.ic_disconnect_32px);
+    static final int CONNECT_CLOSED_CODE = 0x00;
+    static final int CONNECT_SCANNING_CODE = 0x01;
+    static final int CONNECT_CONNECTING_CODE = 0x02;
+    static final int CONNECT_SUCCESS_CODE = 0x03;
+    static final int CONNECT_FAILURE_CODE = 0x04;
+    static final int CONNECT_DISCONNECT_CODE = 0x05;
 
-    static final BleDeviceConnectState CONNECT_SCANNING = new BleDeviceConnectState(0x01, "扫描中...", R.mipmap.ic_scanning_32px);
+    static final BleDeviceConnectState CONNECT_CLOSED = new BleDeviceConnectState(CONNECT_CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
 
-    static final BleDeviceConnectState CONNECT_CONNECTING = new BleDeviceConnectState(0x02, "连接中...", R.mipmap.ic_connecting_32px);
+    static final BleDeviceConnectState CONNECT_SCANNING = new BleDeviceConnectState(CONNECT_SCANNING_CODE, "扫描中...", R.mipmap.ic_scanning_32px);
 
-    static final BleDeviceConnectState CONNECT_SUCCESS = new BleDeviceConnectState(0x03, "已连接", R.mipmap.ic_connected_32px);
+    static final BleDeviceConnectState CONNECT_CONNECTING = new BleDeviceConnectState(CONNECT_CONNECTING_CODE, "连接中...", R.mipmap.ic_connecting_32px);
 
-    static final BleDeviceConnectState CONNECT_FAILURE = new BleDeviceConnectState(0x04, "扫描连接失败", R.mipmap.ic_disconnect_32px);
+    static final BleDeviceConnectState CONNECT_SUCCESS = new BleDeviceConnectState(CONNECT_SUCCESS_CODE, "已连接", R.mipmap.ic_connected_32px);
 
-    static final BleDeviceConnectState CONNECT_DISCONNECT = new BleDeviceConnectState(0x05, "已断开", R.mipmap.ic_disconnect_32px);
+    static final BleDeviceConnectState CONNECT_FAILURE = new BleDeviceConnectState(CONNECT_FAILURE_CODE, "扫描连接失败", R.mipmap.ic_disconnect_32px);
+
+    static final BleDeviceConnectState CONNECT_DISCONNECT = new BleDeviceConnectState(CONNECT_DISCONNECT_CODE, "已断开", R.mipmap.ic_disconnect_32px);
 
     private int code;
 

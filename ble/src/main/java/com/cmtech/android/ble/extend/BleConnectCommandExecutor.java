@@ -9,6 +9,7 @@ import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.exception.BleException;
+import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
@@ -240,7 +241,7 @@ class BleConnectCommandExecutor {
         curReconnectTimes++;
     }
 
-    private synchronized void reconnect() {
+    private void reconnect() {
         int totalReconnectTimes = device.getReconnectTimes();
 
         if(totalReconnectTimes != -1 && curReconnectTimes >= totalReconnectTimes) {
@@ -276,9 +277,14 @@ class BleConnectCommandExecutor {
         ViseLog.e("processConnectSuccess: " + mirror);
 
         // 防止重复连接成功
-        if(device.getConnectState() == CONNECT_SUCCESS) {
+        if(device.isConnected()) {
             ViseLog.e("device connected again!!!!!!");
 
+            return;
+        }
+
+        if(device.isClosed()) {
+            ViseBle.getInstance().disconnect(mirror.getBluetoothLeDevice());
             return;
         }
 
@@ -308,6 +314,10 @@ class BleConnectCommandExecutor {
         device.setDeviceMirror(null);
 
         device.setConnectState(BleDeviceConnectState.CONNECT_FAILURE);
+
+        if(bleException instanceof TimeoutException) {
+            curReconnectTimes = device.getReconnectTimes();
+        }
 
         reconnect();
     }
