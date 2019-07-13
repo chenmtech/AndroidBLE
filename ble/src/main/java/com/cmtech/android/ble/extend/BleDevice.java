@@ -53,7 +53,7 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    protected final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     /** 设备连接命令执行器
      *  在mainHandler中执行命令
@@ -172,7 +172,7 @@ public abstract class BleDevice {
     }
 
 
-    protected void postWithMainHandler(Runnable runnable) {
+    public void postWithMainHandler(Runnable runnable) {
         mainHandler.post(runnable);
     }
 
@@ -184,7 +184,9 @@ public abstract class BleDevice {
     public void open() {
         ViseLog.e("BleDevice open()");
 
-        if(isClosed() && basicInfo.autoConnect()) {
+        setConnectState(CONNECT_DISCONNECT);
+
+        if(basicInfo.autoConnect()) {
             startScan();
         }
     }
