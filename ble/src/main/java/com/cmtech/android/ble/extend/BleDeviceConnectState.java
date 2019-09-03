@@ -5,7 +5,7 @@ import com.cmtech.android.ble.R;
 /**
   *
   * ClassName:      BleDeviceConnectState
-  * Description:    BleDevice连接状态类型，在BLE包基础上增加了扫描和关闭两个状态
+  * Description:    BleDevice连接状态，在BLE包基础上增加了扫描中和关闭两个状态
   * Author:         chenm
   * CreateDate:     2018/4/21 下午4:47
   * UpdateUser:     chenm
@@ -15,12 +15,12 @@ import com.cmtech.android.ble.R;
  */
 
 public class BleDeviceConnectState {
-    static final int CONNECT_CLOSED_CODE = 0x00;
-    static final int CONNECT_SCANNING_CODE = 0x01;
-    static final int CONNECT_CONNECTING_CODE = 0x02;
-    static final int CONNECT_SUCCESS_CODE = 0x03;
-    static final int CONNECT_FAILURE_CODE = 0x04;
-    static final int CONNECT_DISCONNECT_CODE = 0x05;
+    static final int CONNECT_CLOSED_CODE = 0x00; // 连接关闭
+    static final int CONNECT_SCANNING_CODE = 0x01; // 扫描中
+    static final int CONNECT_CONNECTING_CODE = 0x02; // 连接中
+    static final int CONNECT_SUCCESS_CODE = 0x03; // 连接成功
+    static final int CONNECT_FAILURE_CODE = 0x04;// 连接失败
+    static final int CONNECT_DISCONNECT_CODE = 0x05; // 连接断开
 
     static final BleDeviceConnectState CONNECT_CLOSED = new BleDeviceConnectState(CONNECT_CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
 

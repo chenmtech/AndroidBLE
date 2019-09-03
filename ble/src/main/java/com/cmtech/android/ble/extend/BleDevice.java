@@ -26,7 +26,6 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNI
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCESS_CODE;
 
-
 /**
   *
   * ClassName:      BleDevice
@@ -39,32 +38,24 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
   * Version:        1.0
  */
 
-
 public abstract class BleDevice {
-    public final static BleDeviceConnectState DEVICE_INIT_STATE = CONNECT_CLOSED; // 初始连接状态
+    public final static BleDeviceConnectState CONNECT_INIT_STATE = CONNECT_CLOSED; // 连接初始状态
 
     private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
     private DeviceMirror deviceMirror = null; // 设备镜像，连接成功后赋值
 
-    private volatile BleDeviceConnectState connectState = DEVICE_INIT_STATE; // 设备连接状态
+    private volatile BleDeviceConnectState connectState = CONNECT_INIT_STATE; // 设备连接状态
 
     private int battery = -1; // 设备电池电量
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mainHandler = new Handler(Looper.getMainLooper()); // 主线程Handler，连接命令都在主线程中执行
 
-    /** 设备连接命令执行器
-     *  在mainHandler中执行命令
-     */
-    private final BleConnectCommandExecutor connCmdExecutor;
+    private final BleConnectCommandExecutor connCmdExecutor; // 设备连接命令执行器，在mainHandler中执行命令
 
-    /** Gatt命令执行器，在内部的一个单线程池中执行
-     *  设备连接成功后被启动，设备连接失败或者断开时被停止
-     */
-    private final BleSerialGattCommandExecutor gattCmdExecutor;
-
+    private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
 
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
@@ -182,28 +173,37 @@ public abstract class BleDevice {
 
     // 打开设备
     public void open() {
-        ViseLog.e("BleDevice open()");
+        if(isClosed()) {
+            ViseLog.e("BleDevice.open()");
 
-        setConnectState(CONNECT_DISCONNECT);
+            setConnectState(CONNECT_DISCONNECT);
 
-        if(basicInfo.autoConnect()) {
-            startScan();
+            if (basicInfo.autoConnect()) {
+                startScan();
+            }
         }
     }
 
     // 关闭设备
     public void close() {
-        ViseLog.e("BleDevice close()");
-
-        mainHandler.removeCallbacksAndMessages(null);
+        ViseLog.e("BleDevice.close()");
 
         switch(connectState.getCode()) {
             case CONNECT_CLOSED_CODE:
+            case CONNECT_FAILURE_CODE:
+            case CONNECT_CONNECTING_CODE:
                 return;
 
             case CONNECT_SCANNING_CODE:
-                stopScan();
-                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+                connCmdExecutor.stopScan();
+
+                postWithMainHandler(new Runnable() {
+                    @Override
+                    public void run() {
+                        setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
+                    }
+                });
+
                 return;
 
             case CONNECT_DISCONNECT_CODE:
@@ -223,22 +223,14 @@ public abstract class BleDevice {
 
                 return;
 
-            case CONNECT_FAILURE_CODE:
-                setConnectState(BleDeviceConnectState.CONNECT_CLOSED);
-                return;
-
-            case CONNECT_CONNECTING_CODE:
-                return;
-
                 default:
-                    return;
 
         }
     }
 
     // 切换设备状态
     public final void switchState() {
-        ViseLog.i("switchState");
+        ViseLog.i("BleDevice.switchState()");
 
         if(isConnected()) {
             disconnect(false);
@@ -254,13 +246,10 @@ public abstract class BleDevice {
         connCmdExecutor.startScan();
     }
 
-    // 停止扫描
-    private void stopScan() {
-        connCmdExecutor.stopScan();
-    }
-
     // 断开连接
     protected void disconnect(boolean isReconnect) {
+        mainHandler.removeCallbacksAndMessages(null);
+
         connCmdExecutor.disconnect(isReconnect);
     }
 
@@ -269,9 +258,6 @@ public abstract class BleDevice {
     protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
 
     protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
-
-
-
 
 
 
@@ -288,7 +274,7 @@ public abstract class BleDevice {
         return gattCmdExecutor.isAlive();
     }
 
-    protected boolean isContainGattElements(BleGattElement[] elements) {
+    protected boolean containGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
             if( element == null || element.retrieveGattObject(this) == null )
                 return false;
@@ -297,7 +283,7 @@ public abstract class BleDevice {
         return true;
     }
 
-    protected boolean isContainGattElement(BleGattElement element) {
+    protected boolean containGattElement(BleGattElement element) {
         return !( element == null || element.retrieveGattObject(this) == null );
     }
 
