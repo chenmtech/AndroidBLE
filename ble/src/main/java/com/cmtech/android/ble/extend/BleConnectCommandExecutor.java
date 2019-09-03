@@ -33,7 +33,7 @@ import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SUCCES
  */
 
 class BleConnectCommandExecutor {
-
+    // 扫描回调类
     private class MyScanCallback implements IScanCallback {
         MyScanCallback() {
         }
@@ -77,6 +77,7 @@ class BleConnectCommandExecutor {
 
     }
 
+    // 连接回调类
     private class MyConnectCallback implements IConnectCallback {
         MyConnectCallback() {
         }
@@ -122,7 +123,7 @@ class BleConnectCommandExecutor {
 
     BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
-            throw new NullPointerException();
+            throw new NullPointerException("BleConnectCommandExecutor：device不能为null");
         }
 
         this.device = device;
@@ -155,6 +156,8 @@ class BleConnectCommandExecutor {
             @Override
             public void run() {
                 if(scanCallback != null && scanCallback.isScanning()) {
+                    ViseLog.e("stop scanning...");
+
                     waitingResponse = true;
 
                     scanCallback.removeHandlerMsg();
@@ -198,7 +201,7 @@ class BleConnectCommandExecutor {
         device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
-                ViseLog.e("BleDevice disconnect()");
+                ViseLog.e("disconnecting...");
 
                 waitingResponse = true;
 
@@ -251,7 +254,7 @@ class BleConnectCommandExecutor {
 
             curReconnectTimes = 0;
         } else {
-            device.startScan();
+            startScan();
 
             ViseLog.i("reconnect times: " + curReconnectTimes);
         }

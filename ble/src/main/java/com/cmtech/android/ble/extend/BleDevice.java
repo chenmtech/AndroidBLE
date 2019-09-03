@@ -146,6 +146,10 @@ public abstract class BleDevice {
         return connectState == CONNECT_SUCCESS;
     }
 
+    private boolean isDisconnected() {
+        return connectState == CONNECT_DISCONNECT;
+    }
+
     public boolean isWaitingResponse() {
         return connectState == CONNECT_SCANNING || connectState == CONNECT_CONNECTING;
     }
@@ -179,7 +183,7 @@ public abstract class BleDevice {
             setConnectState(CONNECT_DISCONNECT);
 
             if (basicInfo.autoConnect()) {
-                startScan();
+                connCmdExecutor.startScan();
             }
         }
     }
@@ -234,16 +238,9 @@ public abstract class BleDevice {
 
         if(isConnected()) {
             disconnect(false);
-        } else if(!isWaitingResponse()) {
-            startScan();
+        } else if(isDisconnected()) {
+            connCmdExecutor.startScan();
         }
-    }
-
-    // 开始扫描，扫描到设备后会自动连接
-    void startScan() {
-        mainHandler.removeCallbacksAndMessages(null);
-
-        connCmdExecutor.startScan();
     }
 
     // 断开连接
