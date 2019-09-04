@@ -47,6 +47,8 @@ class BleConnectCommandExecutor {
                     @Override
                     public void run() {
                         processScanResult(false, null);
+
+                        waiting = false;
                     }
                 });
 
@@ -55,6 +57,8 @@ class BleConnectCommandExecutor {
                     @Override
                     public void run() {
                         processScanResult(true, bluetoothLeDevice);
+
+                        waiting = false;
                     }
                 });
             }
@@ -71,6 +75,8 @@ class BleConnectCommandExecutor {
                 @Override
                 public void run() {
                     processScanResult(false, null);
+
+                    waiting= false;
                 }
             });
         }
@@ -88,6 +94,8 @@ class BleConnectCommandExecutor {
                 @Override
                 public void run() {
                     processConnectSuccess(deviceMirror);
+
+                    waiting = false;
                 }
             });
         }
@@ -98,6 +106,8 @@ class BleConnectCommandExecutor {
                 @Override
                 public void run() {
                     processConnectFailure(exception);
+
+                    waiting = false;
                 }
             });
         }
@@ -108,6 +118,8 @@ class BleConnectCommandExecutor {
                 @Override
                 public void run() {
                     processDisconnect(isActive);
+
+                    waiting = false;
                 }
             });
         }
@@ -117,7 +129,9 @@ class BleConnectCommandExecutor {
 
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
-    private volatile boolean waitingResponse = false; // 是否在等待响应
+    //private volatile boolean waitingResponse = false; // 是否在等待响应
+
+    private volatile boolean waiting = false;
 
     private int curReconnectTimes = 0; // 重连次数
 
@@ -131,9 +145,14 @@ class BleConnectCommandExecutor {
 
     // 开始扫描
     void startScan() {
+
         device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
+                if(waiting) return;
+
+                waiting = true;
+
                 ViseLog.e("start scanning...");
 
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
@@ -143,11 +162,8 @@ class BleConnectCommandExecutor {
                 device.setConnectState(CONNECT_SCANNING);
 
                 incrementReconnectTimes();
-
-                waitingResponse = true;
             }
         });
-
     }
 
     // 停止扫描
@@ -157,8 +173,6 @@ class BleConnectCommandExecutor {
             public void run() {
                 if(scanCallback != null && scanCallback.isScanning()) {
                     ViseLog.e("stop scanning...");
-
-                    waitingResponse = true;
 
                     scanCallback.removeHandlerMsg();
 
@@ -171,10 +185,9 @@ class BleConnectCommandExecutor {
                     }
                 }
 
-                waitingResponse = false;
+                waiting = false;
             }
         });
-
     }
 
     // 开始连接
@@ -182,6 +195,10 @@ class BleConnectCommandExecutor {
         device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
+                if(waiting) return;
+
+                waiting = true;
+
                 ViseLog.e("start connecting...");
 
                 MyConnectCallback connectCallback = new MyConnectCallback();
@@ -189,8 +206,6 @@ class BleConnectCommandExecutor {
                 ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
                 device.setConnectState(CONNECT_CONNECTING);
-
-                waitingResponse = true;
             }
         });
 
@@ -201,9 +216,11 @@ class BleConnectCommandExecutor {
         device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
-                ViseLog.e("disconnecting...");
+                if(waiting) return;
 
-                waitingResponse = true;
+                waiting = true;
+
+                ViseLog.e("disconnecting...");
 
                 if(device.getDeviceMirror() != null) {
                     ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
@@ -225,7 +242,7 @@ class BleConnectCommandExecutor {
 
                         clearReconnectTimes();
 
-                        waitingResponse = false;
+                        waiting = false;
 
                         if(isReconnect) {
                             startScan();
@@ -271,8 +288,6 @@ class BleConnectCommandExecutor {
 
             reconnect(); // 重连
         }
-
-        waitingResponse = false;
     }
 
     // 处理连接成功回调
@@ -295,8 +310,6 @@ class BleConnectCommandExecutor {
 
         clearReconnectTimes();
 
-        waitingResponse = false;
-
         device.startGattExecutor();
 
         device.executeAfterConnectSuccess();
@@ -307,8 +320,6 @@ class BleConnectCommandExecutor {
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
         ViseLog.e("processConnectFailure: " + bleException );
-
-        waitingResponse = false;
 
         device.stopGattExecutor();
 
@@ -329,8 +340,6 @@ class BleConnectCommandExecutor {
     private void processDisconnect(boolean isActive) {
         ViseLog.e("processDisconnect: " + isActive);
 
-        waitingResponse = false;
-
         device.stopGattExecutor();
 
         device.executeAfterDisconnect();
@@ -338,6 +347,5 @@ class BleConnectCommandExecutor {
         device.setDeviceMirror(null);
 
         device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
-
     }
 }
