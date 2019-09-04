@@ -14,7 +14,6 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
-import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_CONNECTING;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceConnectState.CONNECT_SCANNING;
@@ -231,14 +230,11 @@ class BleConnectCommandExecutor {
                 device.postDelayedWithMainHandler(new Runnable() {
                     @Override
                     public void run() {
-                        if(device.getConnectState() != BleDeviceConnectState.CONNECT_DISCONNECT && device.getConnectState() != CONNECT_CLOSED) {
+                        device.stopGattExecutor();
 
-                            device.stopGattExecutor();
+                        device.executeAfterDisconnect();
 
-                            device.executeAfterDisconnect();
-
-                            device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
-                        }
+                        device.setConnectState(BleDeviceConnectState.CONNECT_DISCONNECT);
 
                         clearReconnectTimes();
 
