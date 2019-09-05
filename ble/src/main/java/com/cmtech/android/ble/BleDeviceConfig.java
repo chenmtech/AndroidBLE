@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.core.ViseBle;
-import com.cmtech.android.ble.extend.BleDeviceConnectState;
+import com.cmtech.android.ble.extend.BleDeviceState;
 import com.cmtech.android.ble.extend.BleDeviceType;
 
 /**
@@ -36,11 +36,11 @@ public class BleDeviceConfig {
         BleDeviceType.addSupportedType(deviceType);
     }
 
-    public static void setConnectStateDescription(BleDeviceConnectState connectState, String description) {
+    public static void setConnectStateDescription(BleDeviceState connectState, String description) {
         connectState.setDescription(description);
     }
 
-    public static void setConnectStateIcon(BleDeviceConnectState connectState, int icon) {
+    public static void setConnectStateIcon(BleDeviceState connectState, int icon) {
         connectState.setIcon(icon);
     }
 

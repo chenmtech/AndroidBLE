@@ -44,7 +44,7 @@ class BleSerialGattCommandExecutor {
             }
         });
 
-        ViseLog.e("The gattCmdExecutor started.");
+        ViseLog.e("The gattCmdExecutor is started.");
     }
 
     // 停止Gatt命令执行器
@@ -52,7 +52,7 @@ class BleSerialGattCommandExecutor {
         if(isAlive()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
 
-            ViseLog.e("The gattCmdExecutor stopped.");
+            ViseLog.e("The gattCmdExecutor is stopped.");
         }
     }
 
