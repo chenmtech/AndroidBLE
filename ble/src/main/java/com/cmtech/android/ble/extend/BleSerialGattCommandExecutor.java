@@ -37,14 +37,14 @@ class BleSerialGattCommandExecutor {
 
         if(isAlive()) return;
 
+        ViseLog.e("启动gattCmdExecutor");
+
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
                 return new Thread(runnable, "MT_Gatt_Cmd");
             }
         });
-
-        ViseLog.e("The gattCmdExecutor is started.");
     }
 
     // 停止Gatt命令执行器
@@ -52,7 +52,7 @@ class BleSerialGattCommandExecutor {
         if(isAlive()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
 
-            ViseLog.e("The gattCmdExecutor is stopped.");
+            ViseLog.e("停止gattCmdExecutor");
         }
     }
 

@@ -168,11 +168,11 @@ public abstract class BleDevice {
     }
 
     // 切换设备状态
-    public final void switchState() {
-        ViseLog.i("BleDevice.switchState()");
+    public void switchState() {
+        ViseLog.e("BleDevice.switchState()");
 
         if(isConnected()) {
-            connCmdExecutor.disconnect(false); // 设备处于连接成功时，断开连接
+            disconnect(false); // 设备处于连接成功时，断开连接
         } else if(isDisconnected()) {
             connCmdExecutor.startScan(); // 设备处于连接断开时，开始扫描
         }
@@ -219,6 +219,8 @@ public abstract class BleDevice {
 
     // 断开连接
     protected void disconnect(boolean isReconnect) {
+        ViseLog.e("BleDevice.disconnect()");
+
         connCmdExecutor.disconnect(isReconnect);
     }
 

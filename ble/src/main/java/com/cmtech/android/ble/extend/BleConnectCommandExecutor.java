@@ -139,7 +139,7 @@ class BleConnectCommandExecutor {
 
     void setState(BleDeviceState state) {
         if(this.state != state) {
-            ViseLog.e(state);
+            ViseLog.e("设置设备状态：" + state);
 
             this.state = state;
 
@@ -205,7 +205,7 @@ class BleConnectCommandExecutor {
 
                 // 等待500ms
                 try {
-                    Thread.sleep(500);
+                    Thread.sleep(200);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -239,7 +239,7 @@ class BleConnectCommandExecutor {
 
     // 处理扫描结果
     private void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
-        ViseLog.e("processScanResult: " + canConnect + '-' + bluetoothLeDevice);
+        ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
 
         if (canConnect) {
             startConnect(bluetoothLeDevice); // 连接
@@ -272,13 +272,13 @@ class BleConnectCommandExecutor {
         } else {
             startScan();
 
-            ViseLog.i("reconnect times: " + curReconnectTimes);
+            ViseLog.i("重连次数: " + curReconnectTimes);
         }
     }
 
     // 处理连接成功回调
     private void processConnectSuccess(DeviceMirror mirror) {
-        ViseLog.e("processConnectSuccess: " + mirror);
+        ViseLog.e("处理连接成功: " + mirror);
 
         // 防止重复连接成功
         if(connectState == CONNECT_SUCCESS) {
@@ -305,7 +305,7 @@ class BleConnectCommandExecutor {
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
-        ViseLog.e("processConnectFailure: " + bleException );
+        ViseLog.e("处理连接失败: " + bleException );
 
         device.stopGattExecutor();
 
@@ -324,7 +324,7 @@ class BleConnectCommandExecutor {
 
     // 处理连接断开
     private void processDisconnect(boolean isActive) {
-        ViseLog.e("processDisconnect: " + isActive);
+        ViseLog.e("处理连接断开: " + isActive);
 
         device.stopGattExecutor();
 
