@@ -139,7 +139,7 @@ class BleConnectCommandExecutor {
 
     void setState(BleDeviceState state) {
         if(this.state != state) {
-            ViseLog.e("设置设备状态：" + state);
+            ViseLog.e("设备状态：" + state);
 
             this.state = state;
 
@@ -239,6 +239,10 @@ class BleConnectCommandExecutor {
 
     // 处理扫描结果
     private void processScanResult(boolean canConnect, BluetoothLeDevice bluetoothLeDevice) {
+        if(state != DEVICE_SCANNING) {
+            return;
+        }
+
         ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
 
         if (canConnect) {
@@ -281,7 +285,7 @@ class BleConnectCommandExecutor {
         ViseLog.e("处理连接成功: " + mirror);
 
         // 防止重复连接成功
-        if(connectState == CONNECT_SUCCESS) {
+        if(state == CONNECT_SUCCESS) {
             ViseLog.e("device connected again!!!!!!");
 
             return;

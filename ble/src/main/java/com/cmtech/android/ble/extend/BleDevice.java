@@ -14,18 +14,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED_CODE;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_DISCONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT_CODE;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE_CODE;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING_CODE;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS_CODE;
+import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED;
+import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING;
+import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_DISCONNECTING;
+import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 
 /**
   *
@@ -113,7 +107,7 @@ public abstract class BleDevice {
         this.deviceMirror = deviceMirror;
     }
 
-    private BleDeviceState getState() {
+    public BleDeviceState getState() {
         return (connCmdExecutor == null) ? DEVICE_CLOSED : connCmdExecutor.getState();
     }
 
@@ -182,7 +176,11 @@ public abstract class BleDevice {
     public void close() {
         ViseLog.e("BleDevice.close()");
 
-        switch(getState().getCode()) {
+        if(getState() == CONNECT_DISCONNECT) {
+            connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
+        }
+
+        /*switch(getState().getCode()) {
             case DEVICE_CLOSED_CODE:
             case CONNECT_FAILURE_CODE:
             case DEVICE_CONNECTING_CODE:
@@ -214,7 +212,7 @@ public abstract class BleDevice {
 
                 default:
 
-        }
+        }*/
     }
 
     // 断开连接
