@@ -228,7 +228,7 @@ class BleConnectCommandExecutor {
                         curReconnectTimes = 0;
 
                         if(isReconnect) {
-                            startScan();
+                            reconnect();
                         }
                     }
                 });

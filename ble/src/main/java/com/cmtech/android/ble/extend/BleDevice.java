@@ -216,7 +216,7 @@ public abstract class BleDevice {
     }
 
     // 断开连接
-    protected void disconnect(boolean isReconnect) {
+    public void disconnect(boolean isReconnect) {
         ViseLog.e("BleDevice.disconnect()");
 
         connCmdExecutor.disconnect(isReconnect);
