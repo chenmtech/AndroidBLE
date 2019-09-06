@@ -15,13 +15,13 @@ import com.cmtech.android.ble.R;
  */
 
 public class BleDeviceState {
-    static final int DEVICE_CLOSED_CODE = 0x00; // 已关闭
-    static final int DEVICE_SCANNING_CODE = 0x01; // 正在扫描
-    static final int DEVICE_CONNECTING_CODE = 0x02; // 正在连接
-    static final int DEVICE_DISCONNECTING_CODE = 0x03; // 正在断开
-    static final int CONNECT_SUCCESS_CODE = 0x04; // 连接成功
-    static final int CONNECT_FAILURE_CODE = 0x05;// 连接失败
-    static final int CONNECT_DISCONNECT_CODE = 0x06; // 连接断开
+    private static final int DEVICE_CLOSED_CODE = 0x00; // 已关闭
+    private static final int DEVICE_SCANNING_CODE = 0x01; // 正在扫描
+    private static final int DEVICE_CONNECTING_CODE = 0x02; // 正在连接
+    private static final int DEVICE_DISCONNECTING_CODE = 0x03; // 正在断开
+    private static final int CONNECT_SUCCESS_CODE = 0x04; // 连接成功
+    private static final int CONNECT_FAILURE_CODE = 0x05;// 连接失败
+    private static final int CONNECT_DISCONNECT_CODE = 0x06; // 连接断开
 
     public static final BleDeviceState DEVICE_CLOSED = new BleDeviceState(DEVICE_CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
 

@@ -153,6 +153,9 @@ class BleConnectCommandExecutor {
         device.postWithMainHandler(new Runnable() {
             @Override
             public void run() {
+                if(state != CONNECT_FAILURE && state != CONNECT_DISCONNECT)
+                    return;
+
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
                 scanCallback.setScan(true).scan();
@@ -190,6 +193,7 @@ class BleConnectCommandExecutor {
     }
 
     // 断开连接
+    // isReconnect: 断开后是否重连
     void disconnect(final boolean isReconnect) {
         device.postWithMainHandler(new Runnable() {
             @Override
@@ -246,22 +250,16 @@ class BleConnectCommandExecutor {
         ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
 
         if (canConnect) {
-            startConnect(bluetoothLeDevice); // 连接
+            MyConnectCallback connectCallback = new MyConnectCallback();
+
+            ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+
+            setState(DEVICE_CONNECTING);
         } else {
             setState(connectState);
 
-            if(connectState != CONNECT_SUCCESS)
-                reconnect(); // 重连
+            reconnect(); // 重连
         }
-    }
-
-    // 开始连接
-    private void startConnect(final BluetoothLeDevice bluetoothLeDevice) {
-        MyConnectCallback connectCallback = new MyConnectCallback();
-
-        ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
-
-        setState(DEVICE_CONNECTING);
     }
 
     private void reconnect() {
@@ -320,10 +318,14 @@ class BleConnectCommandExecutor {
         setConnectState(CONNECT_FAILURE);
 
         if(bleException instanceof TimeoutException) {
-            curReconnectTimes = device.getReconnectTimes();
-        }
+            device.notifyReconnectFailure();
 
-        reconnect();
+            setConnectState(CONNECT_DISCONNECT);
+
+            curReconnectTimes = 0;
+        } else {
+            reconnect();
+        }
     }
 
     // 处理连接断开

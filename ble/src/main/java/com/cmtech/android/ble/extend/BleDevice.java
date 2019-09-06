@@ -156,6 +156,8 @@ public abstract class BleDevice {
     public void open() {
         ViseLog.e("BleDevice.open()");
 
+        connCmdExecutor.setState(CONNECT_DISCONNECT);
+
         if(isClosed() && basicInfo.autoConnect()) {
             connCmdExecutor.startScan(); // 设备关闭时，且允许自动连接，则开始扫描
         }
@@ -217,8 +219,6 @@ public abstract class BleDevice {
 
     // 断开连接
     public void disconnect(boolean isReconnect) {
-        ViseLog.e("BleDevice.disconnect()");
-
         connCmdExecutor.disconnect(isReconnect);
     }
 
