@@ -219,7 +219,7 @@ public abstract class BleDevice {
 
     // 断开连接
     public void disconnect(boolean isReconnect) {
-        mainHandler.removeCallbacksAndMessages(null);
+        //mainHandler.removeCallbacksAndMessages(null);
 
         connCmdExecutor.disconnect(isReconnect);
     }
