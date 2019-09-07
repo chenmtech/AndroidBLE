@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
+import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING;
@@ -42,9 +43,7 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    private final Handler mainHandler = new Handler(Looper.getMainLooper()); // 主线程Handler，连接命令都在主线程中执行
-
-    private final BleConnectCommandExecutor connCmdExecutor; // 设备连接命令执行器，在mainHandler中执行命令
+    private final BleConnectCommandExecutor connCmdExecutor; // 设备连接命令执行器，在主线程中执行命令
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
 
@@ -123,15 +122,7 @@ public abstract class BleDevice {
         return getState() == DEVICE_CLOSED;
     }
 
-    protected boolean isConnected() {
-        return getState() == CONNECT_SUCCESS;
-    }
-
-    private boolean isDisconnected() {
-        return getState() == CONNECT_DISCONNECT;
-    }
-
-    public boolean isWaitingResponse() {
+    public boolean isFABRotated() {
         return getState() == DEVICE_SCANNING || getState() == DEVICE_CONNECTING || getState() == DEVICE_DISCONNECTING;
     }
 
@@ -145,11 +136,6 @@ public abstract class BleDevice {
 
             updateBattery();
         }
-    }
-
-
-    public void postWithMainHandler(Runnable runnable) {
-        mainHandler.post(runnable);
     }
 
     // 打开设备
@@ -167,10 +153,14 @@ public abstract class BleDevice {
     public void switchState() {
         ViseLog.e("BleDevice.switchState()");
 
-        if(isConnected()) {
+        if(getState() == CONNECT_SUCCESS) {
             disconnect(false); // 设备处于连接成功时，断开连接
-        } else if(isDisconnected()) {
-            connCmdExecutor.startScan(); // 设备处于连接断开时，开始扫描
+
+        } else if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
+            connCmdExecutor.startScan(); // 设备处于连接断开或连接失败时，开始扫描
+
+        } else if(getState() == DEVICE_SCANNING) {
+            connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
         }
     }
 
@@ -181,47 +171,15 @@ public abstract class BleDevice {
         if(getState() == CONNECT_DISCONNECT) {
             connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
         }
-
-        /*switch(getState().getCode()) {
-            case DEVICE_CLOSED_CODE:
-            case CONNECT_FAILURE_CODE:
-            case DEVICE_CONNECTING_CODE:
-                return;
-
-            case DEVICE_SCANNING_CODE:
-                connCmdExecutor.stopScan();
-
-                connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
-
-                return;
-
-            case CONNECT_DISCONNECT_CODE:
-                connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
-                return;
-
-            case CONNECT_SUCCESS_CODE:
-                disconnect(false);
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        while(getState() != CONNECT_DISCONNECT);
-                        connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
-                    }
-                }).start();
-
-                return;
-
-                default:
-
-        }*/
     }
+
+
 
     // 断开连接
     public void disconnect(boolean isReconnect) {
-        //mainHandler.removeCallbacksAndMessages(null);
+        ViseLog.e("BleDevice.disconnect()");
 
-        connCmdExecutor.disconnect(isReconnect);
+        connCmdExecutor.disconnect();
     }
 
     protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作

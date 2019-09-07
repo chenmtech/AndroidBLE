@@ -133,8 +133,6 @@ class BleConnectCommandExecutor {
 
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
-    private int curReconnectTimes = 0; // 重连次数
-
 
     BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
@@ -168,108 +166,89 @@ class BleConnectCommandExecutor {
     // 开始扫描
     void startScan() {
 
-        device.postWithMainHandler(new Runnable() {
-            @Override
-            public void run() {
-                opLock.lock();
+        opLock.lock();
 
-                try {
-                    if(state != CONNECT_FAILURE && state != CONNECT_DISCONNECT)
-                        return;
+        try {
+            if(state != CONNECT_FAILURE && state != CONNECT_DISCONNECT)
+                return;
 
-                    scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
+            scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
-                    scanCallback.setScan(true).scan();
+            scanCallback.setScan(true).scan();
 
-                    setState(DEVICE_SCANNING);
-
-                    curReconnectTimes++;
-                } finally {
-                    opLock.unlock();
-                }
-
-            }
-        });
+            setState(DEVICE_SCANNING);
+        } finally {
+            opLock.unlock();
+        }
     }
 
     // 停止扫描
     void stopScan() {
-        device.postWithMainHandler(new Runnable() {
-            @Override
-            public void run() {
-                if(scanCallback != null && scanCallback.isScanning()) {
+        opLock.lock();
 
-                    scanCallback.removeHandlerMsg();
+        try {
+            if(scanCallback != null && scanCallback.isScanning()) {
 
-                    scanCallback.setScan(false).scan();
+                scanCallback.removeHandlerMsg();
 
-                    ViseLog.e("stop scanning, please wait...");
+                scanCallback.setScan(false).scan();
 
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                setState(connectState);
-            }
-        });
-    }
-
-    // 断开连接
-    // isReconnect: 断开后是否重连
-    void disconnect(final boolean isReconnect) {
-        device.postWithMainHandler(new Runnable() {
-            @Override
-            public void run() {
-                opLock.lock();
+                ViseLog.e("stop scanning, please wait...");
 
                 try {
-                    setState(DEVICE_DISCONNECTING);
-
-                    if(device.getDeviceMirror() != null) {
-                        ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
-
-                        ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
-                    }
-                } finally {
-                    opLock.unlock();
-                }
-
-                // 等待200ms
-                try {
-                    Thread.sleep(200);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-
-                opLock.lock();
-
-                try {
-                    // 再检查是否断开
-                    if(connectState != BleDeviceState.CONNECT_DISCONNECT) {
-
-                        device.stopGattExecutor();
-
-                        device.executeAfterDisconnect();
-
-                        device.setDeviceMirror(null);
-
-                        setConnectState(CONNECT_DISCONNECT);
-                    }
-
-                    curReconnectTimes = 0;
-
-                    if(isReconnect) {
-                        reconnect();
-                    }
-                } finally {
-                    opLock.unlock();
-                }
-
             }
-        });
+
+            setState(connectState);
+        } finally {
+            opLock.unlock();
+        }
+
+    }
+
+    // 断开连接
+    void disconnect() {
+        opLock.lock();
+
+        try {
+            setState(DEVICE_DISCONNECTING);
+
+            if(device.getDeviceMirror() != null) {
+                ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+
+                ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+            }
+        } finally {
+            opLock.unlock();
+        }
+
+        // 等待200ms
+        try {
+            Thread.sleep(200);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        opLock.lock();
+
+        try {
+            // 再检查是否断开
+            if(connectState != BleDeviceState.CONNECT_DISCONNECT) {
+
+                device.stopGattExecutor();
+
+                device.executeAfterDisconnect();
+
+                device.setDeviceMirror(null);
+
+                setConnectState(CONNECT_DISCONNECT);
+            }
+        } finally {
+            opLock.unlock();
+        }
     }
 
 
@@ -289,13 +268,10 @@ class BleConnectCommandExecutor {
             setState(DEVICE_CONNECTING);
         } else {
             setState(connectState);
-
-            reconnect(); // 重连
         }
-
     }
 
-    private void reconnect() {
+    /*private void reconnect() {
         int canReconnectTimes = device.getReconnectTimes();
 
         if(canReconnectTimes != -1 && curReconnectTimes >= canReconnectTimes) {
@@ -309,7 +285,7 @@ class BleConnectCommandExecutor {
 
             ViseLog.i("重连次数: " + curReconnectTimes);
         }
-    }
+    }*/
 
     // 处理连接成功回调
     private void processConnectSuccess(DeviceMirror mirror) {
@@ -329,8 +305,6 @@ class BleConnectCommandExecutor {
 
         device.setDeviceMirror(mirror);
 
-        curReconnectTimes = 0;
-
         device.startGattExecutor();
 
         device.executeAfterConnectSuccess();
@@ -349,16 +323,6 @@ class BleConnectCommandExecutor {
         device.setDeviceMirror(null);
 
         setConnectState(CONNECT_FAILURE);
-
-        if(bleException instanceof TimeoutException) {
-            device.notifyReconnectFailure();
-
-            setConnectState(CONNECT_DISCONNECT);
-
-            curReconnectTimes = 0;
-        } else {
-            reconnect();
-        }
     }
 
     // 处理连接断开
