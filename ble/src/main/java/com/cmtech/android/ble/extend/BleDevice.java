@@ -154,7 +154,7 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.switchState()");
 
         if(getState() == CONNECT_SUCCESS) {
-            disconnect(false); // 设备处于连接成功时，断开连接
+            disconnect(); // 设备处于连接成功时，断开连接
 
         } else if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
             connCmdExecutor.startScan(); // 设备处于连接断开或连接失败时，开始扫描
@@ -176,7 +176,7 @@ public abstract class BleDevice {
 
 
     // 断开连接
-    public void disconnect(boolean isReconnect) {
+    public void disconnect() {
         ViseLog.e("BleDevice.disconnect()");
 
         connCmdExecutor.disconnect();

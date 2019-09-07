@@ -1,5 +1,8 @@
 package com.cmtech.android.ble.extend;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.cmtech.android.ble.callback.IBleCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.core.BluetoothGattChannel;
@@ -110,7 +113,12 @@ class BleSerialGattCommand extends BleGattCommand {
             bleCallback.onFailure(exception);
 
         if(device != null) {
-            device.disconnect(true);
+            new Handler(Looper.getMainLooper()).post(new Runnable() {
+                @Override
+                public void run() {
+                    device.disconnect();
+                }
+            });
         }
     }
 }
