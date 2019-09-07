@@ -13,6 +13,8 @@ import com.vise.log.ViseLog;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
@@ -47,6 +49,11 @@ public abstract class BleDevice {
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
 
+    private Lock opLock = new ReentrantLock();
+
+    public Lock getOpLock() {
+        return opLock;
+    }
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
@@ -173,12 +180,21 @@ public abstract class BleDevice {
         }
     }
 
-
-
     // 断开连接
     public void disconnect() {
         ViseLog.e("BleDevice.disconnect()");
 
+        opLock.lock();
+
+        try{
+            doDisconnect();
+        } finally {
+            opLock.unlock();
+        }
+
+    }
+
+    public void doDisconnect() {
         connCmdExecutor.disconnect();
     }
 

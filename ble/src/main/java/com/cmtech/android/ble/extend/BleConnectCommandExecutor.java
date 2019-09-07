@@ -42,7 +42,7 @@ class BleConnectCommandExecutor {
 
     private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
 
-    private Lock opLock = new ReentrantLock();
+    private final Lock opLock;
 
     // 扫描回调类
     private class MyScanCallback implements IScanCallback {
@@ -140,6 +140,8 @@ class BleConnectCommandExecutor {
         }
 
         this.device = device;
+
+        opLock = device.getOpLock();
     }
 
     BleDeviceState getState() {
@@ -221,20 +223,14 @@ class BleConnectCommandExecutor {
 
                 ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
             }
-        } finally {
-            opLock.unlock();
-        }
 
-        // 等待200ms
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+            // 等待200ms
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
-        opLock.lock();
-
-        try {
             // 再检查是否断开
             if(connectState != BleDeviceState.CONNECT_DISCONNECT) {
 
@@ -246,9 +242,11 @@ class BleConnectCommandExecutor {
 
                 setConnectState(CONNECT_DISCONNECT);
             }
+
         } finally {
             opLock.unlock();
         }
+
     }
 
 
