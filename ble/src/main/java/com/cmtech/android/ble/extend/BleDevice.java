@@ -8,6 +8,7 @@ import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
 import com.cmtech.android.ble.core.DeviceMirror;
+import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
@@ -165,6 +166,7 @@ public abstract class BleDevice {
                 connCmdExecutor.setState(CONNECT_DISCONNECT);
 
                 //connCmdExecutor.startScan(); // 设备关闭时，且允许自动连接，则开始扫描
+
                 startConnection();
             }
         } finally {
@@ -192,7 +194,7 @@ public abstract class BleDevice {
                         }
                     });
                 }
-            }, 0, 10, TimeUnit.SECONDS);
+            }, 0, 20, TimeUnit.SECONDS);
 
             ViseLog.e("启动自动连接服务");
         }
@@ -215,6 +217,9 @@ public abstract class BleDevice {
 
             } else if(getState() == DEVICE_SCANNING) {
                 connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
+
+                if(autoConnService != null)
+                    ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
             }
         } finally {
             opLock.unlock();
@@ -256,7 +261,7 @@ public abstract class BleDevice {
         connCmdExecutor.disconnect();
     }
 
-    protected abstract void executeAfterConnectSuccess(); // 连接成功后执行的操作
+    protected abstract boolean executeAfterConnectSuccess(); // 连接成功后执行的操作
 
     protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
 

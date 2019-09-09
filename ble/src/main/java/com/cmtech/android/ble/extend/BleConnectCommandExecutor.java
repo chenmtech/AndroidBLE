@@ -42,7 +42,7 @@ class BleConnectCommandExecutor {
 
     private final Lock opLock;
 
-    private BluetoothLeDevice bluetoothLeDevice;
+    //private BluetoothLeDevice bluetoothLeDevice;
 
     // 扫描回调类
     private class MyScanCallback implements IScanCallback {
@@ -133,7 +133,6 @@ class BleConnectCommandExecutor {
 
     private ScanCallback scanCallback; // 扫描回调，startScan时记录下来是因为stopScan时还要用到
 
-
     BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
             throw new NullPointerException("BleConnectCommandExecutor.device不能为null");
@@ -174,7 +173,7 @@ class BleConnectCommandExecutor {
             if(state != CONNECT_FAILURE && state != CONNECT_DISCONNECT)
                 return;
 
-            if(bluetoothLeDevice == null) {
+            /*if(bluetoothLeDevice == null) {
                 scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
                 scanCallback.setScan(true).scan();
@@ -186,8 +185,13 @@ class BleConnectCommandExecutor {
                 ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
                 setState(DEVICE_CONNECTING);
-            }
+            }*/
 
+            scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
+
+            scanCallback.setScan(true).scan();
+
+            setState(DEVICE_SCANNING);
 
         } finally {
             opLock.unlock();
@@ -268,27 +272,10 @@ class BleConnectCommandExecutor {
 
         ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
 
-        if(scanCallback != null) {
-
-            scanCallback.removeHandlerMsg();
-
-            scanCallback.setScan(false).scan();
-
-            ViseLog.e("stop scanning, please wait...");
-
-            try {
-                Thread.sleep(200);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            scanCallback = null;
-        }
-
         if (canConnect) {
             MyConnectCallback connectCallback = new MyConnectCallback();
 
-            this.bluetoothLeDevice = bluetoothLeDevice;
+            //this.bluetoothLeDevice = bluetoothLeDevice;
 
             ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
@@ -334,9 +321,10 @@ class BleConnectCommandExecutor {
 
         device.startGattExecutor();
 
-        device.executeAfterConnectSuccess();
-
-        setConnectState(CONNECT_SUCCESS);
+        if(device.executeAfterConnectSuccess())
+            setConnectState(CONNECT_SUCCESS);
+        else
+            setConnectState(CONNECT_DISCONNECT);
     }
 
     // 处理连接错误
