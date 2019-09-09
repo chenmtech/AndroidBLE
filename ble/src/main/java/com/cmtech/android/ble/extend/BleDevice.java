@@ -13,6 +13,11 @@ import com.vise.log.ViseLog;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -51,9 +56,13 @@ public abstract class BleDevice {
 
     private Lock opLock = new ReentrantLock();
 
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+
     public Lock getOpLock() {
         return opLock;
     }
+
+    private ExecutorService autoConnService;
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
@@ -149,10 +158,43 @@ public abstract class BleDevice {
     public void open() {
         ViseLog.e("BleDevice.open()");
 
-        if(isClosed() && basicInfo.autoConnect()) {
-            connCmdExecutor.setState(CONNECT_DISCONNECT);
+        opLock.lock();
 
-            connCmdExecutor.startScan(); // 设备关闭时，且允许自动连接，则开始扫描
+        try{
+            if(isClosed() && basicInfo.autoConnect()) {
+                connCmdExecutor.setState(CONNECT_DISCONNECT);
+
+                //connCmdExecutor.startScan(); // 设备关闭时，且允许自动连接，则开始扫描
+                startConnection();
+            }
+        } finally {
+            opLock.unlock();
+        }
+
+    }
+
+    private void startConnection() {
+        if(autoConnService == null || autoConnService.isTerminated()) {
+            autoConnService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                @Override
+                public Thread newThread(Runnable runnable) {
+                    return new Thread(runnable, "MT_Auto_Connection");
+                }
+            });
+
+            ((ScheduledExecutorService) autoConnService).scheduleAtFixedRate(new Runnable() {
+                @Override
+                public void run() {
+                    mainHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            connCmdExecutor.startScan();
+                        }
+                    });
+                }
+            }, 0, 30, TimeUnit.SECONDS);
+
+            ViseLog.e("启动自动连接服务");
         }
     }
 
@@ -160,24 +202,40 @@ public abstract class BleDevice {
     public void switchState() {
         ViseLog.e("BleDevice.switchState()");
 
-        if(getState() == CONNECT_SUCCESS) {
-            disconnect(); // 设备处于连接成功时，断开连接
+        opLock.lock();
 
-        } else if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
-            connCmdExecutor.startScan(); // 设备处于连接断开或连接失败时，开始扫描
+        try {
+            if(getState() == CONNECT_SUCCESS) {
+                disconnect(); // 设备处于连接成功时，断开连接
 
-        } else if(getState() == DEVICE_SCANNING) {
-            connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
+            } else if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
+                //connCmdExecutor.startScan(); // 设备处于连接断开或连接失败时，开始扫描
+
+                startConnection();
+
+            } else if(getState() == DEVICE_SCANNING) {
+                connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
+            }
+        } finally {
+            opLock.unlock();
         }
+
     }
 
     // 关闭设备
     public void close() {
         ViseLog.e("BleDevice.close()");
 
-        if(getState() == CONNECT_DISCONNECT) {
-            connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
+        opLock.lock();
+
+        try {
+            if(getState() == CONNECT_DISCONNECT) {
+                connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
+            }
+        } finally {
+            opLock.unlock();
         }
+
     }
 
     // 断开连接

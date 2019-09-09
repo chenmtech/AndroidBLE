@@ -9,21 +9,19 @@ import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
+import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
+import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
+import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_DISCONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
 
 /**
   *
@@ -257,6 +255,10 @@ class BleConnectCommandExecutor {
         }
 
         ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
+
+        scanCallback.removeHandlerMsg();
+
+        scanCallback.setScan(false).scan();
 
         if (canConnect) {
             MyConnectCallback connectCallback = new MyConnectCallback();
