@@ -91,13 +91,18 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
             adapter = ViseBle.getInstance().getBluetoothAdapter();
 
             if (adapter != null) {
-                //adapter.startLeScan(ScanCallback.this);
                 ScanFilter.Builder builder = new ScanFilter.Builder();
-                //builder.setDeviceName("CM1.0");
+
+                builder.setDeviceName("CM1.0").setDeviceAddress("18:93:D7:77:C9:8F");
+
                 ScanFilter filter = builder.build();
-                BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+
                 ScanSettings.Builder builder1 = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+
+                BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+
                 scanner.startScan(Collections.singletonList(filter), builder1.build(), ScanCallback.this);
+
                 ViseLog.e("start scann");
             }
         } else {
@@ -106,8 +111,10 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
             adapter = ViseBle.getInstance().getBluetoothAdapter();
 
             if (adapter != null) {
-                BluetoothLeScanner scanner = ViseBle.getInstance().getBluetoothAdapter().getBluetoothLeScanner();
+                BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+
                 scanner.stopScan(ScanCallback.this);
+
                 ViseLog.e("stop scan");
             }
         }
@@ -121,19 +128,6 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
         return this;
     }
 
-    //@Override
-    /*public void onLeScan(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
-        BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(bluetoothDevice, rssi, scanRecord, System.currentTimeMillis());
-
-        BluetoothLeDevice filterDevice = onFilter(bluetoothLeDevice);
-
-        if (filterDevice != null) {
-            bluetoothLeDeviceStore.addDevice(filterDevice);
-
-            scanCallback.onDeviceFound(filterDevice);
-        }
-    }*/
-
     @Override
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
@@ -143,11 +137,11 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
         BluetoothLeDevice filterDevice = onFilter(bluetoothLeDevice);
 
         if (filterDevice != null) {
+            ViseLog.e("found device");
+
             bluetoothLeDeviceStore.addDevice(filterDevice);
 
             scanCallback.onDeviceFound(filterDevice);
-
-            ViseLog.e("found device");
         }
     }
 
@@ -155,7 +149,7 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     public void onScanFailed(int errorCode) {
         super.onScanFailed(errorCode);
 
-        ViseLog.e("scan fail");
+        ViseLog.e("scan fail" + errorCode);
     }
 
     @Override

@@ -294,7 +294,7 @@ public class ViseBle {
      * @return 返回蓝牙适配器
      */
     public BluetoothAdapter getBluetoothAdapter() {
-        /*if(bluetoothManager == null) {
+        if(bluetoothManager == null) {
             bluetoothManager = (BluetoothManager) this.context.getSystemService(Context.BLUETOOTH_SERVICE);
 
             if(bluetoothManager == null) {
@@ -304,17 +304,7 @@ public class ViseBle {
 
             return bluetoothManager.getAdapter();
         } else
-            return bluetoothAdapter;*/
-
-
-        bluetoothManager = (BluetoothManager) this.context.getSystemService(Context.BLUETOOTH_SERVICE);
-
-        if(bluetoothManager == null) {
-            Toast.makeText(context, "bluetoothManager is null", Toast.LENGTH_LONG).show();
-            throw new IllegalStateException();
-        }
-
-        return bluetoothManager.getAdapter();
+            return bluetoothAdapter;
     }
 
     /**

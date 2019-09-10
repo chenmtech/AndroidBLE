@@ -48,6 +48,8 @@ class BleConnectCommandExecutor {
 
     private final Lock connLock; // 锁
 
+    private BluetoothLeDevice bluetoothLeDevice;
+
     // 扫描回调类
     private class MyScanCallback implements IScanCallback {
         MyScanCallback() {
@@ -164,6 +166,19 @@ class BleConnectCommandExecutor {
     // 开始扫描
     void startScan() {
         if(state == CONNECT_FAILURE || state == CONNECT_DISCONNECT) {
+            /*if(bluetoothLeDevice == null) {
+                scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
+
+                scanCallback.setScan(true).scan();
+
+                setState(DEVICE_SCANNING);
+            } else {
+                MyConnectCallback connectCallback = new MyConnectCallback();
+
+                ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+
+                setState(DEVICE_CONNECTING);
+            }*/
             scanCallback = new SingleFilterScanCallback(new MyScanCallback()).setDeviceMac(device.getMacAddress());
 
             scanCallback.setScan(true).scan();
@@ -229,18 +244,13 @@ class BleConnectCommandExecutor {
         ViseLog.e("处理扫描结果: " + canConnect + '&' + bluetoothLeDevice);
 
         if (canConnect) { // 扫描到设备，发起连接
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    scanCallback.setScan(false).scan();
+            this.bluetoothLeDevice = bluetoothLeDevice;
 
-                    MyConnectCallback connectCallback = new MyConnectCallback();
+            MyConnectCallback connectCallback = new MyConnectCallback();
 
-                    ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+            ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
-                    setState(DEVICE_CONNECTING);
-                }
-            });
+            setState(DEVICE_CONNECTING);
 
         } else {
             setState(connectState);
