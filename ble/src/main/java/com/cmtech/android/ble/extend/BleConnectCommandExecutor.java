@@ -232,6 +232,8 @@ class BleConnectCommandExecutor {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
+                    scanCallback.setScan(false).scan();
+
                     MyConnectCallback connectCallback = new MyConnectCallback();
 
                     ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
