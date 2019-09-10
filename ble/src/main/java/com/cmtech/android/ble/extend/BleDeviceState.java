@@ -33,7 +33,7 @@ public class BleDeviceState {
 
     public static final BleDeviceState CONNECT_SUCCESS = new BleDeviceState(CONNECT_SUCCESS_CODE, "连接成功", R.mipmap.ic_connected_32px);
 
-    static final BleDeviceState CONNECT_FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
+    public static final BleDeviceState CONNECT_FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
 
     public static final BleDeviceState CONNECT_DISCONNECT = new BleDeviceState(CONNECT_DISCONNECT_CODE, "连接断开", R.mipmap.ic_disconnect_32px);
 
