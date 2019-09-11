@@ -91,17 +91,17 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
             adapter = ViseBle.getInstance().getBluetoothAdapter();
 
             if (adapter != null) {
-                ScanFilter.Builder builder = new ScanFilter.Builder();
+                ScanFilter.Builder filterBuilder = new ScanFilter.Builder();
 
-                builder.setDeviceName("CM1.0");
+                filterBuilder.setDeviceName("CM1.0");
 
-                ScanFilter filter = builder.build();
+                ScanFilter filter = filterBuilder.build();
 
-                ScanSettings.Builder builder1 = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+                ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
 
                 BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
-                scanner.startScan(Collections.singletonList(filter), builder1.build(), ScanCallback.this);
+                scanner.startScan(Collections.singletonList(filter), settingsBuilder.build(), ScanCallback.this);
 
                 ViseLog.e("start scann");
             }
@@ -149,7 +149,7 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     public void onScanFailed(int errorCode) {
         super.onScanFailed(errorCode);
 
-        ViseLog.e("scan fail" + errorCode);
+        scanCallback.onScanTimeout();
     }
 
     @Override

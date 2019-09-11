@@ -63,7 +63,7 @@ public abstract class BleDevice {
         return connLock;
     }
 
-    private ExecutorService autoConnService;
+    private ExecutorService autoConnService; // 自动连接线程池
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {
         this.basicInfo = basicInfo;
@@ -91,10 +91,6 @@ public abstract class BleDevice {
 
     public String getUuidString() {
         return basicInfo.getUuidString();
-    }
-
-    int getReconnectTimes() {
-        return basicInfo.getReconnectTimes();
     }
 
     public String getImagePath() {
@@ -192,7 +188,7 @@ public abstract class BleDevice {
                         }
                     });
                 }
-            }, 0, 20, TimeUnit.SECONDS);
+            }, 0, 10, TimeUnit.SECONDS);
 
             ViseLog.e("启动自动连接服务");
         }
