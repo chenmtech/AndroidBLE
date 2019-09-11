@@ -1,8 +1,5 @@
 package com.cmtech.android.ble.callback.scan;
 
-import com.cmtech.android.ble.core.ViseBle;
-import com.cmtech.android.ble.model.BluetoothLeDevice;
-
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -27,32 +24,5 @@ public class SingleFilterScanCallback extends ScanCallback {
     public ScanCallback setDeviceMac(String deviceMac) {
         this.deviceMac = deviceMac;
         return this;
-    }
-
-    @Override
-    public BluetoothLeDevice onFilter(BluetoothLeDevice bluetoothLeDevice) {
-        BluetoothLeDevice tempDevice = null;
-        if (!hasFound.get()) {
-            if (bluetoothLeDevice != null && bluetoothLeDevice.getAddress() != null && deviceMac != null
-                    && deviceMac.equalsIgnoreCase(bluetoothLeDevice.getAddress().trim())) {
-                hasFound.set(true);
-                isScanning = false;
-                removeHandlerMsg();
-                ViseBle.getInstance().stopScan(SingleFilterScanCallback.this);
-                tempDevice = bluetoothLeDevice;
-                bluetoothLeDeviceStore.addDevice(bluetoothLeDevice);
-                scanCallback.onScanFinish(bluetoothLeDeviceStore);
-            } else if (bluetoothLeDevice != null && bluetoothLeDevice.getName() != null && deviceName != null
-                    && deviceName.equalsIgnoreCase(bluetoothLeDevice.getName().trim())) {
-                hasFound.set(true);
-                isScanning = false;
-                removeHandlerMsg();
-                ViseBle.getInstance().stopScan(SingleFilterScanCallback.this);
-                tempDevice = bluetoothLeDevice;
-                bluetoothLeDeviceStore.addDevice(bluetoothLeDevice);
-                scanCallback.onScanFinish(bluetoothLeDeviceStore);
-            }
-        }
-        return tempDevice;
     }
 }

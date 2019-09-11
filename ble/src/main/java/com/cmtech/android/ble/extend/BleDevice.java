@@ -181,7 +181,7 @@ public abstract class BleDevice {
             ((ScheduledExecutorService) autoConnService).scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             connCmdExecutor.startScan();
@@ -207,7 +207,7 @@ public abstract class BleDevice {
             } else if(getState() == CONNECT_SUCCESS) {
                 ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
-                callDisconnect(); // 设备处于连接成功时，断开连接
+                startDisconnection(); // 设备处于连接成功时，断开连接
             } else if(getState() == DEVICE_SCANNING) {
                 ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
@@ -236,8 +236,8 @@ public abstract class BleDevice {
     }
 
     // 断开连接
-    public void callDisconnect() {
-        ViseLog.e("BleDevice.callDisconnect()");
+    public void startDisconnection() {
+        ViseLog.e("BleDevice.startDisconnection()");
 
         connLock.lock();
 

@@ -24,7 +24,7 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/8/1 22:58.
  */
-public class ScanCallback extends android.bluetooth.le.ScanCallback implements IScanFilter {
+public class ScanCallback extends android.bluetooth.le.ScanCallback {
     protected Handler handler = new Handler(Looper.myLooper());
 
     protected boolean isScan = true;//是否开始扫描
@@ -134,15 +134,11 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
 
         BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes(), result.getTimestampNanos());
 
-        BluetoothLeDevice filterDevice = onFilter(bluetoothLeDevice);
+        ViseLog.e("found device");
 
-        if (filterDevice != null) {
-            ViseLog.e("found device");
+        bluetoothLeDeviceStore.addDevice(bluetoothLeDevice);
 
-            bluetoothLeDeviceStore.addDevice(filterDevice);
-
-            scanCallback.onDeviceFound(filterDevice);
-        }
+        scanCallback.onDeviceFound(bluetoothLeDevice);
     }
 
     @Override
@@ -157,10 +153,5 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
         super.onBatchScanResults(results);
 
         ViseLog.e("batch result");
-    }
-
-    @Override
-    public BluetoothLeDevice onFilter(BluetoothLeDevice bluetoothLeDevice) {
-        return bluetoothLeDevice;
     }
 }

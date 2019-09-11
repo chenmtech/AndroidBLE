@@ -116,7 +116,7 @@ class BleSerialGattCommand extends BleGattCommand {
             new Handler(Looper.getMainLooper()).post(new Runnable() {
                 @Override
                 public void run() {
-                    device.callDisconnect();
+                    device.startDisconnection();
                 }
             });
         }

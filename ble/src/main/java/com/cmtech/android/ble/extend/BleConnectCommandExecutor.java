@@ -267,7 +267,7 @@ class BleConnectCommandExecutor {
         if(device.executeAfterConnectSuccess())
             setConnectState(CONNECT_SUCCESS);
         else {
-            device.callDisconnect();
+            device.startDisconnection();
         }
     }
 
