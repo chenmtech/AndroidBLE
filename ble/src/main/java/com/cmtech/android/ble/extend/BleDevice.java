@@ -192,7 +192,7 @@ public abstract class BleDevice {
                         }
                     });
                 }
-            }, 0, 10, TimeUnit.SECONDS);
+            }, 0, 20, TimeUnit.SECONDS);
 
             ViseLog.e("启动自动连接服务");
         }

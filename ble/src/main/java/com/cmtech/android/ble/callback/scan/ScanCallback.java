@@ -93,7 +93,7 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
             if (adapter != null) {
                 ScanFilter.Builder builder = new ScanFilter.Builder();
 
-                builder.setDeviceName("CM1.0").setDeviceAddress("18:93:D7:77:C9:8F");
+                builder.setDeviceName("CM1.0");
 
                 ScanFilter filter = builder.build();
 

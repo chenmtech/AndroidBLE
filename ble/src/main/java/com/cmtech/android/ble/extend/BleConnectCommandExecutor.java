@@ -1,8 +1,6 @@
 package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothDevice;
-import android.os.Handler;
-import android.os.Looper;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.callback.scan.IScanCallback;
@@ -213,9 +211,10 @@ class BleConnectCommandExecutor {
         setState(DEVICE_DISCONNECTING);
 
         if(device.getDeviceMirror() != null) {
-            ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+            //ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
 
-            ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+            //ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
+            device.getDeviceMirror().clear();
         }
 
         // 等待200ms
@@ -299,7 +298,11 @@ class BleConnectCommandExecutor {
 
         device.executeAfterConnectFailure();
 
-        device.setDeviceMirror(null);
+        if(device.getDeviceMirror() != null) {
+            device.getDeviceMirror().clear();
+
+            device.setDeviceMirror(null);
+        }
 
         setConnectState(CONNECT_FAILURE);
     }
@@ -313,7 +316,11 @@ class BleConnectCommandExecutor {
 
             device.executeAfterDisconnect();
 
-            device.setDeviceMirror(null);
+            if(device.getDeviceMirror() != null) {
+                device.getDeviceMirror().clear();
+
+                device.setDeviceMirror(null);
+            }
 
             setConnectState(CONNECT_DISCONNECT);
         }
