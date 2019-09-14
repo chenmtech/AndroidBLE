@@ -2,20 +2,17 @@ package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.ScanFilter;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
-import com.cmtech.android.ble.callback.scan.IScanCallback;
-import com.cmtech.android.ble.callback.scan.ScanCallback;
-import com.cmtech.android.ble.callback.scan.SingleFilterScanCallback;
+import com.cmtech.android.ble.callback.ScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
-import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
-import com.cmtech.android.ble.model.BluetoothLeDeviceStore;
 import com.vise.log.ViseLog;
 
 /**
@@ -87,7 +84,7 @@ public class ViseBle {
         if (scanCallback == null) {
             throw new IllegalArgumentException("this ScanCallback is Null!");
         }
-        scanCallback.setScan(true).scan();
+        scanCallback.startScan();
     }
 
     /**
@@ -99,7 +96,7 @@ public class ViseBle {
         if (scanCallback == null) {
             throw new IllegalArgumentException("this ScanCallback is Null!");
         }
-        scanCallback.setScan(false).removeHandlerMsg().scan();
+        scanCallback.stopScan();
     }
 
     /**
@@ -137,31 +134,28 @@ public class ViseBle {
             ViseLog.e("This mac or connectCallback is null.");
             return;
         }
-        startScan(new SingleFilterScanCallback(new IScanCallback() {
-            @Override
-            public void onDeviceFound(BluetoothLeDevice bluetoothLeDevice) {
 
-            }
+        ScanFilter.Builder builder = new ScanFilter.Builder();
 
+        builder.setDeviceAddress(mac);
+
+        ScanFilter scanFilter = builder.build();
+
+        startScan(new ScanCallback() {
             @Override
-            public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+            public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
+                stopScan();
+
+                if(bluetoothLeDevice != null) {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
+                            connect(bluetoothLeDevice, connectCallback);
                         }
                     });
-                } else {
-                    connectCallback.onConnectFailure(new TimeoutException());
                 }
             }
-
-            @Override
-            public void onScanTimeout() {
-                connectCallback.onConnectFailure(new TimeoutException());
-            }
-        }).setDeviceMac(mac));
+        }.setScanFilter(scanFilter));
     }
 
     /**
@@ -175,31 +169,28 @@ public class ViseBle {
             ViseLog.e("This name or connectCallback is null.");
             return;
         }
-        startScan(new SingleFilterScanCallback(new IScanCallback() {
-            @Override
-            public void onDeviceFound(BluetoothLeDevice bluetoothLeDevice) {
 
-            }
+        ScanFilter.Builder builder = new ScanFilter.Builder();
 
+        builder.setDeviceName(name);
+
+        ScanFilter scanFilter = builder.build();
+
+        startScan(new ScanCallback() {
             @Override
-            public void onScanFinish(final BluetoothLeDeviceStore bluetoothLeDeviceStore) {
-                if (bluetoothLeDeviceStore.getDeviceList().size() > 0) {
+            public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
+                stopScan();
+
+                if(bluetoothLeDevice != null) {
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            connect(bluetoothLeDeviceStore.getDeviceList().get(0), connectCallback);
+                            connect(bluetoothLeDevice, connectCallback);
                         }
                     });
-                } else {
-                    connectCallback.onConnectFailure(new TimeoutException());
                 }
             }
-
-            @Override
-            public void onScanTimeout() {
-                connectCallback.onConnectFailure(new TimeoutException());
-            }
-        }).setDeviceName(name));
+        }.setScanFilter(scanFilter));
     }
 
     /**

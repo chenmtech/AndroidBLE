@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 
-import com.cmtech.android.ble.callback.scan.ScanCallback;
+import com.cmtech.android.ble.callback.ScanCallback;
 import com.cmtech.android.ble.core.ViseBle;
 
 /**
