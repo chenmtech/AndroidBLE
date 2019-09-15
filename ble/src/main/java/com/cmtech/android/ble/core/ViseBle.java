@@ -9,7 +9,7 @@ import android.os.Looper;
 import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
-import com.cmtech.android.ble.callback.ScanCallback;
+import com.cmtech.android.ble.callback.BleScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
@@ -78,25 +78,25 @@ public class ViseBle {
     /**
      * 开始扫描
      *
-     * @param scanCallback 自定义回调
+     * @param bleScanCallback 自定义回调
      */
-    public void startScan(ScanCallback scanCallback) {
-        if (scanCallback == null) {
-            throw new IllegalArgumentException("this ScanCallback is Null!");
+    public void startScan(BleScanCallback bleScanCallback) {
+        if (bleScanCallback == null) {
+            throw new IllegalArgumentException("this BleScanCallback is Null!");
         }
-        scanCallback.startScan();
+        bleScanCallback.startScan();
     }
 
     /**
      * 停止扫描
      *
-     * @param scanCallback 自定义回调
+     * @param bleScanCallback 自定义回调
      */
-    public void stopScan(ScanCallback scanCallback) {
-        if (scanCallback == null) {
-            throw new IllegalArgumentException("this ScanCallback is Null!");
+    public void stopScan(BleScanCallback bleScanCallback) {
+        if (bleScanCallback == null) {
+            throw new IllegalArgumentException("this BleScanCallback is Null!");
         }
-        scanCallback.stopScan();
+        bleScanCallback.stopScan();
     }
 
     /**
@@ -141,7 +141,7 @@ public class ViseBle {
 
         ScanFilter scanFilter = builder.build();
 
-        startScan(new ScanCallback() {
+        startScan(new BleScanCallback() {
             @Override
             public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
                 stopScan();
@@ -176,7 +176,7 @@ public class ViseBle {
 
         ScanFilter scanFilter = builder.build();
 
-        startScan(new ScanCallback() {
+        startScan(new BleScanCallback() {
             @Override
             public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
                 stopScan();

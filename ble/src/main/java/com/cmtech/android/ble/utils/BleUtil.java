@@ -7,7 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 
-import com.cmtech.android.ble.callback.ScanCallback;
+import com.cmtech.android.ble.callback.BleScanCallback;
 import com.cmtech.android.ble.core.ViseBle;
 
 /**
@@ -38,13 +38,13 @@ public class BleUtil {
     }
 
     // 开始扫描
-    public static void startScan(ScanCallback scanCallback) {
-        ViseBle.getInstance().startScan(scanCallback);
+    public static void startScan(BleScanCallback bleScanCallback) {
+        ViseBle.getInstance().startScan(bleScanCallback);
     }
 
     // 停止扫描
-    public static void stopScan(ScanCallback scanCallback) {
-        ViseBle.getInstance().stopScan(scanCallback);
+    public static void stopScan(BleScanCallback bleScanCallback) {
+        ViseBle.getInstance().stopScan(bleScanCallback);
     }
 
     // 断开所有设备连接

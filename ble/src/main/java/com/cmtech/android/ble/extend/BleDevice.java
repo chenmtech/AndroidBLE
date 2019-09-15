@@ -59,10 +59,6 @@ public abstract class BleDevice {
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public Lock getConnLock() {
-        return connLock;
-    }
-
     private ExecutorService autoConnService; // 自动连接线程池
 
     public BleDevice(BleDeviceBasicInfo basicInfo) {

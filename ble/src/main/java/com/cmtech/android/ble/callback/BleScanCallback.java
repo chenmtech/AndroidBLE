@@ -15,18 +15,14 @@ import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 
-/**
- * @Description: 扫描设备回调
- * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
- * @date: 17/8/1 22:58.
- */
-public abstract class ScanCallback extends android.bluetooth.le.ScanCallback {
+
+public abstract class BleScanCallback extends android.bluetooth.le.ScanCallback {
     private ScanFilter scanFilter;
 
-    public ScanCallback() {
+    public BleScanCallback() {
     }
 
-    public ScanCallback setScanFilter(ScanFilter scanFilter) {
+    public BleScanCallback setScanFilter(ScanFilter scanFilter) {
         this.scanFilter = scanFilter;
 
         return this;
@@ -40,7 +36,7 @@ public abstract class ScanCallback extends android.bluetooth.le.ScanCallback {
 
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
-            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), ScanCallback.this);
+            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), BleScanCallback.this);
 
             ViseLog.e("Start scanning");
         }
@@ -53,7 +49,7 @@ public abstract class ScanCallback extends android.bluetooth.le.ScanCallback {
         if (adapter != null) {
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
-            scanner.stopScan(ScanCallback.this);
+            scanner.stopScan(BleScanCallback.this);
 
             ViseLog.e("Stop scan");
         }
@@ -63,7 +59,13 @@ public abstract class ScanCallback extends android.bluetooth.le.ScanCallback {
     public void onScanResult(int callbackType, ScanResult result) {
         super.onScanResult(callbackType, result);
 
-        BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes(), result.getTimestampNanos());
+        BluetoothLeDevice bluetoothLeDevice;
+
+        if(result.getScanRecord() == null) {
+            bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), null, result.getTimestampNanos());
+        } else {
+            bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes(), result.getTimestampNanos());
+        }
 
         ViseLog.e("Found device: device address = " + bluetoothLeDevice.getAddress());
 
