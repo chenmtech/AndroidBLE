@@ -113,12 +113,7 @@ class BleSerialGattCommand extends BleGattCommand {
             bleCallback.onFailure(exception);
 
         if(device != null) {
-            new Handler(Looper.getMainLooper()).post(new Runnable() {
-                @Override
-                public void run() {
-                    device.startDisconnection();
-                }
-            });
+            device.startDisconnection();
         }
     }
 }

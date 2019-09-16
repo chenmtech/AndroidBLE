@@ -667,17 +667,6 @@ public class DeviceMirror {
     /**
      * 连接设备
      */
-    /*private synchronized void connect() {
-        if (handler != null) {
-            handler.removeMessages(MSG_CONNECT_TIMEOUT);
-            handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
-        }
-        connectState = ConnectState.CONNECT_PROCESS;
-        if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
-            bluetoothLeDevice.getDevice().connectGatt(ViseBle.getInstance().getContext(), false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
-        }
-    }*/
-
     private synchronized void connect() {
         if (handler != null) {
             handler.removeMessages(MSG_CONNECT_TIMEOUT);

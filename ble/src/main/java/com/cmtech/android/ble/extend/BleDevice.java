@@ -55,8 +55,6 @@ public abstract class BleDevice {
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
 
-    private final Lock connLock = new ReentrantLock(); // 连接相关操作的锁
-
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     private ExecutorService autoConnService; // 自动连接线程池
@@ -151,16 +149,10 @@ public abstract class BleDevice {
     public void open() {
         ViseLog.e("BleDevice.open()");
 
-        connLock.lock();
+        if(isClosed() && basicInfo.autoConnect()) {
+            connCmdExecutor.setState(CONNECT_DISCONNECT);
 
-        try{
-            if(isClosed() && basicInfo.autoConnect()) {
-                connCmdExecutor.setState(CONNECT_DISCONNECT);
-
-                startConnection();
-            }
-        } finally {
-            connLock.unlock();
+            startConnection();
         }
 
     }
@@ -177,12 +169,15 @@ public abstract class BleDevice {
             ((ScheduledExecutorService) autoConnService).scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            connCmdExecutor.startScan();
-                        }
-                    });
+                    if(getState() == CONNECT_FAILURE || getState() == CONNECT_DISCONNECT) {
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                connCmdExecutor.startScan();
+                            }
+                        });
+                    }
+
                 }
             }, 0, 10, TimeUnit.SECONDS);
 
@@ -194,23 +189,17 @@ public abstract class BleDevice {
     public void switchState() {
         ViseLog.e("BleDevice.switchState()");
 
-        connLock.lock();
+        if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
+            startConnection();
 
-        try {
-            if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
-                startConnection();
+        } else if(getState() == CONNECT_SUCCESS) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
-            } else if(getState() == CONNECT_SUCCESS) {
-                ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+            startDisconnection(); // 设备处于连接成功时，断开连接
+        } else if(getState() == DEVICE_SCANNING) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
-                startDisconnection(); // 设备处于连接成功时，断开连接
-            } else if(getState() == DEVICE_SCANNING) {
-                ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-
-                connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
-            }
-        } finally {
-            connLock.unlock();
+            connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
         }
 
     }
@@ -219,14 +208,8 @@ public abstract class BleDevice {
     public void close() {
         ViseLog.e("BleDevice.close()");
 
-        connLock.lock();
-
-        try {
-            if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
-                connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
-            }
-        } finally {
-            connLock.unlock();
+        if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
+            connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
         }
 
     }
@@ -235,17 +218,16 @@ public abstract class BleDevice {
     public void startDisconnection() {
         ViseLog.e("BleDevice.startDisconnection()");
 
-        connLock.lock();
-
-        try{
-            disconnect();
-        } finally {
-            connLock.unlock();
-        }
+        mainHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                disconnect();
+            }
+        });
 
     }
 
-    public void disconnect() {
+    protected void disconnect() {
         connCmdExecutor.disconnect();
     }
 
