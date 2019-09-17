@@ -13,8 +13,6 @@ import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
-import java.util.concurrent.locks.Lock;
-
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
@@ -38,21 +36,27 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 class BleConnectCommandExecutor {
     private final BleDevice device; // 设备
 
-    private final BleScanCallback bleScanCallback; // 扫描回调，startScan时记录下来，stopScan时要用到
+    private final BleScanCallback bleScanCallback = new BleScanCallback() {
+        @Override
+        public void onScanFinish(BluetoothLeDevice bluetoothLeDevice) {
+            stopScan();
 
-    private final MyConnectCallback connectCallback;
+            if(bluetoothLeDevice != null) {
+                BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
 
-    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
+                if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
+                    processScanResult(null);
 
-    private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
-
-    private Handler mHandler = new Handler(Looper.getMainLooper());
-
-    // 连接回调类
-    private class MyConnectCallback implements IConnectCallback {
-        MyConnectCallback() {
+                } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+                    processScanResult(bluetoothLeDevice);
+                }
+            } else {
+                processScanResult(null);
+            }
         }
+    }; // 扫描回调
 
+    private final IConnectCallback connectCallback = new IConnectCallback() {
         // 连接成功
         @Override
         public void onConnectSuccess(final DeviceMirror deviceMirror) {
@@ -85,7 +89,13 @@ class BleConnectCommandExecutor {
                 }
             });
         }
-    }
+    }; // 连接回调
+
+    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
+
+    private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
+
+    private Handler mHandler = new Handler(Looper.getMainLooper()); // 主线程Handler
 
     BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
@@ -96,27 +106,7 @@ class BleConnectCommandExecutor {
 
         ScanFilter scanFilter = new ScanFilter.Builder().setDeviceName("CM1.0").setDeviceAddress(device.getMacAddress()).build();
 
-        bleScanCallback = new BleScanCallback() {
-            @Override
-            public void onScanFinish(BluetoothLeDevice bluetoothLeDevice) {
-                stopScan();
-
-                if(bluetoothLeDevice != null) {
-                    BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
-
-                    if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                        processScanResult(null);
-
-                    } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                        processScanResult(bluetoothLeDevice);
-                    }
-                } else {
-                    processScanResult(null);
-                }
-            }
-        }.setScanFilter(scanFilter);
-
-        connectCallback = new MyConnectCallback();
+        bleScanCallback.setScanFilter(scanFilter);
     }
 
     BleDeviceState getState() {
@@ -136,7 +126,6 @@ class BleConnectCommandExecutor {
     // 开始扫描
     void startScan() {
         if(state == CONNECT_FAILURE || state == CONNECT_DISCONNECT) {
-
             bleScanCallback.startScan();
 
             setState(DEVICE_SCANNING);
@@ -156,28 +145,8 @@ class BleConnectCommandExecutor {
 
         if(device.getDeviceMirror() != null) {
             ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
-
-            //device.getDeviceMirror().clear();
         }
-
-        // 等待200ms
-        try {
-            Thread.sleep(200);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror().getBluetoothLeDevice());
-
-        device.stopGattExecutor();
-
-        device.executeAfterDisconnect();
-
-        device.setDeviceMirror(null);
-
-        setConnectState(CONNECT_DISCONNECT);
     }
-
 
     // 处理扫描结果
     private void processScanResult(final BluetoothLeDevice bluetoothLeDevice) {
@@ -188,12 +157,9 @@ class BleConnectCommandExecutor {
         ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
 
         if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
-            //MyConnectCallback connectCallback = new MyConnectCallback();
-
             ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
             setState(DEVICE_CONNECTING);
-
         } else {
             setState(connectState);
         }
@@ -240,7 +206,7 @@ class BleConnectCommandExecutor {
         device.executeAfterConnectFailure();
 
         if(device.getDeviceMirror() != null) {
-            device.getDeviceMirror().clear();
+            //device.getDeviceMirror().clear();
 
             device.setDeviceMirror(null);
         }
@@ -258,7 +224,7 @@ class BleConnectCommandExecutor {
             device.executeAfterDisconnect();
 
             if(device.getDeviceMirror() != null) {
-                device.getDeviceMirror().clear();
+                //device.getDeviceMirror().clear();
 
                 device.setDeviceMirror(null);
             }

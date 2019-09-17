@@ -19,8 +19,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
@@ -55,7 +53,7 @@ public abstract class BleDevice {
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
 
-    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     private ExecutorService autoConnService; // 自动连接线程池
 
@@ -145,6 +143,21 @@ public abstract class BleDevice {
         }
     }
 
+    protected boolean containGattElements(BleGattElement[] elements) {
+        for(BleGattElement element : elements) {
+            if( element == null || element.retrieveGattObject(this) == null )
+                return false;
+        }
+
+        return true;
+    }
+
+    protected boolean containGattElement(BleGattElement element) {
+        return !( element == null || element.retrieveGattObject(this) == null );
+    }
+
+
+
     // 打开设备
     public void open() {
         ViseLog.e("BleDevice.open()");
@@ -154,7 +167,6 @@ public abstract class BleDevice {
 
             startConnection();
         }
-
     }
 
     private void startConnection() {
@@ -170,14 +182,13 @@ public abstract class BleDevice {
                 @Override
                 public void run() {
                     if(getState() == CONNECT_FAILURE || getState() == CONNECT_DISCONNECT) {
-                        mainHandler.post(new Runnable() {
+                        mHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 connCmdExecutor.startScan();
                             }
                         });
                     }
-
                 }
             }, 0, 10, TimeUnit.SECONDS);
 
@@ -195,13 +206,14 @@ public abstract class BleDevice {
         } else if(getState() == CONNECT_SUCCESS) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
+            mHandler.removeCallbacksAndMessages(null);
+
             startDisconnection(); // 设备处于连接成功时，断开连接
         } else if(getState() == DEVICE_SCANNING) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
             connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
         }
-
     }
 
     // 关闭设备
@@ -209,6 +221,10 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.close()");
 
         if(getState() == CONNECT_DISCONNECT || getState() == CONNECT_FAILURE) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+
+            mHandler.removeCallbacksAndMessages(null);
+
             connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
         }
 
@@ -218,7 +234,7 @@ public abstract class BleDevice {
     public void startDisconnection() {
         ViseLog.e("BleDevice.startDisconnection()");
 
-        mainHandler.post(new Runnable() {
+        mHandler.post(new Runnable() {
             @Override
             public void run() {
                 disconnect();
@@ -231,12 +247,13 @@ public abstract class BleDevice {
         connCmdExecutor.disconnect();
     }
 
+
+
     protected abstract boolean executeAfterConnectSuccess(); // 连接成功后执行的操作
 
     protected abstract void executeAfterConnectFailure(); // 连接错误后执行的操作
 
     protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
-
 
 
 
@@ -250,19 +267,6 @@ public abstract class BleDevice {
 
     protected boolean isGattExecutorAlive() {
         return gattCmdExecutor.isAlive();
-    }
-
-    protected boolean containGattElements(BleGattElement[] elements) {
-        for(BleGattElement element : elements) {
-            if( element == null || element.retrieveGattObject(this) == null )
-                return false;
-        }
-
-        return true;
-    }
-
-    protected boolean containGattElement(BleGattElement element) {
-        return !( element == null || element.retrieveGattObject(this) == null );
     }
 
     protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {

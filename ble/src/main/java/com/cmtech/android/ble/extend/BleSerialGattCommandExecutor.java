@@ -26,6 +26,10 @@ class BleSerialGattCommandExecutor {
     private ExecutorService gattCmdService; // 命令执行Service
 
     BleSerialGattCommandExecutor(BleDevice device) {
+        if(device == null) {
+            throw new NullPointerException("BleSerialGattCommandExecutor.device不能为null");
+        }
+
         this.device = device;
     }
 
