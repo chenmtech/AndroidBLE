@@ -24,7 +24,7 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 /**
   *
   * ClassName:      BleConnectCommandExecutor
-  * Description:    设备连接相关命令执行器
+  * Description:    设备连接相关命令及回调执行器
   * Author:         chenm
   * CreateDate:     2019-06-25 17:54
   * UpdateUser:     chenm
@@ -35,6 +35,10 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 
 class BleConnectCommandExecutor {
     private final BleDevice device; // 设备
+
+    private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
+
+    private Handler mHandler = new Handler(Looper.getMainLooper()); // 主线程Handler
 
     private final BleScanCallback bleScanCallback = new BleScanCallback() {
         @Override
@@ -91,12 +95,6 @@ class BleConnectCommandExecutor {
         }
     }; // 连接回调
 
-    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
-
-    private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
-
-    private Handler mHandler = new Handler(Looper.getMainLooper()); // 主线程Handler
-
     BleConnectCommandExecutor(BleDevice device) {
         if(device == null) {
             throw new NullPointerException("BleConnectCommandExecutor.device不能为null");
@@ -109,26 +107,12 @@ class BleConnectCommandExecutor {
         bleScanCallback.setScanFilter(scanFilter);
     }
 
-    BleDeviceState getState() {
-        return state;
-    }
-
-    void setState(BleDeviceState state) {
-        if(this.state != state) {
-            ViseLog.e("设备状态：" + state);
-
-            this.state = state;
-
-            device.updateState();
-        }
-    }
-
     // 开始扫描
     void startScan() {
-        if(state == CONNECT_FAILURE || state == CONNECT_DISCONNECT) {
+        if(device.getState() == CONNECT_FAILURE || device.getState() == CONNECT_DISCONNECT) {
             bleScanCallback.startScan();
 
-            setState(DEVICE_SCANNING);
+            device.setState(DEVICE_SCANNING);
         }
     }
 
@@ -136,12 +120,12 @@ class BleConnectCommandExecutor {
     void stopScan() {
         bleScanCallback.stopScan();
 
-        setState(connectState);
+        device.setState(connectState);
     }
 
     // 断开连接
     void disconnect() {
-        setState(DEVICE_DISCONNECTING);
+        device.setState(DEVICE_DISCONNECTING);
 
         if(device.getDeviceMirror() != null) {
             ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
@@ -151,13 +135,13 @@ class BleConnectCommandExecutor {
     // 处理扫描结果
     private void processScanResult(final BluetoothLeDevice bluetoothLeDevice) {
 
-        if(state == DEVICE_SCANNING) {
+        if(device.getState() == DEVICE_SCANNING) {
             ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
 
             if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
                 ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
 
-                setState(DEVICE_CONNECTING);
+                device.setState(DEVICE_CONNECTING);
             } else {
                 device.stopScan();
             }
@@ -168,19 +152,19 @@ class BleConnectCommandExecutor {
     // 处理连接成功回调
     private void processConnectSuccess(DeviceMirror mirror) {
         // 防止重复连接成功
-        if(state == CONNECT_SUCCESS) {
+        if(device.getState() == CONNECT_SUCCESS) {
             ViseLog.e("再次连接成功!!!");
 
             return;
         }
 
-        if(state == DEVICE_CLOSED) { // 设备已经关闭了，强行断开
+        if(device.getState() == DEVICE_CLOSED) { // 设备已经关闭了，强行断开
             ViseBle.getInstance().disconnect(mirror.getBluetoothLeDevice());
 
             return;
         }
 
-        if(state == DEVICE_SCANNING) {
+        if(device.getState() == DEVICE_SCANNING) {
             stopScan();
         }
 
@@ -233,9 +217,9 @@ class BleConnectCommandExecutor {
         }
     }
 
-    void setConnectState(BleDeviceState connectState) {
+    private void setConnectState(BleDeviceState connectState) {
         this.connectState = connectState;
 
-        setState(connectState);
+        device.setState(connectState);
     }
 }

@@ -43,6 +43,8 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 public abstract class BleDevice {
     private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
+    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
+
     private DeviceMirror deviceMirror = null; // 设备镜像，连接成功后赋值
 
     private int battery = -1; // 设备电池电量
@@ -112,7 +114,17 @@ public abstract class BleDevice {
     }
 
     public BleDeviceState getState() {
-        return (connCmdExecutor == null) ? DEVICE_CLOSED : connCmdExecutor.getState();
+        return state;
+    }
+
+    void setState(BleDeviceState state) {
+        if(this.state != state) {
+            ViseLog.e("设备状态：" + state);
+
+            this.state = state;
+
+            updateState();
+        }
     }
 
     public String getStateDescription() {
@@ -163,7 +175,7 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.open()");
 
         if(isClosed() && basicInfo.autoConnect()) {
-            connCmdExecutor.setConnectState(CONNECT_DISCONNECT);
+            setState(CONNECT_DISCONNECT);
 
             startConnection();
         }
@@ -223,7 +235,7 @@ public abstract class BleDevice {
 
             mHandler.removeCallbacksAndMessages(null);
 
-            connCmdExecutor.setState(BleDeviceState.DEVICE_CLOSED);
+            setState(BleDeviceState.DEVICE_CLOSED);
         }
 
     }
