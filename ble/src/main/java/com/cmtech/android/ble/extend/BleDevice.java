@@ -210,7 +210,9 @@ public abstract class BleDevice {
 
             startDisconnection(); // 设备处于连接成功时，断开连接
         } else if(getState() == DEVICE_SCANNING) {
-            stopScan();
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+
+            connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
         }
     }
 
@@ -243,12 +245,6 @@ public abstract class BleDevice {
 
     protected void disconnect() {
         connCmdExecutor.disconnect();
-    }
-
-    void stopScan() {
-        ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-
-        connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
     }
 
 

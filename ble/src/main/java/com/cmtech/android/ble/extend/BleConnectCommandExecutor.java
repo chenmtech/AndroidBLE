@@ -10,7 +10,6 @@ import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
@@ -162,7 +161,7 @@ class BleConnectCommandExecutor {
 
             setState(DEVICE_CONNECTING);
         } else {
-            device.stopScan();
+            setState(connectState);
         }
     }
 
@@ -206,12 +205,8 @@ class BleConnectCommandExecutor {
 
         device.executeAfterConnectFailure();
 
-        if(bleException instanceof ConnectException) {
-            ((ConnectException) bleException).getBluetoothGatt().disconnect();
-        }
-
         if(device.getDeviceMirror() != null) {
-            device.getDeviceMirror().clear();
+            //device.getDeviceMirror().clear();
 
             device.setDeviceMirror(null);
         }
@@ -229,7 +224,7 @@ class BleConnectCommandExecutor {
             device.executeAfterDisconnect();
 
             if(device.getDeviceMirror() != null) {
-                device.getDeviceMirror().clear();
+                //device.getDeviceMirror().clear();
 
                 device.setDeviceMirror(null);
             }
