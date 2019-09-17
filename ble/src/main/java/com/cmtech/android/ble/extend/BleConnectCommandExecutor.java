@@ -161,7 +161,7 @@ class BleConnectCommandExecutor {
 
             setState(DEVICE_CONNECTING);
         } else {
-            setState(connectState);
+            device.stopScan();
         }
     }
 

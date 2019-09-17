@@ -49,9 +49,9 @@ public abstract class BleDevice {
 
     private final List<OnBleDeviceStateListener> stateListeners = new LinkedList<>(); // 设备状态监听器列表
 
-    private final BleConnectCommandExecutor connCmdExecutor; // 设备连接命令执行器，在主线程中执行命令
+    private final BleConnectCommandExecutor connCmdExecutor; // 设备连接命令执行器，在主线程中执行连接命令和连接回调
 
-    private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后被启动，设备连接失败或者断开时被停止
+    private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时被停止
 
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
@@ -210,9 +210,7 @@ public abstract class BleDevice {
 
             startDisconnection(); // 设备处于连接成功时，断开连接
         } else if(getState() == DEVICE_SCANNING) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-
-            connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
+            stopScan();
         }
     }
 
@@ -245,6 +243,12 @@ public abstract class BleDevice {
 
     protected void disconnect() {
         connCmdExecutor.disconnect();
+    }
+
+    void stopScan() {
+        ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+
+        connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
     }
 
 
