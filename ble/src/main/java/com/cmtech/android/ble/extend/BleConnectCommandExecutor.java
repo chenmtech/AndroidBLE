@@ -150,19 +150,19 @@ class BleConnectCommandExecutor {
 
     // 处理扫描结果
     private void processScanResult(final BluetoothLeDevice bluetoothLeDevice) {
-        if (state != DEVICE_SCANNING) {
-            return;
+
+        if(state == DEVICE_SCANNING) {
+            ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
+
+            if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
+                ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
+
+                setState(DEVICE_CONNECTING);
+            } else {
+                device.stopScan();
+            }
         }
 
-        ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
-
-        if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
-            ViseBle.getInstance().connect(bluetoothLeDevice, connectCallback);
-
-            setState(DEVICE_CONNECTING);
-        } else {
-            device.stopScan();
-        }
     }
 
     // 处理连接成功回调
@@ -206,7 +206,7 @@ class BleConnectCommandExecutor {
         device.executeAfterConnectFailure();
 
         if(device.getDeviceMirror() != null) {
-            //device.getDeviceMirror().clear();
+            device.getDeviceMirror().clear();
 
             device.setDeviceMirror(null);
         }
@@ -224,7 +224,7 @@ class BleConnectCommandExecutor {
             device.executeAfterDisconnect();
 
             if(device.getDeviceMirror() != null) {
-                //device.getDeviceMirror().clear();
+                device.getDeviceMirror().clear();
 
                 device.setDeviceMirror(null);
             }
@@ -233,7 +233,7 @@ class BleConnectCommandExecutor {
         }
     }
 
-    private void setConnectState(BleDeviceState connectState) {
+    void setConnectState(BleDeviceState connectState) {
         this.connectState = connectState;
 
         setState(connectState);

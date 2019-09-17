@@ -163,7 +163,7 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.open()");
 
         if(isClosed() && basicInfo.autoConnect()) {
-            connCmdExecutor.setState(CONNECT_DISCONNECT);
+            connCmdExecutor.setConnectState(CONNECT_DISCONNECT);
 
             startConnection();
         }
