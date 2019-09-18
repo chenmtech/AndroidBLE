@@ -1,8 +1,10 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.callback;
+
+import com.cmtech.android.ble.extend.GattDataException;
 
 /**
   *
-  * ClassName:      IGattDataCallback
+  * ClassName:      IBleGattDataCallback
   * Description:    Gatt数据操作回调接口
   * Author:         chenm
   * CreateDate:     2019-06-28 08:48
@@ -12,7 +14,7 @@ package com.cmtech.android.ble.extend;
   * Version:        1.0
  */
 
-public interface IGattDataCallback {
+public interface IBleGattDataCallback {
     void onSuccess(byte[] data); // 数据操作成功
 
     void onFailure(GattDataException exception); // 数据操作失败

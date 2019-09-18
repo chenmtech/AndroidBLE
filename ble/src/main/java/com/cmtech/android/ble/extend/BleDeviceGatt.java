@@ -775,10 +775,10 @@ public class BleDeviceGatt {
      * 处理数据发送失败
      *
      * @param bluetoothGattInfoHashMap  hashMap
-     * @param bleExceprion             回调异常
+     * @param bleException             回调异常
      * @param isRemoveCall             是否需要移除回调
      */
-    private synchronized void handleFailureData(HashMap<String, BleGattChannel> bluetoothGattInfoHashMap, BleException bleExceprion,
+    private synchronized void handleFailureData(HashMap<String, BleGattChannel> bluetoothGattInfoHashMap, BleException bleException,
                                                 boolean isRemoveCall) {
         handler.removeCallbacksAndMessages(null);
 
@@ -790,7 +790,7 @@ public class BleDeviceGatt {
             for (Map.Entry<String, BleGattChannel> gattInfoEntry : bluetoothGattInfoHashMap.entrySet()) {
                 String bluetoothGattInfoKey = gattInfoEntry.getKey();
                 if (bleCallbackKey.equals(bluetoothGattInfoKey)) {
-                    bleCallbackValue.onFailure(bleExceprion);
+                    bleCallbackValue.onFailure(bleException);
                     removeBleCallbackKey = bleCallbackKey;
                     removeBluetoothGattInfoKey = bluetoothGattInfoKey;
                 }

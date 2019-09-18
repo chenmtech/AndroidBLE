@@ -7,6 +7,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
+import com.cmtech.android.ble.callback.IBleGattDataCallback;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -295,27 +296,27 @@ public abstract class BleDevice {
         return gattCmdExecutor.isAlive();
     }
 
-    protected final void read(BleGattElement element, IGattDataCallback gattDataCallback) {
+    protected final void read(BleGattElement element, IBleGattDataCallback gattDataCallback) {
         gattCmdExecutor.read(element, gattDataCallback);
     }
 
-    protected final void write(BleGattElement element, byte[] data, IGattDataCallback gattDataCallback) {
+    protected final void write(BleGattElement element, byte[] data, IBleGattDataCallback gattDataCallback) {
         gattCmdExecutor.write(element, data, gattDataCallback);
     }
 
-    protected final void write(BleGattElement element, byte data, IGattDataCallback gattDataCallback) {
+    protected final void write(BleGattElement element, byte data, IBleGattDataCallback gattDataCallback) {
         gattCmdExecutor.write(element, data, gattDataCallback);
     }
 
-    protected final void notify(BleGattElement element, boolean enable, IGattDataCallback notifyOpCallback) {
+    protected final void notify(BleGattElement element, boolean enable, IBleGattDataCallback notifyOpCallback) {
         gattCmdExecutor.notify(element, enable, notifyOpCallback);
     }
 
-    protected final void indicate(BleGattElement element, boolean enable, IGattDataCallback indicateOpCallback) {
+    protected final void indicate(BleGattElement element, boolean enable, IBleGattDataCallback indicateOpCallback) {
         gattCmdExecutor.indicate(element, enable, indicateOpCallback);
     }
 
-    protected final void runInstantly(IGattDataCallback gattDataCallback) {
+    protected final void runInstantly(IBleGattDataCallback gattDataCallback) {
         gattCmdExecutor.runInstantly(gattDataCallback);
     }
 
