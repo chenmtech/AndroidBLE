@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.core;
+package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -14,7 +14,7 @@ import java.util.UUID;
  * @author: <a href="http://xiaoyaoyou1212.360doc.com">DAWI</a>
  * @date: 2017/10/17 16:25
  */
-public class BluetoothGattChannel {
+public class BleGattChannel {
 
     private BluetoothGatt bluetoothGatt;
     private BluetoothGattService service;
@@ -26,7 +26,7 @@ public class BluetoothGattChannel {
     private UUID characteristicUUID;
     private UUID descriptorUUID;
 
-    private BluetoothGattChannel(BluetoothGatt bluetoothGatt, PropertyType propertyType, UUID serviceUUID, UUID characteristicUUID, UUID descriptorUUID) {
+    private BleGattChannel(BluetoothGatt bluetoothGatt, PropertyType propertyType, UUID serviceUUID, UUID characteristicUUID, UUID descriptorUUID) {
         this.bluetoothGatt = bluetoothGatt;
         this.propertyType = propertyType;
         this.serviceUUID = serviceUUID;
@@ -67,7 +67,7 @@ public class BluetoothGattChannel {
         return service;
     }
 
-    public BluetoothGattChannel setDescriptor(BluetoothGattDescriptor descriptor) {
+    public BleGattChannel setDescriptor(BluetoothGattDescriptor descriptor) {
         this.descriptor = descriptor;
         return this;
     }
@@ -127,8 +127,8 @@ public class BluetoothGattChannel {
             return this;
         }
 
-        public BluetoothGattChannel builder() {
-            return new BluetoothGattChannel(bluetoothGatt, propertyType, serviceUUID, characteristicUUID, descriptorUUID);
+        public BleGattChannel builder() {
+            return new BleGattChannel(bluetoothGatt, propertyType, serviceUUID, characteristicUUID, descriptorUUID);
         }
     }
 }

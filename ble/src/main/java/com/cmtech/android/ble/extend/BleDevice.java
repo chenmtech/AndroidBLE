@@ -7,7 +7,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 
-import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -47,7 +46,7 @@ public abstract class BleDevice {
 
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
 
-    private DeviceMirror deviceMirror = null; // 设备镜像，连接成功后赋值
+    private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值
 
     private int battery = -1; // 设备电池电量
 
@@ -69,6 +68,7 @@ public abstract class BleDevice {
         connCmdExecutor = new BleConnectCommandExecutor(this);
 
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+        bleDeviceGatt = null;
     }
 
     public Context getContext() {
@@ -113,12 +113,12 @@ public abstract class BleDevice {
         }
     }
 
-    public DeviceMirror getDeviceMirror() {
-        return deviceMirror;
+    public BleDeviceGatt getBleDeviceGatt() {
+        return bleDeviceGatt;
     }
 
-    void setDeviceMirror(DeviceMirror deviceMirror) {
-        this.deviceMirror = deviceMirror;
+    void setBleDeviceGatt(BleDeviceGatt bleDeviceGatt) {
+        this.bleDeviceGatt = bleDeviceGatt;
     }
 
     public BleDeviceState getState() {

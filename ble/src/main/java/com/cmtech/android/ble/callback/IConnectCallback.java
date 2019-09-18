@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.core.DeviceMirror;
+import com.cmtech.android.ble.extend.BleDeviceGatt;
 import com.cmtech.android.ble.exception.BleException;
 
 /**
@@ -10,7 +10,7 @@ import com.cmtech.android.ble.exception.BleException;
  */
 public interface IConnectCallback {
     //连接成功
-    void onConnectSuccess(DeviceMirror deviceMirror);
+    void onConnectSuccess(BleDeviceGatt bleDeviceGatt);
 
     //连接失败
     void onConnectFailure(BleException exception);

@@ -2,7 +2,6 @@ package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
-import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.cmtech.android.ble.utils.HexUtil;
@@ -37,8 +36,8 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         @Override
-        public void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-            onSerialCommandSuccess(bleCallback, data, bluetoothGattChannel, bluetoothLeDevice);
+        public void onSuccess(byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+            onSerialCommandSuccess(bleCallback, data, bleGattChannel, bluetoothLeDevice);
         }
 
         @Override
@@ -55,7 +54,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
                                 IGattDataCallback dataCallback, IGattDataCallback notifyCallback, boolean isInstantCommand) {
-        if(device.getDeviceMirror() == null) return null;
+        if(device.getBleDeviceGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
 
@@ -81,7 +80,7 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
@@ -91,7 +90,7 @@ class BleSerialGattCommand extends BleGattCommand {
         removeBleCallback();
 
         if(bleCallback != null) {
-            bleCallback.onSuccess(data, bluetoothGattChannel, bluetoothLeDevice);
+            bleCallback.onSuccess(data, bleGattChannel, bluetoothLeDevice);
         }
 
         done = true;

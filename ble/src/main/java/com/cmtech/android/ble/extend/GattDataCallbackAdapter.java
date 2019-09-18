@@ -1,7 +1,6 @@
 package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 
@@ -34,7 +33,7 @@ class GattDataCallbackAdapter implements IBleDataCallback {
     }
 
     @Override
-    public void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+    public void onSuccess(byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice) {
         dataOpCallback.onSuccess(data);
     }
 

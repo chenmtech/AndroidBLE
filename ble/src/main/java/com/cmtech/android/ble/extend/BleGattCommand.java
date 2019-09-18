@@ -2,8 +2,6 @@ package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
-import com.cmtech.android.ble.core.BluetoothGattChannel;
-import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.utils.HexUtil;
 
 
@@ -22,7 +20,7 @@ import com.cmtech.android.ble.utils.HexUtil;
 class BleGattCommand{
     final BleDevice device; // 执行命令的设备
 
-    private final BluetoothGattChannel channel; // 执行命令的通道
+    private final BleGattChannel channel; // 执行命令的通道
 
     IBleDataCallback dataOpCallback; // 数据操作回调
 
@@ -34,7 +32,7 @@ class BleGattCommand{
 
     private final boolean isInstantCommand; // 是否是即刻命令，即不需要等待蓝牙响应的命令
 
-    private BleGattCommand(BleDevice device, BluetoothGattChannel channel,
+    private BleGattCommand(BleDevice device, BleGattChannel channel,
                            IBleDataCallback dataOpCallback,
                            byte[] writtenData, IBleDataCallback notifyOpCallback, String elementString, boolean isInstantCommand) {
         this.device = device;
@@ -86,39 +84,39 @@ class BleGattCommand{
             return true;
         }
 
-        if(device == null || device.getDeviceMirror() == null || channel == null) {
+        if(device == null || device.getBleDeviceGatt() == null || channel == null) {
             throw new NullPointerException("The device mirror or channel of the non-instant commands must not be null.");
         }
 
-        DeviceMirror deviceMirror = device.getDeviceMirror();
+        BleDeviceGatt bleDeviceGatt = device.getBleDeviceGatt();
 
         switch (channel.getPropertyType()) {
             case PROPERTY_READ:
-                deviceMirror.bindChannel( dataOpCallback, channel);
+                bleDeviceGatt.bindChannel( dataOpCallback, channel);
 
-                deviceMirror.readData();
+                bleDeviceGatt.readData();
                 break;
 
             case PROPERTY_WRITE:
-                deviceMirror.bindChannel( dataOpCallback, channel);
+                bleDeviceGatt.bindChannel( dataOpCallback, channel);
 
-                deviceMirror.writeData(writtenData);
+                bleDeviceGatt.writeData(writtenData);
                 break;
 
             case PROPERTY_NOTIFY:
             case PROPERTY_INDICATE:
                 boolean isIndication = (channel.getPropertyType() == PropertyType.PROPERTY_INDICATE);
 
-                deviceMirror.bindChannel( dataOpCallback, channel);
+                bleDeviceGatt.bindChannel( dataOpCallback, channel);
 
                 if(writtenData[0] == 1) {
-                    deviceMirror.registerNotify(isIndication);
+                    bleDeviceGatt.registerNotify(isIndication);
 
-                    deviceMirror.setNotifyListener(channel.getGattInfoKey(), notifyOpCallback);
+                    bleDeviceGatt.setNotifyListener(channel.getGattInfoKey(), notifyOpCallback);
                 } else {
-                    deviceMirror.unregisterNotify(isIndication);
+                    bleDeviceGatt.unregisterNotify(isIndication);
 
-                    deviceMirror.removeReceiveCallback(channel.getGattInfoKey());
+                    bleDeviceGatt.removeReceiveCallback(channel.getGattInfoKey());
                 }
                 break;
 
@@ -154,8 +152,8 @@ class BleGattCommand{
 
         // 清除当前命令的数据操作IBleCallback，否则会出现多次执行该回调.
         // 有可能是ViseBle内部问题，也有可能本身蓝牙就会这样
-        if(device != null && device.getDeviceMirror() != null) {
-            device.getDeviceMirror().removeBleCallback(channel.getGattInfoKey());
+        if(device != null && device.getBleDeviceGatt() != null) {
+            device.getBleDeviceGatt().removeBleCallback(channel.getGattInfoKey());
         }
     }
 
@@ -230,7 +228,7 @@ class BleGattCommand{
 
             } else {
 
-                if(device == null || device.getDeviceMirror() == null || element == null) {
+                if(device == null || device.getBleDeviceGatt() == null || element == null) {
                     throw new NullPointerException("The device mirror or element of the non-instant commands must not be null.");
                 }
 
@@ -249,9 +247,9 @@ class BleGattCommand{
                     }
                 }
 
-                BluetoothGattChannel.Builder builder = new BluetoothGattChannel.Builder();
+                BleGattChannel.Builder builder = new BleGattChannel.Builder();
 
-                BluetoothGattChannel channel = builder.setBluetoothGatt(device.getDeviceMirror().getBluetoothGatt())
+                BleGattChannel channel = builder.setBluetoothGatt(device.getBleDeviceGatt().getBluetoothGatt())
                         .setPropertyType(propertyType)
                         .setServiceUUID(element.getServiceUuid())
                         .setCharacteristicUUID(element.getCharacteristicUuid())

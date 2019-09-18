@@ -35,7 +35,7 @@ class BleSerialGattCommandExecutor {
 
     // 启动Gatt命令执行器
     final void start() {
-        if(device == null || device.getDeviceMirror() == null) {
+        if(device == null || device.getBleDeviceGatt() == null) {
             throw new NullPointerException("The device mirror must not be null when BleSerialGattCommandExecutor is started.");
         }
 

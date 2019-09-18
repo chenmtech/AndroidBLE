@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.core.BluetoothGattChannel;
+import com.cmtech.android.ble.extend.BleGattChannel;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 
@@ -10,7 +10,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
  * @date: 2017/10/17 19:42
  */
 public interface IBleDataCallback {
-    void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice);
+    void onSuccess(byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice);
 
     void onFailure(BleException exception);
 }

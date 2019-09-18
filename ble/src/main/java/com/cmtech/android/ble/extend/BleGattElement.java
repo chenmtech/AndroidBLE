@@ -5,7 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.utils.UuidUtil;
 
 import java.util.UUID;
@@ -77,15 +76,15 @@ public class BleGattElement {
     Object retrieveGattObject(BleDevice device) {
         if(device == null) return null;
 
-        return retrieveGattObject(device.getDeviceMirror());
+        return retrieveGattObject(device.getBleDeviceGatt());
     }
 
     // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
-    private Object retrieveGattObject(DeviceMirror deviceMirror) {
+    private Object retrieveGattObject(BleDeviceGatt bleDeviceGatt) {
 
-        if(deviceMirror == null || deviceMirror.getBluetoothGatt() == null) return null;
+        if(bleDeviceGatt == null || bleDeviceGatt.getBluetoothGatt() == null) return null;
 
-        BluetoothGatt gatt = deviceMirror.getBluetoothGatt();
+        BluetoothGatt gatt = bleDeviceGatt.getBluetoothGatt();
 
         BluetoothGattService service;
 

@@ -8,7 +8,6 @@ import android.os.Looper;
 
 import com.cmtech.android.ble.callback.BleScanCallback;
 import com.cmtech.android.ble.callback.IConnectCallback;
-import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
@@ -64,11 +63,11 @@ class BleConnectCommandExecutor {
     private final IConnectCallback connectCallback = new IConnectCallback() {
         // 连接成功
         @Override
-        public void onConnectSuccess(final DeviceMirror deviceMirror) {
+        public void onConnectSuccess(final BleDeviceGatt bleDeviceGatt) {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    processConnectSuccess(deviceMirror);
+                    processConnectSuccess(bleDeviceGatt);
                 }
             });
         }
@@ -128,9 +127,8 @@ class BleConnectCommandExecutor {
     void disconnect() {
         device.setState(DEVICE_DISCONNECTING);
 
-        if(device.getDeviceMirror() != null) {
-            device.getDeviceMirror().disconnect();
-            //ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+        if(device.getBleDeviceGatt() != null) {
+            device.getBleDeviceGatt().disconnect();
         }
     }
 
@@ -142,7 +140,6 @@ class BleConnectCommandExecutor {
             ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
 
             if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
-                //ViseBle.getInstance().connect(device.getContext(), bluetoothLeDevice, connectCallback);
                 connect(device.getContext(), bluetoothLeDevice, connectCallback);
 
                 device.setState(DEVICE_CONNECTING);
@@ -158,13 +155,13 @@ class BleConnectCommandExecutor {
             ViseLog.e("This bluetoothLeDevice or connectCallback is null.");
             return;
         }
-        DeviceMirror deviceMirror = new DeviceMirror(bluetoothLeDevice);
+        BleDeviceGatt bleDeviceGatt = new BleDeviceGatt(bluetoothLeDevice);
 
-        deviceMirror.connect(context, connectCallback);
+        bleDeviceGatt.connect(context, connectCallback);
     }
 
     // 处理连接成功回调
-    private void processConnectSuccess(DeviceMirror mirror) {
+    private void processConnectSuccess(BleDeviceGatt mirror) {
         // 防止重复连接成功
         if(device.getState() == CONNECT_SUCCESS) {
             ViseLog.e("再次连接成功!!!");
@@ -173,8 +170,7 @@ class BleConnectCommandExecutor {
         }
 
         if(device.getState() == DEVICE_CLOSED) { // 设备已经关闭了，强行断开
-            //ViseBle.getInstance().disconnect(mirror.getBluetoothLeDevice());
-            mirror.disconnect();
+            mirror.clear();
 
             return;
         }
@@ -185,7 +181,7 @@ class BleConnectCommandExecutor {
 
         ViseLog.e("处理连接成功: " + mirror);
 
-        device.setDeviceMirror(mirror);
+        device.setBleDeviceGatt(mirror);
 
         device.startGattExecutor();
 
@@ -204,21 +200,13 @@ class BleConnectCommandExecutor {
 
         device.executeAfterConnectFailure();
 
-        /*if(device.getDeviceMirror() != null) {
-            device.getDeviceMirror().clear();
-            //ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
-
-            device.setDeviceMirror(null);
-        }*/
-
-        device.setDeviceMirror(null);
+        device.setBleDeviceGatt(null);
 
         setConnectState(CONNECT_FAILURE);
 
         if(bleException instanceof TimeoutException) {
             device.stopScan();
         }
-
     }
 
     // 处理连接断开
@@ -230,14 +218,7 @@ class BleConnectCommandExecutor {
 
             device.executeAfterDisconnect();
 
-            /*if(device.getDeviceMirror() != null) {
-                device.getDeviceMirror().clear();
-                //ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
-
-                device.setDeviceMirror(null);
-            }*/
-
-            device.setDeviceMirror(null);
+            device.setBleDeviceGatt(null);
 
             setConnectState(CONNECT_DISCONNECT);
         }
