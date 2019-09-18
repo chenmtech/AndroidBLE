@@ -52,7 +52,7 @@ public class DeviceMirror {
     private BluetoothGatt bluetoothGatt;//蓝牙GATT
     private IRssiCallback rssiCallback;//获取信号值回调
     private IConnectCallback connectCallback;//连接回调
-    private int connectRetryCount = 0;//当前连接重试次数
+    //private int connectRetryCount = 0;//当前连接重试次数
     private int writeDataRetryCount = 0;//当前写入数据重试次数
     private int readDataRetryCount = 0;//当前读取数据重试次数
     private int receiveDataRetryCount = 0;//当前接收数据重试次数
@@ -285,7 +285,7 @@ public class DeviceMirror {
      */
     public synchronized void connect(IConnectCallback connectCallback) {
         if (connectState == ConnectState.CONNECT_SUCCESS || connectState == ConnectState.CONNECT_PROCESS
-                || (connectState == ConnectState.CONNECT_INIT && connectRetryCount != 0)) {
+                || (connectState == ConnectState.CONNECT_INIT)) {
             ViseLog.e("this connect state is connecting, connectSuccess or current retry count less than config connect retry count.");
             return;
         }
@@ -293,7 +293,6 @@ public class DeviceMirror {
             handler.removeCallbacksAndMessages(null);
         }
         this.connectCallback = connectCallback;
-        connectRetryCount = 0;
         connect();
     }
 
@@ -452,9 +451,9 @@ public class DeviceMirror {
      *
      * @return
      */
-    public int getConnectRetryCount() {
+    /*public int getConnectRetryCount() {
         return connectRetryCount;
-    }
+    }*/
 
     /**
      * 获取当前读取数据失败重试次数
@@ -582,7 +581,6 @@ public class DeviceMirror {
      */
     public synchronized void disconnect() {
         connectState = ConnectState.CONNECT_INIT;
-        connectRetryCount = 0;
         if (bluetoothGatt != null) {
             isActiveDisconnect = true;
             bluetoothGatt.disconnect();
@@ -787,27 +785,18 @@ public class DeviceMirror {
      * @param bleException 回调异常
      */
     private void connectFailure(BleException bleException) {
-        if (connectRetryCount < BleConfig.getInstance().getConnectRetryCount()) {
-            connectRetryCount++;
-            if (handler != null) {
-                handler.removeMessages(MSG_CONNECT_TIMEOUT);
-                handler.sendEmptyMessageDelayed(MSG_CONNECT_RETRY, BleConfig.getInstance().getConnectRetryInterval());
-            }
-            ViseLog.i("connectFailure connectRetryCount is " + connectRetryCount);
+        if (bleException instanceof TimeoutException) {
+            connectState = ConnectState.CONNECT_TIMEOUT;
         } else {
-            if (bleException instanceof TimeoutException) {
-                connectState = ConnectState.CONNECT_TIMEOUT;
-            } else {
-                connectState = ConnectState.CONNECT_FAILURE;
-            }
-            if(bluetoothGatt != null)
-                bluetoothGatt.disconnect();
-            close();
-            if (connectCallback != null) {
-                connectCallback.onConnectFailure(bleException);
-            }
-            ViseLog.i("connectFailure " + bleException);
+            connectState = ConnectState.CONNECT_FAILURE;
         }
+        if(bluetoothGatt != null)
+            bluetoothGatt.disconnect();
+        close();
+        if (connectCallback != null) {
+            connectCallback.onConnectFailure(bleException);
+        }
+        ViseLog.i("connectFailure " + bleException);
     }
 
     /**

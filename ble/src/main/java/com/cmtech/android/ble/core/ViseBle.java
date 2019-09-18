@@ -308,18 +308,6 @@ public class ViseBle {
     }
 
     /**
-     * 获取当前连接失败重试次数
-     *
-     * @return
-     */
-    public int getConnectRetryCount() {
-        if (lastDeviceMirror == null) {
-            return 0;
-        }
-        return lastDeviceMirror.getConnectRetryCount();
-    }
-
-    /**
      * 获取当前读取数据失败重试次数
      *
      * @return
