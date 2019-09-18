@@ -3,7 +3,6 @@ package com.cmtech.android.ble;
 import android.content.Context;
 
 import com.cmtech.android.ble.common.BleConfig;
-import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.extend.BleDeviceState;
 import com.cmtech.android.ble.extend.BleDeviceType;
 
@@ -19,7 +18,7 @@ public class BleDeviceConfig {
     }
 
     public static void initialize(Context context) {
-        ViseBle.getInstance().init(context);
+        //ViseBle.getInstance().init(context);
     }
 
     // 配置扫描超时时间

@@ -280,8 +280,8 @@ public class DeviceMirror {
     /**
      * 绑定一个具备读写或可通知能力的通道，设置需要操作数据的相关信息，包含：数据操作回调，数据操作类型，数据通道建立所需的UUID。
      *
-     * @param bleCallback
-     * @param bluetoothGattChannel
+     * @param bleCallback bleCallback
+     * @param bluetoothGattChannel gatt Channel
      */
     public synchronized void bindChannel(IBleDataCallback bleCallback, BluetoothGattChannel bluetoothGattChannel) {
         if (bleCallback != null && bluetoothGattChannel != null) {
@@ -479,14 +479,6 @@ public class DeviceMirror {
      */
     public synchronized void removeReceiveCallback(String key) {
         receiveCallbackMap.remove(key);
-    }
-
-    /**
-     * 移除所有回调
-     */
-    public synchronized void removeAllCallback() {
-        bleCallbackMap.clear();
-        receiveCallbackMap.clear();
     }
 
     /**
