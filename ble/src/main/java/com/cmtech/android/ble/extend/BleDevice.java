@@ -41,6 +41,8 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
  */
 
 public abstract class BleDevice {
+    private final Context context;
+
     private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
@@ -59,12 +61,18 @@ public abstract class BleDevice {
 
     private ExecutorService autoConnService; // 自动连接线程池
 
-    public BleDevice(BleDeviceBasicInfo basicInfo) {
+    public BleDevice(Context context, BleDeviceBasicInfo basicInfo) {
+        this.context = context;
+
         this.basicInfo = basicInfo;
 
         connCmdExecutor = new BleConnectCommandExecutor(this);
 
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+    }
+
+    public Context getContext() {
+        return context;
     }
 
     public BleDeviceBasicInfo getBasicInfo() {

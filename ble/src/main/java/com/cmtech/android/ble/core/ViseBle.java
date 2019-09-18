@@ -5,10 +5,7 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 import android.widget.Toast;
 
-import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.common.BleConfig;
-import com.cmtech.android.ble.model.BluetoothLeDevice;
-import com.vise.log.ViseLog;
 
 /**
  * @Description: BLE设备操作入口
@@ -59,34 +56,6 @@ public class ViseBle {
         }
     }
 
-    /**
-     * 连接设备
-     *
-     * @param bluetoothLeDevice
-     * @param connectCallback
-     */
-    public void connect(BluetoothLeDevice bluetoothLeDevice, IConnectCallback connectCallback) {
-        if (bluetoothLeDevice == null || connectCallback == null) {
-            ViseLog.e("This bluetoothLeDevice or connectCallback is null.");
-            return;
-        }
-        DeviceMirror deviceMirror = new DeviceMirror(bluetoothLeDevice);
-            /*if (lastDeviceMirror != null && !TextUtils.isEmpty(lastDeviceMirror.getUniqueSymbol())
-                    && lastDeviceMirror.getUniqueSymbol().equals(deviceMirror.getUniqueSymbol())) {
-                deviceMirror = lastDeviceMirror;//防止重复创建设备镜像
-            }*/
-        deviceMirror.connect(connectCallback);
-        lastDeviceMirror = deviceMirror;
-    }
-
-    /**
-     * 获取Context
-     *
-     * @return 返回Context
-     */
-    public Context getContext() {
-        return context;
-    }
 
     /**
      * 获取蓝牙适配器

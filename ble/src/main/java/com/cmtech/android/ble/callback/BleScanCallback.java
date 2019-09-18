@@ -1,12 +1,13 @@
 package com.cmtech.android.ble.callback;
 
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 
-import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
@@ -28,8 +29,18 @@ public abstract class BleScanCallback extends android.bluetooth.le.ScanCallback 
         return this;
     }
 
-    public void startScan() {
-        BluetoothAdapter adapter = ViseBle.getInstance().getBluetoothAdapter();
+    private static BluetoothAdapter getBluetoothAdapter(Context context) {
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+
+        if(bluetoothManager == null) {
+            return null;
+        }
+
+        return bluetoothManager.getAdapter();
+    }
+
+    public void startScan(Context context) {
+        BluetoothAdapter adapter = getBluetoothAdapter(context);
 
         if (adapter != null) {
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
@@ -43,8 +54,8 @@ public abstract class BleScanCallback extends android.bluetooth.le.ScanCallback 
 
     }
 
-    public void stopScan() {
-        BluetoothAdapter adapter = ViseBle.getInstance().getBluetoothAdapter();
+    public void stopScan(Context context) {
+        BluetoothAdapter adapter = getBluetoothAdapter(context);
 
         if (adapter != null) {
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();

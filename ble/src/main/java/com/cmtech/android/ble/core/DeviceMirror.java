@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -264,7 +265,7 @@ public class DeviceMirror {
      *
      * @param connectCallback connectCallback
      */
-    public synchronized void connect(IConnectCallback connectCallback) {
+    public synchronized void connect(Context context, IConnectCallback connectCallback) {
         if (connectState == ConnectState.CONNECT_SUCCESS || connectState == ConnectState.CONNECT_PROCESS) {
             ViseLog.e("this connect state is connecting, connectSuccess or current retry count less than config connect retry count.");
             return;
@@ -273,7 +274,7 @@ public class DeviceMirror {
         handler.removeCallbacksAndMessages(null);
 
         this.connectCallback = connectCallback;
-        connect();
+        connect(context);
     }
 
     /**
@@ -591,13 +592,13 @@ public class DeviceMirror {
     /**
      * 连接设备
      */
-    private synchronized void connect() {
+    private synchronized void connect(Context context) {
         handler.removeMessages(MSG_CONNECT_TIMEOUT);
         handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
 
         connectState = ConnectState.CONNECT_PROCESS;
         if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
-            bluetoothLeDevice.getDevice().connectGatt(ViseBle.getInstance().getContext(), false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
+            bluetoothLeDevice.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
         }
     }
 
