@@ -10,6 +10,7 @@ import com.cmtech.android.ble.callback.IConnectCallback;
 import com.cmtech.android.ble.core.DeviceMirror;
 import com.cmtech.android.ble.core.ViseBle;
 import com.cmtech.android.ble.exception.BleException;
+import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
@@ -102,7 +103,7 @@ class BleConnectCommandExecutor {
 
         this.device = device;
 
-        ScanFilter scanFilter = new ScanFilter.Builder().setDeviceName("CM1.0").setDeviceAddress(device.getMacAddress()).build();
+        ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(device.getMacAddress()).build();
 
         bleScanCallback.setScanFilter(scanFilter);
     }
@@ -196,6 +197,11 @@ class BleConnectCommandExecutor {
         }
 
         setConnectState(CONNECT_FAILURE);
+
+        if(bleException instanceof TimeoutException) {
+            device.stopScan();
+        }
+
     }
 
     // 处理连接断开

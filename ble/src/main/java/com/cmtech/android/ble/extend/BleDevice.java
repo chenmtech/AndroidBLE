@@ -260,6 +260,8 @@ public abstract class BleDevice {
     void stopScan() {
         ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
 
+        mHandler.removeCallbacksAndMessages(null);
+
         connCmdExecutor.stopScan(); // 设备处于扫描时，停止扫描
     }
 

@@ -19,7 +19,7 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 public abstract class BleScanCallback extends android.bluetooth.le.ScanCallback {
     private ScanFilter scanFilter;
 
-    public BleScanCallback() {
+    protected BleScanCallback() {
     }
 
     public BleScanCallback setScanFilter(ScanFilter scanFilter) {
