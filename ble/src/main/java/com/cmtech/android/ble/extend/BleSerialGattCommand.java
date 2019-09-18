@@ -1,9 +1,6 @@
 package com.cmtech.android.ble.extend;
 
-import android.os.Handler;
-import android.os.Looper;
-
-import com.cmtech.android.ble.callback.IBleCallback;
+import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.exception.BleException;
@@ -32,10 +29,10 @@ class BleSerialGattCommand extends BleGattCommand {
     //private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // IBleCallback的装饰类，在一般的回调响应任务完成后，执行串行命令所需动作
-    private class BleSerialCommandCallbackDecorator implements IBleCallback {
-        private IBleCallback bleCallback;
+    private class BleSerialCommandDataCallbackDecorator implements IBleDataCallback {
+        private IBleDataCallback bleCallback;
 
-        BleSerialCommandCallbackDecorator(IBleCallback bleCallback) {
+        BleSerialCommandDataCallbackDecorator(IBleDataCallback bleCallback) {
             this.bleCallback = bleCallback;
         }
 
@@ -53,7 +50,7 @@ class BleSerialGattCommand extends BleGattCommand {
     private BleSerialGattCommand(BleGattCommand gattCommand) {
         super(gattCommand);
 
-        dataOpCallback = new BleSerialCommandCallbackDecorator(dataOpCallback);
+        dataOpCallback = new BleSerialCommandDataCallbackDecorator(dataOpCallback);
     }
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
@@ -84,7 +81,7 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
@@ -104,7 +101,7 @@ class BleSerialGattCommand extends BleGattCommand {
         notifyAll();
     }
 
-    private synchronized void onSerialCommandFailure(IBleCallback bleCallback, BleException exception) {
+    private synchronized void onSerialCommandFailure(IBleDataCallback bleCallback, BleException exception) {
         ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
         removeBleCallback();

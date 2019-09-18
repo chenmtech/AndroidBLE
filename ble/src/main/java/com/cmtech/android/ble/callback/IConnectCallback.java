@@ -16,6 +16,6 @@ public interface IConnectCallback {
     void onConnectFailure(BleException exception);
 
     //连接断开
-    void onDisconnect(boolean isActive);
+    void onDisconnect();
 
 }

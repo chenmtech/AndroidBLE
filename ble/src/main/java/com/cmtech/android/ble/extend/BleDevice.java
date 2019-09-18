@@ -105,7 +105,7 @@ public abstract class BleDevice {
         }
     }
 
-    DeviceMirror getDeviceMirror() {
+    public DeviceMirror getDeviceMirror() {
         return deviceMirror;
     }
 

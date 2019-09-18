@@ -9,7 +9,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
  * @author: <a href="http://xiaoyaoyou1212.360doc.com">DAWI</a>
  * @date: 2017/10/17 19:42
  */
-public interface IBleCallback {
+public interface IBleDataCallback {
     void onSuccess(byte[] data, BluetoothGattChannel bluetoothGattChannel, BluetoothLeDevice bluetoothLeDevice);
 
     void onFailure(BleException exception);

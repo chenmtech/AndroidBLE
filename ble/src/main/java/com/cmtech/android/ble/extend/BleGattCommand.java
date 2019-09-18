@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.extend;
 
-import com.cmtech.android.ble.callback.IBleCallback;
+import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.core.DeviceMirror;
@@ -24,19 +24,19 @@ class BleGattCommand{
 
     private final BluetoothGattChannel channel; // 执行命令的通道
 
-    IBleCallback dataOpCallback; // 数据操作回调
+    IBleDataCallback dataOpCallback; // 数据操作回调
 
     private final byte[] writtenData; // 如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable数据
 
-    private final IBleCallback notifyOpCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
+    private final IBleDataCallback notifyOpCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
 
     private final String elementString; // 命令操作的element的描述符
 
     private final boolean isInstantCommand; // 是否是即刻命令，即不需要等待蓝牙响应的命令
 
     private BleGattCommand(BleDevice device, BluetoothGattChannel channel,
-                           IBleCallback dataOpCallback,
-                           byte[] writtenData, IBleCallback notifyOpCallback, String elementString, boolean isInstantCommand) {
+                           IBleDataCallback dataOpCallback,
+                           byte[] writtenData, IBleDataCallback notifyOpCallback, String elementString, boolean isInstantCommand) {
         this.device = device;
 
         this.channel = channel;
@@ -168,9 +168,9 @@ class BleGattCommand{
 
         private byte[] data;
 
-        private IBleCallback dataCallback;
+        private IBleDataCallback dataCallback;
 
-        private IBleCallback notifyOpCallback;
+        private IBleDataCallback notifyOpCallback;
 
         private boolean isInstantCommand = false;
 
@@ -195,7 +195,7 @@ class BleGattCommand{
             return this;
         }
 
-        Builder setDataCallback(IBleCallback dataCallback) {
+        Builder setDataCallback(IBleDataCallback dataCallback) {
             this.dataCallback = dataCallback;
 
             return this;
@@ -207,7 +207,7 @@ class BleGattCommand{
             return this;
         }
 
-        Builder setNotifyOpCallback(IBleCallback notifyOpCallback) {
+        Builder setNotifyOpCallback(IBleDataCallback notifyOpCallback) {
             this.notifyOpCallback = notifyOpCallback;
 
             return this;

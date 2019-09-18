@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.extend;
 
-import com.cmtech.android.ble.callback.IBleCallback;
+import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.core.BluetoothGattChannel;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
@@ -18,12 +18,12 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
   * Version:        1.0
  */
 
-class GattDataCallbackAdapter implements IBleCallback {
+class GattDataCallbackAdapter implements IBleDataCallback {
     private IGattDataCallback dataOpCallback;
 
     private GattDataCallbackAdapter(IGattDataCallback gattDataCallback) {
         if(gattDataCallback == null) {
-            throw new NullPointerException("The gattDataCallback adapted to IBleCallback must not be null");
+            throw new NullPointerException("The gattDataCallback adapted to IBleDataCallback must not be null");
         }
 
         this.dataOpCallback = gattDataCallback;

@@ -2,16 +2,11 @@ package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.ScanFilter;
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IConnectCallback;
-import com.cmtech.android.ble.callback.BleScanCallback;
 import com.cmtech.android.ble.common.BleConfig;
-import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
@@ -24,7 +19,6 @@ public class ViseBle {
     private Context context;//上下文
     private BluetoothManager bluetoothManager;//蓝牙管理
     private BluetoothAdapter bluetoothAdapter;//蓝牙适配器
-    private DeviceMirrorPool deviceMirrorPool;//设备连接池
     private DeviceMirror lastDeviceMirror;//上次操作设备镜像
 
     private static ViseBle instance;//入口操作管理
@@ -50,15 +44,6 @@ public class ViseBle {
     }
 
     /**
-     * 获取配置对象，可进行相关配置的修改
-     *
-     * @return
-     */
-    public static BleConfig config() {
-        return bleConfig;
-    }
-
-    /**
      * 初始化
      *
      * @param context 上下文
@@ -71,32 +56,7 @@ public class ViseBle {
                 throw new IllegalStateException();
             }
             bluetoothAdapter = bluetoothManager.getAdapter();
-            deviceMirrorPool = new DeviceMirrorPool();
         }
-    }
-
-    /**
-     * 开始扫描
-     *
-     * @param bleScanCallback 自定义回调
-     */
-    public void startScan(BleScanCallback bleScanCallback) {
-        if (bleScanCallback == null) {
-            throw new IllegalArgumentException("this BleScanCallback is Null!");
-        }
-        bleScanCallback.startScan();
-    }
-
-    /**
-     * 停止扫描
-     *
-     * @param bleScanCallback 自定义回调
-     */
-    public void stopScan(BleScanCallback bleScanCallback) {
-        if (bleScanCallback == null) {
-            throw new IllegalArgumentException("this BleScanCallback is Null!");
-        }
-        bleScanCallback.stopScan();
     }
 
     /**
@@ -110,155 +70,13 @@ public class ViseBle {
             ViseLog.e("This bluetoothLeDevice or connectCallback is null.");
             return;
         }
-        if (deviceMirrorPool != null && !deviceMirrorPool.isContainDevice(bluetoothLeDevice)) {
-            DeviceMirror deviceMirror = new DeviceMirror(bluetoothLeDevice);
+        DeviceMirror deviceMirror = new DeviceMirror(bluetoothLeDevice);
             /*if (lastDeviceMirror != null && !TextUtils.isEmpty(lastDeviceMirror.getUniqueSymbol())
                     && lastDeviceMirror.getUniqueSymbol().equals(deviceMirror.getUniqueSymbol())) {
                 deviceMirror = lastDeviceMirror;//防止重复创建设备镜像
             }*/
-            deviceMirror.connect(connectCallback);
-            lastDeviceMirror = deviceMirror;
-        } else {
-            ViseLog.i("This device is connected.");
-        }
-    }
-
-    /**
-     * 连接指定mac地址的设备
-     *
-     * @param mac             设备mac地址
-     * @param connectCallback 连接回调
-     */
-    public void connectByMac(String mac, final IConnectCallback connectCallback) {
-        if (mac == null || connectCallback == null) {
-            ViseLog.e("This mac or connectCallback is null.");
-            return;
-        }
-
-        ScanFilter.Builder builder = new ScanFilter.Builder();
-
-        builder.setDeviceAddress(mac);
-
-        ScanFilter scanFilter = builder.build();
-
-        startScan(new BleScanCallback() {
-            @Override
-            public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
-                stopScan();
-
-                if(bluetoothLeDevice != null) {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            connect(bluetoothLeDevice, connectCallback);
-                        }
-                    });
-                }
-            }
-        }.setScanFilter(scanFilter));
-    }
-
-    /**
-     * 连接指定设备名称的设备
-     *
-     * @param name            设备名称
-     * @param connectCallback 连接回调
-     */
-    public void connectByName(String name, final IConnectCallback connectCallback) {
-        if (name == null || connectCallback == null) {
-            ViseLog.e("This name or connectCallback is null.");
-            return;
-        }
-
-        ScanFilter.Builder builder = new ScanFilter.Builder();
-
-        builder.setDeviceName(name);
-
-        ScanFilter scanFilter = builder.build();
-
-        startScan(new BleScanCallback() {
-            @Override
-            public void onScanFinish(final BluetoothLeDevice bluetoothLeDevice) {
-                stopScan();
-
-                if(bluetoothLeDevice != null) {
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            connect(bluetoothLeDevice, connectCallback);
-                        }
-                    });
-                }
-            }
-        }.setScanFilter(scanFilter));
-    }
-
-    /**
-     * 获取连接池中的设备镜像，如果没有连接则返回空
-     *
-     * @param bluetoothLeDevice
-     * @return
-     */
-    public DeviceMirror getDeviceMirror(BluetoothLeDevice bluetoothLeDevice) {
-        if (deviceMirrorPool != null) {
-            return deviceMirrorPool.getDeviceMirror(bluetoothLeDevice);
-        }
-        return null;
-    }
-
-    /**
-     * 获取该设备连接状态
-     *
-     * @param bluetoothLeDevice
-     * @return
-     */
-    public ConnectState getConnectState(BluetoothLeDevice bluetoothLeDevice) {
-        if (deviceMirrorPool != null) {
-            return deviceMirrorPool.getConnectState(bluetoothLeDevice);
-        }
-        return ConnectState.CONNECT_DISCONNECT;
-    }
-
-    /**
-     * 判断该设备是否已连接
-     *
-     * @param bluetoothLeDevice
-     * @return
-     */
-    public boolean isConnect(BluetoothLeDevice bluetoothLeDevice) {
-        if (deviceMirrorPool != null) {
-            return deviceMirrorPool.isContainDevice(bluetoothLeDevice);
-        }
-        return false;
-    }
-
-    /**
-     * 断开某一个设备
-     *
-     * @param bluetoothLeDevice
-     */
-    public void disconnect(BluetoothLeDevice bluetoothLeDevice) {
-        if (deviceMirrorPool != null) {
-            deviceMirrorPool.disconnect(bluetoothLeDevice);
-        }
-    }
-
-    /**
-     * 断开所有设备
-     */
-    public void disconnect() {
-        if (deviceMirrorPool != null) {
-            deviceMirrorPool.disconnect();
-        }
-    }
-
-    /**
-     * 清除资源，在退出应用时调用
-     */
-    public void clear() {
-        if (deviceMirrorPool != null) {
-            deviceMirrorPool.clear();
-        }
+        deviceMirror.connect(connectCallback);
+        lastDeviceMirror = deviceMirror;
     }
 
     /**
@@ -268,15 +86,6 @@ public class ViseBle {
      */
     public Context getContext() {
         return context;
-    }
-
-    /**
-     * 获取蓝牙管理
-     *
-     * @return 返回蓝牙管理
-     */
-    public BluetoothManager getBluetoothManager() {
-        return bluetoothManager;
     }
 
     /**
@@ -298,48 +107,6 @@ public class ViseBle {
             return bluetoothAdapter;
     }
 
-    /**
-     * 获取设备镜像池
-     *
-     * @return
-     */
-    public DeviceMirrorPool getDeviceMirrorPool() {
-        return deviceMirrorPool;
-    }
 
-    /**
-     * 获取当前读取数据失败重试次数
-     *
-     * @return
-     */
-    public int getReadDataRetryCount() {
-        if (lastDeviceMirror == null) {
-            return 0;
-        }
-        return lastDeviceMirror.getReadDataRetryCount();
-    }
 
-    /**
-     * 获取当前使能数据失败重试次数
-     *
-     * @return
-     */
-    public int getReceiveDataRetryCount() {
-        if (lastDeviceMirror == null) {
-            return 0;
-        }
-        return lastDeviceMirror.getReceiveDataRetryCount();
-    }
-
-    /**
-     * 获取当前写入数据失败重试次数
-     *
-     * @return
-     */
-    public int getWriteDataRetryCount() {
-        if (lastDeviceMirror == null) {
-            return 0;
-        }
-        return lastDeviceMirror.getWriteDataRetryCount();
-    }
 }

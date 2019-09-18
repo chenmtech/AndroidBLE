@@ -86,11 +86,11 @@ class BleConnectCommandExecutor {
 
         // 连接中断
         @Override
-        public void onDisconnect(final boolean isActive) {
+        public void onDisconnect() {
             mHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                    processDisconnect(isActive);
+                    processDisconnect();
                 }
             });
         }
@@ -129,7 +129,8 @@ class BleConnectCommandExecutor {
         device.setState(DEVICE_DISCONNECTING);
 
         if(device.getDeviceMirror() != null) {
-            ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
+            device.getDeviceMirror().disconnect();
+            //ViseBle.getInstance().getDeviceMirrorPool().disconnect(device.getDeviceMirror().getBluetoothLeDevice());
         }
     }
 
@@ -160,7 +161,8 @@ class BleConnectCommandExecutor {
         }
 
         if(device.getState() == DEVICE_CLOSED) { // 设备已经关闭了，强行断开
-            ViseBle.getInstance().disconnect(mirror.getBluetoothLeDevice());
+            //ViseBle.getInstance().disconnect(mirror.getBluetoothLeDevice());
+            mirror.disconnect();
 
             return;
         }
@@ -190,11 +192,14 @@ class BleConnectCommandExecutor {
 
         device.executeAfterConnectFailure();
 
-        if(device.getDeviceMirror() != null) {
+        /*if(device.getDeviceMirror() != null) {
             device.getDeviceMirror().clear();
+            //ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
 
             device.setDeviceMirror(null);
-        }
+        }*/
+
+        device.setDeviceMirror(null);
 
         setConnectState(CONNECT_FAILURE);
 
@@ -205,19 +210,22 @@ class BleConnectCommandExecutor {
     }
 
     // 处理连接断开
-    private void processDisconnect(boolean isActive) {
+    private void processDisconnect() {
         if(connectState != CONNECT_DISCONNECT) {
-            ViseLog.e("处理连接断开: " + isActive);
+            ViseLog.e("处理连接断开");
 
             device.stopGattExecutor();
 
             device.executeAfterDisconnect();
 
-            if(device.getDeviceMirror() != null) {
+            /*if(device.getDeviceMirror() != null) {
                 device.getDeviceMirror().clear();
+                //ViseBle.getInstance().getDeviceMirrorPool().removeDeviceMirror(device.getDeviceMirror());
 
                 device.setDeviceMirror(null);
-            }
+            }*/
+
+            device.setDeviceMirror(null);
 
             setConnectState(CONNECT_DISCONNECT);
         }

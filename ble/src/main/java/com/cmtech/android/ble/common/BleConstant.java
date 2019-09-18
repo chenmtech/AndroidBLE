@@ -23,8 +23,4 @@ public class BleConstant {
     public static final int MSG_WRITE_DATA_TIMEOUT = 0x02;
     public static final int MSG_READ_DATA_TIMEOUT = 0x03;
     public static final int MSG_RECEIVE_DATA_TIMEOUT = 0x04;
-    public static final int MSG_CONNECT_RETRY = 0x05;
-    public static final int MSG_WRITE_DATA_RETRY = 0x06;
-    public static final int MSG_READ_DATA_RETRY = 0x07;
-    public static final int MSG_RECEIVE_DATA_RETRY = 0x08;
 }
