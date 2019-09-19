@@ -4,10 +4,17 @@ import com.cmtech.android.ble.extend.BleDeviceGatt;
 import com.cmtech.android.ble.exception.BleException;
 
 /**
- * @Description: 连接设备回调
- * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
- * @date: 17/8/1 23:00.
+ *
+ * ClassName:      IBleConnectCallback
+ * Description:    连接回调接口
+ * Author:         chenm
+ * CreateDate:     2019-09-19 07:02
+ * UpdateUser:     chenm
+ * UpdateDate:     2019-09-19 07:02
+ * UpdateRemark:   更新说明
+ * Version:        1.0
  */
+
 public interface IBleConnectCallback {
     //连接成功
     void onConnectSuccess(BleDeviceGatt bleDeviceGatt);

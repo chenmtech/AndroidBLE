@@ -21,11 +21,7 @@ import com.vise.log.ViseLog;
  */
 
 class BleSerialGattCommand extends BleGattCommand {
-    private final static int CMD_ERROR_RETRY_TIMES = 3; // Gatt命令执行错误可重试的次数
-
     private boolean done = true; // 标记命令是否执行完毕
-
-    //private int cmdErrorTimes = 0; // 命令执行错误的次数
 
     // IBleCallback的装饰类，在一般的回调响应任务完成后，执行串行命令所需动作
     private class BleSerialCommandDataCallbackDecorator implements IBleDataCallback {
@@ -95,8 +91,6 @@ class BleSerialGattCommand extends BleGattCommand {
 
         done = true;
 
-        //cmdErrorTimes = 0;
-
         notifyAll();
     }
 
@@ -109,7 +103,7 @@ class BleSerialGattCommand extends BleGattCommand {
             bleCallback.onFailure(exception);
 
         if(device != null) {
-            device.startDisconnection();
+            device.callDisconnect();
         }
     }
 }

@@ -10,12 +10,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
-import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleConnectCallback;
-import com.cmtech.android.ble.callback.IRssiCallback;
+import com.cmtech.android.ble.callback.IBleDataCallback;
+import com.cmtech.android.ble.callback.IBleRssiCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.BleConstant;
-import com.cmtech.android.ble.common.ConnectState;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.ConnectException;
@@ -37,19 +36,19 @@ import static com.cmtech.android.ble.common.BleConstant.MSG_RECEIVE_DATA_TIMEOUT
 import static com.cmtech.android.ble.common.BleConstant.MSG_WRITE_DATA_TIMEOUT;
 
 public class BleDeviceGatt {
+    private final Context context;
+
     private final BluetoothLeDevice bluetoothLeDevice;//设备基础信息
 
     private BluetoothGatt bluetoothGatt;//蓝牙GATT
 
-    private IRssiCallback rssiCallback;//获取信号值回调
+    private IBleRssiCallback rssiCallback;//获取信号值回调
 
     private IBleConnectCallback connectCallback;//连接回调
 
     private boolean isIndication;//是否是指示器方式
 
     private boolean enable;//是否设置使能
-
-    private ConnectState connectState;//设备状态描述
 
     private volatile HashMap<String, BleGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
     private volatile HashMap<String, BleGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
@@ -101,17 +100,14 @@ public class BleDeviceGatt {
                 if (connectCallback != null) {
                     handler.removeCallbacksAndMessages(null);
 
-                    BleDeviceGatt.this.clear();
+                    clear();
+
                     if (status == GATT_SUCCESS) {
-                        connectState = ConnectState.CONNECT_DISCONNECT;
                         connectCallback.onDisconnect();
                     } else {
-                        connectState = ConnectState.CONNECT_FAILURE;
                         connectCallback.onConnectFailure(new ConnectException(gatt, status));
                     }
                 }
-            } else if (newState == BluetoothGatt.STATE_CONNECTING) {
-                connectState = ConnectState.CONNECT_PROCESS;
             }
         }
 
@@ -128,8 +124,6 @@ public class BleDeviceGatt {
 
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
-
-                connectState = ConnectState.CONNECT_SUCCESS;
 
                 bluetoothGatt = gatt;
 
@@ -258,10 +252,10 @@ public class BleDeviceGatt {
         }
     };
 
-    public BleDeviceGatt(BluetoothLeDevice bluetoothLeDevice) {
-        this.bluetoothLeDevice = bluetoothLeDevice;
+    public BleDeviceGatt(Context context, BluetoothLeDevice bluetoothLeDevice) {
+        this.context = context;
 
-        connectState = ConnectState.CONNECT_INIT;
+        this.bluetoothLeDevice = bluetoothLeDevice;
     }
 
     /**
@@ -269,16 +263,12 @@ public class BleDeviceGatt {
      *
      * @param connectCallback connectCallback
      */
-    public synchronized void connect(Context context, IBleConnectCallback connectCallback) {
-        if (connectState == ConnectState.CONNECT_SUCCESS || connectState == ConnectState.CONNECT_PROCESS) {
-            ViseLog.e("this connect state is connecting or connectSuccess.");
-            return;
-        }
-
+    public synchronized void connect(IBleConnectCallback connectCallback) {
         handler.removeCallbacksAndMessages(null);
 
         this.connectCallback = connectCallback;
-        connect(context);
+
+        connect();
     }
 
     /**
@@ -372,7 +362,7 @@ public class BleDeviceGatt {
      *
      * @param rssiCallback rssiCallback
      */
-    public void readRemoteRssi(IRssiCallback rssiCallback) {
+    public void readRemoteRssi(IBleRssiCallback rssiCallback) {
         this.rssiCallback = rssiCallback;
         if (bluetoothGatt != null) {
             bluetoothGatt.readRemoteRssi();
@@ -432,30 +422,12 @@ public class BleDeviceGatt {
     }
 
     /**
-     * 获取设备连接状态
-     *
-     * @return 返回设备连接状态
-     */
-    public ConnectState getConnectState() {
-        return connectState;
-    }
-
-    /**
      * 获取设备详细信息
      *
      * @return bluetoothLeDevice
      */
     public BluetoothLeDevice getBluetoothLeDevice() {
         return bluetoothLeDevice;
-    }
-
-    /**
-     * 设备是否连接
-     *
-     * @return isConnected
-     */
-    public boolean isConnected() {
-        return connectState == ConnectState.CONNECT_SUCCESS;
     }
 
     /**
@@ -499,8 +471,9 @@ public class BleDeviceGatt {
      * 主动断开设备连接
      */
     public synchronized void disconnect() {
-        connectState = ConnectState.CONNECT_INIT;
         if (bluetoothGatt != null) {
+            ViseLog.e("BluetoothGatt is disconnected");
+
             bluetoothGatt.disconnect();
         }
         handler.removeCallbacksAndMessages(null);
@@ -510,10 +483,11 @@ public class BleDeviceGatt {
      * 关闭GATT
      */
     public synchronized void close() {
-        ViseLog.e("BluetoothGatt is closed");
-
         if (bluetoothGatt != null) {
+            ViseLog.e("BluetoothGatt is closed");
+
             bluetoothGatt.close();
+
             bluetoothGatt = null;
         }
     }
@@ -571,12 +545,10 @@ public class BleDeviceGatt {
     /**
      * 连接设备
      */
-    private synchronized void connect(Context context) {
+    private synchronized void connect() {
         handler.removeMessages(MSG_CONNECT_TIMEOUT);
 
         handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
-
-        connectState = ConnectState.CONNECT_PROCESS;
 
         if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
             bluetoothLeDevice.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
@@ -689,11 +661,6 @@ public class BleDeviceGatt {
      * @param bleException 回调异常
      */
     private void connectFailure(BleException bleException) {
-        if (bleException instanceof TimeoutException) {
-            connectState = ConnectState.CONNECT_TIMEOUT;
-        } else {
-            connectState = ConnectState.CONNECT_FAILURE;
-        }
         if(bluetoothGatt != null)
             bluetoothGatt.disconnect();
 

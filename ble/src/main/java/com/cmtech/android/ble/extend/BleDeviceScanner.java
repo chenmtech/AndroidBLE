@@ -18,25 +18,33 @@ import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 
+/**
+ *
+ * ClassName:      BleDeviceScanner
+ * Description:    低功耗蓝牙扫描仪类
+ * Author:         chenm
+ * CreateDate:     2019-09-19 07:02
+ * UpdateUser:     chenm
+ * UpdateDate:     2019-09-19 07:02
+ * UpdateRemark:   更新说明
+ * Version:        1.0
+ */
+
 public class BleDeviceScanner {
     private final Context context;
 
-    private ScanFilter scanFilter;
+    private ScanFilter scanFilter; // 扫描过滤器
 
-    private IBleScanCallback bleScanCallback;
+    private IBleScanCallback bleScanCallback; // 扫描回调
 
     private final ScanCallback scanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
 
-            BluetoothLeDevice bluetoothLeDevice;
+            byte[] recordBytes = (result.getScanRecord() == null) ? null : result.getScanRecord().getBytes();
 
-            if(result.getScanRecord() == null) {
-                bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), null, result.getTimestampNanos());
-            } else {
-                bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), result.getScanRecord().getBytes(), result.getTimestampNanos());
-            }
+            BluetoothLeDevice bluetoothLeDevice = new BluetoothLeDevice(result.getDevice(), result.getRssi(), recordBytes, result.getTimestampNanos());
 
             if(bleScanCallback != null)
                 bleScanCallback.onDeviceFound(bluetoothLeDevice);
@@ -63,22 +71,20 @@ public class BleDeviceScanner {
         this.context = context;
     }
 
+    public BleDeviceScanner(Context context, ScanFilter scanFilter) {
+        this(context);
+
+        this.scanFilter = scanFilter;
+    }
+
+    // 设备过滤器
     public BleDeviceScanner setScanFilter(ScanFilter scanFilter) {
         this.scanFilter = scanFilter;
 
         return this;
     }
 
-    private BluetoothAdapter getBluetoothAdapter() {
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-
-        if(bluetoothManager == null) {
-            return null;
-        }
-
-        return bluetoothManager.getAdapter();
-    }
-
+    // 开始扫描
     public void startScan(IBleScanCallback bleScanCallback) {
         this.bleScanCallback = bleScanCallback;
 
@@ -95,6 +101,7 @@ public class BleDeviceScanner {
         }
     }
 
+    // 停止扫描
     public void stopScan() {
         BluetoothAdapter adapter = getBluetoothAdapter();
 
@@ -103,7 +110,14 @@ public class BleDeviceScanner {
 
             scanner.stopScan(scanCallback);
 
-            ViseLog.e("Stop to scan");
+            ViseLog.e("Scan stopped");
         }
     }
+
+    private BluetoothAdapter getBluetoothAdapter() {
+        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+
+        return (bluetoothManager == null) ? null : bluetoothManager.getAdapter();
+    }
+
 }
