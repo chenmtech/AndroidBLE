@@ -52,11 +52,11 @@ public abstract class BleDevice {
 
     private BleDeviceBasicInfo basicInfo; // 设备基本信息
 
-    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
+    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备实时状态
 
     private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态
 
-    private final BleDeviceScanner scanner = new BleDeviceScanner(); // 蓝牙扫描仪，完成开始扫描和停止扫描的功能
+    private final BleDeviceScanner scanner; // 蓝牙扫描仪，完成开始扫描和停止扫描的功能
 
     private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
 
@@ -78,10 +78,11 @@ public abstract class BleDevice {
             BluetoothDevice bluetoothDevice = bluetoothLeDevice.getDevice();
 
             if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                processScanResult(null);
+                stopScanForever();
 
+                setState(connectState);
             } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                processScanResult(bluetoothLeDevice);
+                processFoundDevice(bluetoothLeDevice);
             }
         }
 
@@ -89,24 +90,22 @@ public abstract class BleDevice {
         public void onScanFailed(int errorCode) {
             ViseLog.e("Scan Failed: errorCode = " + errorCode);
 
-            processScanResult(null);
+            stopScanForever();
+
+            setState(connectState);
         }
     }; // 扫描回调
 
-    // 处理扫描结果
-    private void processScanResult(final BluetoothLeDevice bluetoothLeDevice) {
+    // 处理扫描到的设备
+    private void processFoundDevice(final BluetoothLeDevice bluetoothLeDevice) {
 
-        ViseLog.e("处理扫描结果: " + bluetoothLeDevice);
+        ViseLog.e("处理找到的设备: " + bluetoothLeDevice);
 
-        stopScanForever();
+        scanner.stopScan();
 
-        if (bluetoothLeDevice != null) { // 扫描到设备，发起连接
-            BleDeviceGatt bleDeviceGatt = new BleDeviceGatt(bluetoothLeDevice);
+        new BleDeviceGatt(bluetoothLeDevice).connect(context, connectCallback);
 
-            bleDeviceGatt.connect(context, connectCallback);
-
-            setState(DEVICE_CONNECTING);
-        }
+        setState(DEVICE_CONNECTING);
     }
 
     private final IBleConnectCallback connectCallback = new IBleConnectCallback() {
@@ -160,14 +159,14 @@ public abstract class BleDevice {
         }
 
         if(getState() == DEVICE_SCANNING) {
-            stopScanForever();
+            scanner.stopScan();
         }
 
         ViseLog.e("处理连接成功: " + bleDeviceGatt);
 
         this.bleDeviceGatt = bleDeviceGatt;
 
-        startGattExecutor();
+        gattCmdExecutor.start();
 
         if(executeAfterConnectSuccess())
             setConnectState(CONNECT_SUCCESS);
@@ -180,7 +179,7 @@ public abstract class BleDevice {
     private void processConnectFailure(final BleException bleException) {
         ViseLog.e("处理连接失败: " + bleException );
 
-        stopGattExecutor();
+        gattCmdExecutor.stop();
 
         executeAfterConnectFailure();
 
@@ -198,7 +197,7 @@ public abstract class BleDevice {
         if(connectState != CONNECT_DISCONNECT) {
             ViseLog.e("处理连接断开");
 
-            stopGattExecutor();
+            gattCmdExecutor.stop();
 
             executeAfterDisconnect();
 
@@ -219,13 +218,12 @@ public abstract class BleDevice {
 
         this.basicInfo = basicInfo;
 
-        gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-
-        bleDeviceGatt = null;
-
         ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
 
-        scanner.setScanFilter(scanFilter);
+        scanner = new BleDeviceScanner(context).setScanFilter(scanFilter);
+
+        gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+
     }
 
     public Context getContext() {
@@ -279,7 +277,7 @@ public abstract class BleDevice {
         return state;
     }
 
-    void setState(BleDeviceState state) {
+    private void setState(BleDeviceState state) {
         if(this.state != state) {
             ViseLog.e("设备状态：" + state);
 
@@ -359,7 +357,9 @@ public abstract class BleDevice {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                scanner.startScan(getContext(), bleScanCallback);
+                                setState(DEVICE_SCANNING);
+
+                                scanner.startScan(bleScanCallback);
                             }
                         });
                     }
@@ -385,6 +385,8 @@ public abstract class BleDevice {
             startDisconnection(); // 设备处于连接成功时，断开连接
         } else if(getState() == DEVICE_SCANNING) {
             stopScanForever();
+
+            setState(connectState);
         }
     }
 
@@ -428,7 +430,7 @@ public abstract class BleDevice {
 
         mHandler.removeCallbacksAndMessages(null);
 
-        scanner.stopScan(getContext()); // 设备处于扫描时，停止扫描
+        scanner.stopScan(); // 设备处于扫描时，停止扫描
     }
 
 
@@ -439,15 +441,6 @@ public abstract class BleDevice {
 
     protected abstract void executeAfterDisconnect(); // 断开连接后执行的操作
 
-
-
-    void startGattExecutor() {
-        gattCmdExecutor.start();
-    }
-
-    void stopGattExecutor() {
-        gattCmdExecutor.stop();
-    }
 
     protected boolean isGattExecutorAlive() {
         return gattCmdExecutor.isAlive();

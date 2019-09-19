@@ -19,6 +19,8 @@ import java.util.List;
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 
 public class BleDeviceScanner {
+    private final Context context;
+
     private ScanFilter scanFilter;
 
     private IBleScanCallback bleScanCallback;
@@ -57,7 +59,8 @@ public class BleDeviceScanner {
     };
 
 
-    public BleDeviceScanner() {
+    public BleDeviceScanner(Context context) {
+        this.context = context;
     }
 
     public BleDeviceScanner setScanFilter(ScanFilter scanFilter) {
@@ -66,7 +69,7 @@ public class BleDeviceScanner {
         return this;
     }
 
-    private static BluetoothAdapter getBluetoothAdapter(Context context) {
+    private BluetoothAdapter getBluetoothAdapter() {
         BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
 
         if(bluetoothManager == null) {
@@ -76,10 +79,10 @@ public class BleDeviceScanner {
         return bluetoothManager.getAdapter();
     }
 
-    public void startScan(Context context, IBleScanCallback bleScanCallback) {
+    public void startScan(IBleScanCallback bleScanCallback) {
         this.bleScanCallback = bleScanCallback;
 
-        BluetoothAdapter adapter = getBluetoothAdapter(context);
+        BluetoothAdapter adapter = getBluetoothAdapter();
 
         if (adapter != null) {
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
@@ -90,11 +93,10 @@ public class BleDeviceScanner {
 
             ViseLog.e("Start scanning");
         }
-
     }
 
-    public void stopScan(Context context) {
-        BluetoothAdapter adapter = getBluetoothAdapter(context);
+    public void stopScan() {
+        BluetoothAdapter adapter = getBluetoothAdapter();
 
         if (adapter != null) {
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
