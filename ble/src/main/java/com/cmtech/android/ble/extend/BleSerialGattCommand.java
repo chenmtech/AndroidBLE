@@ -1,7 +1,6 @@
 package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.callback.IBleGattDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
@@ -54,7 +53,7 @@ class BleSerialGattCommand extends BleGattCommand {
     }
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
-                                       IBleGattDataCallback dataCallback, IBleGattDataCallback notifyCallback, boolean isInstantCommand) {
+                                       IBleDataCallback dataCallback, IBleDataCallback notifyCallback, boolean isInstantCommand) {
         if(device.getBleDeviceGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
@@ -63,8 +62,8 @@ class BleSerialGattCommand extends BleGattCommand {
                 .setBluetoothElement(element)
                 .setPropertyType(propertyType)
                 .setData(data)
-                .setDataCallback(GattDataCallbackAdapter.create(dataCallback))
-                .setNotifyOpCallback(GattDataCallbackAdapter.create(notifyCallback))
+                .setDataCallback(dataCallback)
+                .setNotifyOpCallback(notifyCallback)
                 .setInstantCommand(isInstantCommand).build();
 
         return new BleSerialGattCommand(command);

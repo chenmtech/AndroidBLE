@@ -8,7 +8,7 @@ import com.cmtech.android.ble.exception.BleException;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 17/8/1 23:00.
  */
-public interface IConnectCallback {
+public interface IBleConnectCallback {
     //连接成功
     void onConnectSuccess(BleDeviceGatt bleDeviceGatt);
 

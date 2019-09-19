@@ -11,7 +11,7 @@ import android.os.Looper;
 import android.os.Message;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.callback.IConnectCallback;
+import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IRssiCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.BleConstant;
@@ -43,7 +43,7 @@ public class BleDeviceGatt {
 
     private IRssiCallback rssiCallback;//获取信号值回调
 
-    private IConnectCallback connectCallback;//连接回调
+    private IBleConnectCallback connectCallback;//连接回调
 
     private boolean isIndication;//是否是指示器方式
 
@@ -269,7 +269,7 @@ public class BleDeviceGatt {
      *
      * @param connectCallback connectCallback
      */
-    public synchronized void connect(Context context, IConnectCallback connectCallback) {
+    public synchronized void connect(Context context, IBleConnectCallback connectCallback) {
         if (connectState == ConnectState.CONNECT_SUCCESS || connectState == ConnectState.CONNECT_PROCESS) {
             ViseLog.e("this connect state is connecting or connectSuccess.");
             return;

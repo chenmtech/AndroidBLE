@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.extend;
 
-import com.cmtech.android.ble.callback.IBleGattDataCallback;
+import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
@@ -68,60 +68,60 @@ class BleSerialGattCommandExecutor {
 
     // Gatt操作
     // 读
-    final void read(BleGattElement element, IBleGattDataCallback gattDataCallback) {
+    final void read(BleGattElement element, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_READ,
-                null, gattDataCallback, null, false);
+                null, dataCallback, null, false);
 
         if(command != null)
             executeCommand(command);
     }
 
     // 写多字节
-    final void write(BleGattElement element, byte[] data, IBleGattDataCallback gattDataCallback) {
+    final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_WRITE,
-                data, gattDataCallback, null, false);
+                data, dataCallback, null, false);
 
         if(command != null)
             executeCommand(command);
     }
 
     // 写单字节
-    final void write(BleGattElement element, byte data, IBleGattDataCallback gattDataCallback) {
-        write(element, new byte[]{data}, gattDataCallback);
+    final void write(BleGattElement element, byte data, IBleDataCallback dataCallback) {
+        write(element, new byte[]{data}, dataCallback);
     }
 
     // Notify
-    final void notify(BleGattElement element, boolean enable, IBleGattDataCallback notifyOpCallback) {
+    final void notify(BleGattElement element, boolean enable, IBleDataCallback notifyOpCallback) {
         notify(element, enable, null, notifyOpCallback);
     }
 
     private void notify(BleGattElement element, boolean enable
-            , IBleGattDataCallback gattDataCallback, IBleGattDataCallback notifyOpCallback) {
+            , IBleDataCallback dataCallback, IBleDataCallback notifyOpCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_NOTIFY,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, gattDataCallback, notifyOpCallback, false);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, notifyOpCallback, false);
 
         if(command != null)
             executeCommand(command);
     }
 
     // Indicate
-    final void indicate(BleGattElement element, boolean enable, IBleGattDataCallback indicateOpCallback) {
+    final void indicate(BleGattElement element, boolean enable, IBleDataCallback indicateOpCallback) {
         indicate(element, enable, null, indicateOpCallback);
     }
 
     private void indicate(BleGattElement element, boolean enable
-            , IBleGattDataCallback gattDataCallback, IBleGattDataCallback indicateOpCallback) {
+            , IBleDataCallback dataCallback, IBleDataCallback indicateOpCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_INDICATE,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, gattDataCallback, indicateOpCallback, false);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, indicateOpCallback, false);
 
         if(command != null)
             executeCommand(command);
     }
 
     // 无需等待响应立刻执行完毕
-    final void runInstantly(IBleGattDataCallback gattDataCallback) {
+    final void runInstantly(IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, null, null,
-                null, gattDataCallback, null, true);
+                null, dataCallback, null, true);
 
         if(command != null)
             executeCommand(command);
