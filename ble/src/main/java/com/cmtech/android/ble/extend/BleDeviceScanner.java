@@ -1,18 +1,17 @@
 package com.cmtech.android.ble.extend;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.Context;
 
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.model.BluetoothLeDevice;
 import com.vise.log.ViseLog;
 
+import java.lang.reflect.Method;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,8 +30,6 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
  */
 
 public class BleDeviceScanner {
-    private final Context context;
-
     private ScanFilter scanFilter; // 扫描过滤器
 
     private IBleScanCallback bleScanCallback; // 扫描回调
@@ -67,12 +64,12 @@ public class BleDeviceScanner {
     };
 
 
-    public BleDeviceScanner(Context context) {
-        this.context = context;
+    public BleDeviceScanner() {
+
     }
 
-    public BleDeviceScanner(Context context, ScanFilter scanFilter) {
-        this(context);
+    public BleDeviceScanner(ScanFilter scanFilter) {
+        this();
 
         this.scanFilter = scanFilter;
     }
@@ -85,7 +82,7 @@ public class BleDeviceScanner {
     }
 
     // 开始扫描
-    public void startScan(IBleScanCallback bleScanCallback) {
+    public boolean startScan(IBleScanCallback bleScanCallback) {
         this.bleScanCallback = bleScanCallback;
 
         BluetoothAdapter adapter = getBluetoothAdapter();
@@ -95,10 +92,16 @@ public class BleDeviceScanner {
 
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
-            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+            if(scanner != null) {
+                scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
 
-            ViseLog.e("Start scanning");
+                ViseLog.e("Start scanning");
+
+                return true;
+            }
         }
+
+        return false;
     }
 
     // 停止扫描
@@ -108,16 +111,29 @@ public class BleDeviceScanner {
         if (adapter != null) {
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
-            scanner.stopScan(scanCallback);
+            if(scanner != null) {
+                scanner.stopScan(scanCallback);
 
-            ViseLog.e("Scan stopped");
+                ViseLog.e("Scan stopped");
+            }
         }
     }
 
-    private BluetoothAdapter getBluetoothAdapter() {
-        BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+    private static BluetoothAdapter getBluetoothAdapter() {
+        return BluetoothAdapter.getDefaultAdapter();
+    }
 
-        return (bluetoothManager == null) ? null : bluetoothManager.getAdapter();
+    public static void cleanup() {
+        BluetoothLeScanner scanner = getBluetoothAdapter().getBluetoothLeScanner();
+
+        try {
+            final Method cleanup = BluetoothLeScanner.class.getMethod("cleanup");
+            if (scanner != null) {
+                cleanup.invoke(scanner);
+            }
+        } catch (Exception e) {
+            ViseLog.e("An exception occured while refreshing device" + e);
+        }
     }
 
 }

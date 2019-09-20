@@ -49,7 +49,8 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
  */
 
 public abstract class BleDevice {
-    private static final int CONNECT_INTERVAL_IN_SECOND = 10; // 自动连接间隔
+    private static final int CONNECT_INTERVAL_IN_SECOND = 20; // 自动连接间隔秒数
+    private static final int MAX_TIMES_CONTINUOUS_CONNECT = 5; // 最大连续连接次数，防止出现scanning too frequently错误
 
     private final Context context;
 
@@ -72,6 +73,8 @@ public abstract class BleDevice {
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     private ExecutorService autoConnService; // 自动连接线程池
+
+    private int connTimes = 0;
 
     // 扫描回调
     private final IBleScanCallback bleScanCallback = new IBleScanCallback() {
@@ -103,9 +106,11 @@ public abstract class BleDevice {
 
             stopScanForever();
 
+            BleDeviceScanner.cleanup();
+
             setState(connectState);
 
-            Toast.makeText(context, "扫描失败。", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "扫描错误。", Toast.LENGTH_LONG).show();
         }
     };
 
@@ -153,7 +158,7 @@ public abstract class BleDevice {
 
         ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
 
-        bleDeviceScanner = new BleDeviceScanner(context, scanFilter);
+        bleDeviceScanner = new BleDeviceScanner(scanFilter);
 
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
     }
@@ -310,16 +315,31 @@ public abstract class BleDevice {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                setState(DEVICE_SCANNING);
+                                if(connTimes < MAX_TIMES_CONTINUOUS_CONNECT) {
+                                    setState(DEVICE_SCANNING);
 
-                                bleDeviceScanner.startScan(bleScanCallback);
+                                    boolean isScanning = bleDeviceScanner.startScan(bleScanCallback);
+
+                                    if(isScanning)
+                                        connTimes++;
+                                    else
+                                        setState(connectState);
+                                } else {
+                                    stopScanForever();
+
+                                    setState(connectState);
+                                }
                             }
                         });
                     }
                 }
             }, 0, CONNECT_INTERVAL_IN_SECOND, TimeUnit.SECONDS);
 
+            connTimes = 0;
+
             ViseLog.e("启动自动连接服务");
+        } else {
+            Toast.makeText(context, "正在自动连接中，请稍等。", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -402,8 +422,11 @@ public abstract class BleDevice {
 
         gattCmdExecutor.start();
 
-        if(executeAfterConnectSuccess())
-            setConnectState(CONNECT_SUCCESS);
+        setConnectState(CONNECT_SUCCESS);
+
+        if(executeAfterConnectSuccess()) {
+            connTimes = 0;
+        }
         else {
             callDisconnect();
         }
@@ -415,11 +438,11 @@ public abstract class BleDevice {
 
         gattCmdExecutor.stop();
 
-        executeAfterConnectFailure();
-
         bleDeviceGatt = null;
 
         setConnectState(CONNECT_FAILURE);
+
+        executeAfterConnectFailure();
 
         if(bleException instanceof TimeoutException) {
             stopScanForever();
@@ -433,11 +456,11 @@ public abstract class BleDevice {
 
             gattCmdExecutor.stop();
 
-            executeAfterDisconnect();
-
             bleDeviceGatt = null;
 
             setConnectState(CONNECT_DISCONNECT);
+
+            executeAfterDisconnect();
         }
     }
 
