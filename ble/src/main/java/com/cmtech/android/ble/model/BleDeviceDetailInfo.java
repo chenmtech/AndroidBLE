@@ -24,18 +24,18 @@ import java.util.Set;
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
  * @date: 16/8/5 20:44.
  */
-public class BluetoothLeDevice implements Parcelable {
+public class BleDeviceDetailInfo implements Parcelable {
 
     /**
      * The Constant CREATOR.
      */
-    public static final Creator<BluetoothLeDevice> CREATOR = new Creator<BluetoothLeDevice>() {
-        public BluetoothLeDevice createFromParcel(final Parcel in) {
-            return new BluetoothLeDevice(in);
+    public static final Creator<BleDeviceDetailInfo> CREATOR = new Creator<BleDeviceDetailInfo>() {
+        public BleDeviceDetailInfo createFromParcel(final Parcel in) {
+            return new BleDeviceDetailInfo(in);
         }
 
-        public BluetoothLeDevice[] newArray(final int size) {
-            return new BluetoothLeDevice[size];
+        public BleDeviceDetailInfo[] newArray(final int size) {
+            return new BleDeviceDetailInfo[size];
         }
     };
     protected static final int MAX_RSSI_LOG_SIZE = 10;
@@ -66,7 +66,7 @@ public class BluetoothLeDevice implements Parcelable {
      * @param scanRecord the scan record of the device
      * @param timestamp  the timestamp of the RSSI reading
      */
-    public BluetoothLeDevice(final BluetoothDevice device, final int rssi, final byte[] scanRecord, final long timestamp) {
+    public BleDeviceDetailInfo(final BluetoothDevice device, final int rssi, final byte[] scanRecord, final long timestamp) {
         mDevice = device;
         mFirstRssi = rssi;
         mFirstTimestamp = timestamp;
@@ -81,7 +81,7 @@ public class BluetoothLeDevice implements Parcelable {
      *
      * @param device the device
      */
-    public BluetoothLeDevice(final BluetoothLeDevice device) {
+    public BleDeviceDetailInfo(final BleDeviceDetailInfo device) {
         mCurrentRssi = device.getRssi();
         mCurrentTimestamp = device.getTimestamp();
         mDevice = device.getDevice();
@@ -97,7 +97,7 @@ public class BluetoothLeDevice implements Parcelable {
      *
      * @param in the in
      */
-    protected BluetoothLeDevice(final Parcel in) {
+    protected BleDeviceDetailInfo(final Parcel in) {
         final Bundle b = in.readBundle(getClass().getClassLoader());
 
         mCurrentRssi = b.getInt(PARCEL_EXTRA_CURRENT_RSSI, 0);
@@ -144,7 +144,7 @@ public class BluetoothLeDevice implements Parcelable {
         if (this == obj) return true;
         if (obj == null) return false;
         if (getClass() != obj.getClass()) return false;
-        final BluetoothLeDevice other = (BluetoothLeDevice) obj;
+        final BleDeviceDetailInfo other = (BleDeviceDetailInfo) obj;
         if (mCurrentRssi != other.mCurrentRssi) return false;
         if (mCurrentTimestamp != other.mCurrentTimestamp) return false;
         if (mDevice == null) {
@@ -350,7 +350,7 @@ public class BluetoothLeDevice implements Parcelable {
      */
     @Override
     public String toString() {
-        return "BluetoothLeDevice [mDevice=" + mDevice + ", " +
+        return "BleDeviceDetailInfo [mDevice=" + mDevice + ", " +
                 "mRssi=" + mFirstRssi + ", mScanRecord=" + HexUtil.encodeHexStr(mScanRecord) +
                 ", mRecordStore=" + mRecordStore + ", getBluetoothDeviceBondState()=" +
                 getBluetoothDeviceBondState() + ", getBluetoothDeviceClassName()=" +

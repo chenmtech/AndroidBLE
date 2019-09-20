@@ -14,8 +14,8 @@ import java.util.Set;
 
 /**
   *
-  * ClassName:      BleDeviceBasicInfo
-  * Description:    设备基本信息，字段信息将保存在数据库或Preference中
+  * ClassName:      BleDeviceRegisterInfo
+  * Description:    设备注册信息，字段信息将保存在数据库或Preference中
   * Author:         chenm
   * CreateDate:     2018-06-27 08:56
   * UpdateUser:     chenm
@@ -24,7 +24,7 @@ import java.util.Set;
   * Version:        1.0
  */
 
-public class BleDeviceBasicInfo implements Serializable{
+public class BleDeviceRegisterInfo implements Serializable{
     private final static long serialVersionUID = 1L;
 
     // 下面五个参数用于登记设备基本信息
@@ -48,12 +48,12 @@ public class BleDeviceBasicInfo implements Serializable{
 
     private boolean warnAfterReconnectFailure = DEFAULT_WARN_AFTER_RECONNECT_FAILURE; // 重连失败后是否报警
 
-    public BleDeviceBasicInfo() {
+    public BleDeviceRegisterInfo() {
 
     }
 
-    public BleDeviceBasicInfo(String macAddress, String nickName, String uuidString, String imagePath,
-                              boolean autoConnect, int reconnectTimes, boolean warnAfterReconnectFailure) {
+    public BleDeviceRegisterInfo(String macAddress, String nickName, String uuidString, String imagePath,
+                                 boolean autoConnect, int reconnectTimes, boolean warnAfterReconnectFailure) {
         this.macAddress = macAddress;
 
         this.nickName = nickName;
@@ -192,7 +192,7 @@ public class BleDeviceBasicInfo implements Serializable{
     }
 
     // 从Pref创建所有的设备基本信息
-    public static List<BleDeviceBasicInfo> createAllFromPref(SharedPreferences pref) {
+    public static List<BleDeviceRegisterInfo> createAllFromPref(SharedPreferences pref) {
         Set<String> addressSet = new HashSet<>();
 
         addressSet = pref.getStringSet("addressSet", addressSet);
@@ -206,10 +206,10 @@ public class BleDeviceBasicInfo implements Serializable{
 
         Arrays.sort(addressArr);
 
-        List<BleDeviceBasicInfo> infoList = new ArrayList<>();
+        List<BleDeviceRegisterInfo> infoList = new ArrayList<>();
 
         for(String macAddress : addressArr) {
-            BleDeviceBasicInfo basicInfo = createFromPref(pref, macAddress);
+            BleDeviceRegisterInfo basicInfo = createFromPref(pref, macAddress);
 
             if(basicInfo != null)
                 infoList.add(basicInfo);
@@ -219,7 +219,7 @@ public class BleDeviceBasicInfo implements Serializable{
     }
 
     // 由Pref创建设备基本信息
-    private static BleDeviceBasicInfo createFromPref(SharedPreferences pref, String macAddress) {
+    private static BleDeviceRegisterInfo createFromPref(SharedPreferences pref, String macAddress) {
         if(TextUtils.isEmpty(macAddress)) return null;
 
         String address = pref.getString(macAddress+"_macAddress", "");
@@ -238,7 +238,7 @@ public class BleDeviceBasicInfo implements Serializable{
 
         boolean warnAfterRecconnectFailure = pref.getBoolean(macAddress+"_warnAfterReconnectFailure", DEFAULT_WARN_AFTER_RECONNECT_FAILURE);
 
-        return new BleDeviceBasicInfo(address, nickName, uuidString, imagePath, autoConnect, reconnectTimes, warnAfterRecconnectFailure);
+        return new BleDeviceRegisterInfo(address, nickName, uuidString, imagePath, autoConnect, reconnectTimes, warnAfterRecconnectFailure);
     }
 
     @Override
@@ -247,7 +247,7 @@ public class BleDeviceBasicInfo implements Serializable{
 
         if (o == null || getClass() != o.getClass()) return false;
 
-        BleDeviceBasicInfo that = (BleDeviceBasicInfo) o;
+        BleDeviceRegisterInfo that = (BleDeviceRegisterInfo) o;
 
         return macAddress.equalsIgnoreCase(that.macAddress);
     }

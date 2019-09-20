@@ -20,7 +20,7 @@ import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
 import com.cmtech.android.ble.exception.TimeoutException;
-import com.cmtech.android.ble.model.BluetoothLeDevice;
+import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
@@ -38,7 +38,7 @@ import static com.cmtech.android.ble.common.BleConstant.MSG_WRITE_DATA_TIMEOUT;
 public class BleDeviceGatt {
     private final Context context;
 
-    private final BluetoothLeDevice bluetoothLeDevice;//设备基础信息
+    private final BleDeviceDetailInfo deviceDetailInfo;//设备详细信息
 
     private BluetoothGatt bluetoothGatt;//蓝牙GATT
 
@@ -187,7 +187,7 @@ public class BleDeviceGatt {
                     String bluetoothGattInfoKey = gattInfoEntry.getKey();
                     BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
                     if (receiveKey.equals(bluetoothGattInfoKey)) {
-                        receiveValue.onSuccess(characteristic.getValue(), bluetoothGattInfoValue, bluetoothLeDevice);
+                        receiveValue.onSuccess(characteristic.getValue(), bluetoothGattInfoValue, deviceDetailInfo);
                     }
                 }
             }
@@ -254,10 +254,10 @@ public class BleDeviceGatt {
         }
     };
 
-    public BleDeviceGatt(Context context, BluetoothLeDevice bluetoothLeDevice) {
+    public BleDeviceGatt(Context context, BleDeviceDetailInfo bleDeviceDetailInfo) {
         this.context = context;
 
-        this.bluetoothLeDevice = bluetoothLeDevice;
+        this.deviceDetailInfo = bleDeviceDetailInfo;
     }
 
     /**
@@ -426,10 +426,10 @@ public class BleDeviceGatt {
     /**
      * 获取设备详细信息
      *
-     * @return bluetoothLeDevice
+     * @return deviceDetailInfo
      */
-    public BluetoothLeDevice getBluetoothLeDevice() {
-        return bluetoothLeDevice;
+    public BleDeviceDetailInfo getDeviceDetailInfo() {
+        return deviceDetailInfo;
     }
 
     /**
@@ -496,10 +496,10 @@ public class BleDeviceGatt {
 
     @Override
     public String toString() {
-        String uniqueSymbol = bluetoothLeDevice.getAddress() + bluetoothLeDevice.getName();
+        String uniqueSymbol = deviceDetailInfo.getAddress() + deviceDetailInfo.getName();
 
         return "BleDeviceGatt{" +
-                "bluetoothLeDevice=" + bluetoothLeDevice +
+                "deviceDetailInfo=" + deviceDetailInfo +
                 ", uniqueSymbol='" + uniqueSymbol + '\'' +
                 '}';
     }
@@ -552,8 +552,8 @@ public class BleDeviceGatt {
 
         handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
 
-        if (bluetoothLeDevice != null && bluetoothLeDevice.getDevice() != null) {
-            bluetoothLeDevice.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
+        if (deviceDetailInfo != null && deviceDetailInfo.getDevice() != null) {
+            deviceDetailInfo.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
         }
     }
 
@@ -726,7 +726,7 @@ public class BleDeviceGatt {
                 String bluetoothGattInfoKey = gattInfoEntry.getKey();
                 BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
                 if (bleCallbackKey.equals(bluetoothGattInfoKey)) {
-                    bleCallbackValue.onSuccess(value, bluetoothGattInfoValue, bluetoothLeDevice);
+                    bleCallbackValue.onSuccess(value, bluetoothGattInfoValue, deviceDetailInfo);
                     removeBleCallbackKey = bleCallbackKey;
                     removeBluetoothGattInfoKey = bluetoothGattInfoKey;
                 }

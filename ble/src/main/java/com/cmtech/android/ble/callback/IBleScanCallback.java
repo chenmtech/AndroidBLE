@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.model.BluetoothLeDevice;
+import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 
 /**
  *
@@ -16,7 +16,7 @@ import com.cmtech.android.ble.model.BluetoothLeDevice;
 
 public interface IBleScanCallback {
     // 发现设备
-    void onDeviceFound(BluetoothLeDevice bluetoothLeDevice);
+    void onDeviceFound(BleDeviceDetailInfo bleDeviceDetailInfo);
 
     // 扫描失败
     void onScanFailed(int errorCode);

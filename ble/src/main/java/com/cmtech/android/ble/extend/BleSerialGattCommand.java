@@ -3,7 +3,7 @@ package com.cmtech.android.ble.extend;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.model.BluetoothLeDevice;
+import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
@@ -32,8 +32,8 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         @Override
-        public void onSuccess(byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice) {
-            onSerialCommandSuccess(bleCallback, data, bleGattChannel, bluetoothLeDevice);
+        public void onSuccess(byte[] data, BleGattChannel bleGattChannel, BleDeviceDetailInfo bleDeviceDetailInfo) {
+            onSerialCommandSuccess(bleCallback, data, bleGattChannel, bleDeviceDetailInfo);
         }
 
         @Override
@@ -76,7 +76,7 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel, BluetoothLeDevice bluetoothLeDevice) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel, BleDeviceDetailInfo bleDeviceDetailInfo) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
@@ -86,7 +86,7 @@ class BleSerialGattCommand extends BleGattCommand {
         removeBleCallback();
 
         if(bleCallback != null) {
-            bleCallback.onSuccess(data, bleGattChannel, bluetoothLeDevice);
+            bleCallback.onSuccess(data, bleGattChannel, bleDeviceDetailInfo);
         }
 
         done = true;
@@ -103,7 +103,7 @@ class BleSerialGattCommand extends BleGattCommand {
             bleCallback.onFailure(exception);
 
         if(device != null) {
-            device.callDisconnect();
+            device.disconnect();
         }
     }
 }
