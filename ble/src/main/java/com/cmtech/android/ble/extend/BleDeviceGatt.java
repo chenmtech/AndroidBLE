@@ -89,7 +89,7 @@ public class BleDeviceGatt {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
 
-                bluetoothGatt = gatt;
+                //bluetoothGatt = gatt;
 
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                 if(bluetoothGatt != null)
@@ -122,10 +122,12 @@ public class BleDeviceGatt {
 
             handler.removeMessages(MSG_CONNECT_TIMEOUT);
 
+            bluetoothGatt = gatt;
+
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
 
-                bluetoothGatt = gatt;
+                //bluetoothGatt = gatt;
 
                 if (connectCallback != null) {
                     connectCallback.onConnectSuccess(BleDeviceGatt.this);

@@ -106,11 +106,11 @@ public abstract class BleDevice {
 
             stopScanForever();
 
-            BleDeviceScanner.cleanup();
-
             setState(connectState);
 
-            Toast.makeText(context, "扫描错误。", Toast.LENGTH_LONG).show();
+            notifyReconnectFailure();
+
+            Toast.makeText(context, "扫描错误，需要重启系统蓝牙。", Toast.LENGTH_LONG).show();
         }
     };
 
