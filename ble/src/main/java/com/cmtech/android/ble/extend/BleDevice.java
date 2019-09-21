@@ -433,7 +433,7 @@ public abstract class BleDevice {
         ViseLog.e("处理找到的设备: " + bleDeviceDetailInfo);
 
         if(isDisconnect()) {
-            new BleDeviceGatt(context, bleDeviceDetailInfo).connect(connectCallback);
+            new BleDeviceGatt(bleDeviceDetailInfo).connect(context, connectCallback);
 
             setState(DEVICE_CONNECTING);
         }

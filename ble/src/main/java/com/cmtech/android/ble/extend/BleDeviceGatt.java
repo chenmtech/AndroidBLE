@@ -36,8 +36,6 @@ import static com.cmtech.android.ble.common.BleConstant.MSG_RECEIVE_DATA_TIMEOUT
 import static com.cmtech.android.ble.common.BleConstant.MSG_WRITE_DATA_TIMEOUT;
 
 public class BleDeviceGatt {
-    private final Context context;
-
     private final BleDeviceDetailInfo deviceDetailInfo;//设备详细信息
 
     private BluetoothGatt bluetoothGatt;//蓝牙GATT
@@ -254,23 +252,28 @@ public class BleDeviceGatt {
         }
     };
 
-    public BleDeviceGatt(Context context, BleDeviceDetailInfo bleDeviceDetailInfo) {
-        this.context = context;
 
+
+    BleDeviceGatt(BleDeviceDetailInfo bleDeviceDetailInfo) {
         this.deviceDetailInfo = bleDeviceDetailInfo;
     }
 
+
     /**
      * 连接设备
-     *
+     * @param context context
      * @param connectCallback connectCallback
      */
-    public synchronized void connect(IBleConnectCallback connectCallback) {
-        handler.removeCallbacksAndMessages(null);
-
+    public synchronized void connect(Context context, IBleConnectCallback connectCallback) {
         this.connectCallback = connectCallback;
 
-        connect();
+        handler.removeCallbacksAndMessages(null);
+
+        handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
+
+        if (deviceDetailInfo != null && deviceDetailInfo.getDevice() != null) {
+            deviceDetailInfo.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
+        }
     }
 
     /**
@@ -542,19 +545,6 @@ public class BleDeviceGatt {
             return false;
         }
         return true;
-    }
-
-    /**
-     * 连接设备
-     */
-    private synchronized void connect() {
-        handler.removeMessages(MSG_CONNECT_TIMEOUT);
-
-        handler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
-
-        if (deviceDetailInfo != null && deviceDetailInfo.getDevice() != null) {
-            deviceDetailInfo.getDevice().connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
-        }
     }
 
     /**
