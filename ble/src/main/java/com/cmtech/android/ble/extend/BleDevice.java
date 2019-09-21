@@ -61,13 +61,13 @@ public abstract class BleDevice {
 
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
 
-    private BleDeviceDetailInfo detailInfo; // 设备详细信息
-
-    private final ScanFilter scanFilter; // 扫描过滤器
+    //private BleDeviceDetailInfo detailInfo; // 设备详细信息
 
     private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
 
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
+
+    private final ScanFilter scanFilter; // 扫描过滤器
 
     private int battery = -1; // 设备电池电量
 
@@ -88,7 +88,7 @@ public abstract class BleDevice {
                 public void run() {
                     ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
 
-                    BleDevice.this.detailInfo = bleDeviceDetailInfo;
+                    //BleDevice.this.detailInfo = bleDeviceDetailInfo;
 
                     BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
 
@@ -363,8 +363,11 @@ public abstract class BleDevice {
 
                                     if(BleDeviceScanner.startScan(scanFilter, bleScanCallback))
                                         reConnTimes++;
-                                    else
+                                    else {
+                                        stopScanForever();
+
                                         setState(connectState);
+                                    }
                                 } else {
                                     stopScanForever();
 
