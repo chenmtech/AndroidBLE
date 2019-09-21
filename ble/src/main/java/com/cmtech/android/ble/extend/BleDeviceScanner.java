@@ -11,7 +11,7 @@ import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.vise.log.ViseLog;
 
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,11 +30,100 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
  */
 
 public class BleDeviceScanner {
-    private ScanFilter scanFilter; // 扫描过滤器
+    private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>();
 
-    private IBleScanCallback bleScanCallback; // 扫描回调
 
-    private final ScanCallback scanCallback = new ScanCallback() {
+    private BleDeviceScanner() {
+
+    }
+
+    // 开始扫描
+    public static boolean startScan(ScanFilter scanFilter, IBleScanCallback bleScanCallback) {
+        if(bleScanCallback == null) {
+            throw new IllegalArgumentException("IBleScanCallback can't be null");
+        }
+
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (adapter != null) {
+            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+
+            if(scanner != null) {
+                ScanCallbackAdapter scanCallback = null;
+
+                for(ScanCallbackAdapter callback : callbackList) {
+                    if(callback.bleScanCallback == bleScanCallback) {
+                        scanCallback = callback;
+                        break;
+                    }
+                }
+
+                if(scanCallback == null) {
+                    scanCallback = new ScanCallbackAdapter(bleScanCallback);
+
+                    callbackList.add(scanCallback);
+                }
+
+                ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+
+                scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+
+                ViseLog.e("Start scanning");
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // 停止扫描
+    public static boolean stopScan(IBleScanCallback bleScanCallback) {
+        if(bleScanCallback == null) {
+            throw new IllegalArgumentException("IBleScanCallback can't be null.");
+        }
+
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
+        if (adapter != null) {
+            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+
+            if(scanner != null) {
+                ScanCallbackAdapter scanCallback = null;
+
+                for(ScanCallbackAdapter callback : callbackList) {
+                    if(callback.bleScanCallback == bleScanCallback) {
+                        scanCallback = callback;
+                        break;
+                    }
+                }
+
+                if(scanCallback != null) {
+                    callbackList.remove(scanCallback);
+
+                    scanner.stopScan(scanCallback);
+
+                    ViseLog.e("Scan stopped");
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static class ScanCallbackAdapter extends ScanCallback {
+        private IBleScanCallback bleScanCallback;
+
+        ScanCallbackAdapter(IBleScanCallback bleScanCallback) {
+            if(bleScanCallback == null) {
+                throw new IllegalArgumentException("IBleScanCallback can't be null.");
+            }
+
+            this.bleScanCallback = bleScanCallback;
+        }
+
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
@@ -60,79 +149,6 @@ public class BleDeviceScanner {
             super.onBatchScanResults(results);
 
             ViseLog.e("Batch scan result");
-        }
-    };
-
-
-    public BleDeviceScanner() {
-
-    }
-
-    public BleDeviceScanner(ScanFilter scanFilter) {
-        this();
-
-        this.scanFilter = scanFilter;
-    }
-
-    // 设备过滤器
-    public BleDeviceScanner setScanFilter(ScanFilter scanFilter) {
-        this.scanFilter = scanFilter;
-
-        return this;
-    }
-
-    // 开始扫描
-    public boolean startScan(IBleScanCallback bleScanCallback) {
-        this.bleScanCallback = bleScanCallback;
-
-        BluetoothAdapter adapter = getBluetoothAdapter();
-
-        if (adapter != null) {
-            ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
-
-            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
-
-            if(scanner != null) {
-                scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
-
-                ViseLog.e("Start scanning");
-
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    // 停止扫描
-    public void stopScan() {
-        BluetoothAdapter adapter = getBluetoothAdapter();
-
-        if (adapter != null) {
-            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
-
-            if(scanner != null) {
-                scanner.stopScan(scanCallback);
-
-                ViseLog.e("Scan stopped");
-            }
-        }
-    }
-
-    private static BluetoothAdapter getBluetoothAdapter() {
-        return BluetoothAdapter.getDefaultAdapter();
-    }
-
-    public static void cleanup() {
-        BluetoothLeScanner scanner = getBluetoothAdapter().getBluetoothLeScanner();
-
-        try {
-            final Method cleanup = BluetoothLeScanner.class.getMethod("cleanup");
-            if (scanner != null) {
-                cleanup.invoke(scanner);
-            }
-        } catch (Exception e) {
-            ViseLog.e("An exception occured while refreshing device" + e);
         }
     }
 
