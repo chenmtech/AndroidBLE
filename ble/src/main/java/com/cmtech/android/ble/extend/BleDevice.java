@@ -51,7 +51,6 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 
 public abstract class BleDevice {
     private static final int CONNECT_INTERVAL_IN_SECOND = 20; // 自动连接间隔秒数
-    //private static final int MAX_RECONNECT_TIMES = 5; // 最大重连次数，防止出现scanning too frequently错误
 
     private final Context context;
 
@@ -60,8 +59,6 @@ public abstract class BleDevice {
     private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
 
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
-
-    //private BleDeviceDetailInfo detailInfo; // 设备详细信息
 
     private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
 
@@ -77,8 +74,6 @@ public abstract class BleDevice {
 
     private ExecutorService connService; // 定时连接服务
 
-    //private int reConnTimes = 0; // 重连次数
-
     // 扫描回调
     private final IBleScanCallback bleScanCallback = new IBleScanCallback() {
         @Override
@@ -87,8 +82,6 @@ public abstract class BleDevice {
                 @Override
                 public void run() {
                     ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
-
-                    //BleDevice.this.detailInfo = bleDeviceDetailInfo;
 
                     BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
 
@@ -126,7 +119,7 @@ public abstract class BleDevice {
                     if(errorCode == SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
                         notifyReconnectFailure();
 
-                        Toast.makeText(context, "由于多次反复连接蓝牙，导致蓝牙功能异常。需要您重启系统蓝牙。", Toast.LENGTH_LONG).show();
+                        //Toast.makeText(context, "由于多次重连蓝牙，系统已禁用蓝牙。请重启蓝牙。", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -364,6 +357,8 @@ public abstract class BleDevice {
                                     stopScanForever();
 
                                     setState(connectState);
+
+                                    Toast.makeText(context, "蓝牙错误。", Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
@@ -467,13 +462,15 @@ public abstract class BleDevice {
     private void processConnectFailure(final BleException bleException) {
         ViseLog.e("处理连接失败: " + bleException );
 
-        gattCmdExecutor.stop();
+        if(connectState != CONNECT_FAILURE) {
+            gattCmdExecutor.stop();
 
-        bleDeviceGatt = null;
+            bleDeviceGatt = null;
 
-        setConnectState(CONNECT_FAILURE);
+            setConnectState(CONNECT_FAILURE);
 
-        executeAfterConnectFailure();
+            executeAfterConnectFailure();
+        }
 
         if(bleException instanceof TimeoutException) {
             stopScanForever();

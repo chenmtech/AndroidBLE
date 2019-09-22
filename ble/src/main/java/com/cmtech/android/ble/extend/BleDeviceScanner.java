@@ -32,6 +32,8 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 public class BleDeviceScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
 
+    public static volatile boolean canUsed = BluetoothAdapter.getDefaultAdapter().isEnabled(); // 蓝牙扫描功能是否可用
+
 
     private BleDeviceScanner() {
 
@@ -39,13 +41,17 @@ public class BleDeviceScanner {
 
     // 开始扫描
     public static boolean startScan(ScanFilter scanFilter, IBleScanCallback bleScanCallback) {
+        if(!canUsed) {
+            return false;
+        }
+
         if(bleScanCallback == null) {
             throw new IllegalArgumentException("IBleScanCallback can't be null");
         }
 
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 
-        if (adapter != null) {
+        if (adapter != null && adapter.isEnabled()) {
             BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
 
             if(scanner != null) {
@@ -139,6 +145,8 @@ public class BleDeviceScanner {
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
+
+            canUsed = false;
 
             if(bleScanCallback != null)
                 bleScanCallback.onScanFailed(errorCode);
