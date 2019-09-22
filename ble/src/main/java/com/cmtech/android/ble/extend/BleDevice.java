@@ -51,7 +51,7 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 
 public abstract class BleDevice {
     private static final int CONNECT_INTERVAL_IN_SECOND = 20; // 自动连接间隔秒数
-    private static final int MAX_RECONNECT_TIMES = 5; // 最大重连次数，防止出现scanning too frequently错误
+    //private static final int MAX_RECONNECT_TIMES = 5; // 最大重连次数，防止出现scanning too frequently错误
 
     private final Context context;
 
@@ -77,7 +77,7 @@ public abstract class BleDevice {
 
     private ExecutorService connService; // 定时连接服务
 
-    private int reConnTimes = 0; // 重连次数
+    //private int reConnTimes = 0; // 重连次数
 
     // 扫描回调
     private final IBleScanCallback bleScanCallback = new IBleScanCallback() {
@@ -126,7 +126,7 @@ public abstract class BleDevice {
                     if(errorCode == SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
                         notifyReconnectFailure();
 
-                        Toast.makeText(context, "扫描错误，需要重启系统蓝牙。", Toast.LENGTH_LONG).show();
+                        Toast.makeText(context, "由于多次反复连接蓝牙，导致蓝牙功能异常。需要您重启系统蓝牙。", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -358,30 +358,18 @@ public abstract class BleDevice {
                         mHandler.post(new Runnable() {
                             @Override
                             public void run() {
-                                if(reConnTimes < MAX_RECONNECT_TIMES) {
-                                    setState(DEVICE_SCANNING);
+                                setState(DEVICE_SCANNING);
 
-                                    if(BleDeviceScanner.startScan(scanFilter, bleScanCallback))
-                                        reConnTimes++;
-                                    else {
-                                        stopScanForever();
-
-                                        setState(connectState);
-                                    }
-                                } else {
+                                if(!BleDeviceScanner.startScan(scanFilter, bleScanCallback)) {
                                     stopScanForever();
 
                                     setState(connectState);
-
-                                    Toast.makeText(context, "已经达到最大自动重连次数：" + MAX_RECONNECT_TIMES, Toast.LENGTH_SHORT).show();
                                 }
                             }
                         });
                     }
                 }
             }, 0, CONNECT_INTERVAL_IN_SECOND, TimeUnit.SECONDS);
-
-            reConnTimes = 0;
         } else {
             Toast.makeText(context, "正在自动连接中，请稍等。", Toast.LENGTH_SHORT).show();
         }
@@ -470,9 +458,7 @@ public abstract class BleDevice {
 
         setConnectState(CONNECT_SUCCESS);
 
-        if(executeAfterConnectSuccess()) {
-            reConnTimes = 0;
-        } else {
+        if(!executeAfterConnectSuccess()) {
             disconnect();
         }
     }

@@ -30,7 +30,7 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
  */
 
 public class BleDeviceScanner {
-    private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>();
+    private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
 
 
     private BleDeviceScanner() {
