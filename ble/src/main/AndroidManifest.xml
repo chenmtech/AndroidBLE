@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         >
 
-        <receiver android:name = "com.cmtech.android.ble.extend.BtStateChangeReceiver">
+        <receiver android:name = "com.cmtech.android.ble.extend.BleDeviceScanner$BtStateChangeReceiver">
             <intent-filter>
                 <action android:name = "android.bluetooth.adapter.action.STATE_CHANGED" />
             </intent-filter>

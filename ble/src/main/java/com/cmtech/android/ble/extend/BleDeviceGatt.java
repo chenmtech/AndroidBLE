@@ -461,7 +461,7 @@ public class BleDeviceGatt {
     public synchronized boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
-            if (refresh != null && bluetoothGatt != null) {
+            if (bluetoothGatt != null) {
                 final boolean success = (Boolean) refresh.invoke(bluetoothGatt);
                 ViseLog.i("Refreshing result: " + success);
                 return success;

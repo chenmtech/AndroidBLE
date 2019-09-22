@@ -6,6 +6,10 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.model.BleDeviceDetailInfo;
@@ -32,7 +36,33 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 public class BleDeviceScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
 
-    public static volatile boolean canUsed = BluetoothAdapter.getDefaultAdapter().isEnabled(); // 蓝牙扫描功能是否可用
+    private static volatile boolean canUsed = BluetoothAdapter.getDefaultAdapter().isEnabled(); // 蓝牙扫描功能是否可用
+
+    public static class BtStateChangeReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
+                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
+
+                switch (state) {
+                    case BluetoothAdapter.STATE_ON:
+                        canUsed = true;
+
+                        Toast.makeText(context, "蓝牙已打开。", Toast.LENGTH_SHORT).show();
+
+                        break;
+
+                    case BluetoothAdapter.STATE_OFF:
+                        canUsed = false;
+
+                        break;
+
+                }
+
+            }
+        }
+    }
 
 
     private BleDeviceScanner() {
@@ -49,35 +79,35 @@ public class BleDeviceScanner {
             throw new IllegalArgumentException("IBleScanCallback can't be null");
         }
 
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if(!isBleEnable()) {
+            return false;
+        }
 
-        if (adapter != null && adapter.isEnabled()) {
-            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
 
-            if(scanner != null) {
-                ScanCallbackAdapter scanCallback = null;
+        if(scanner != null) {
+            ScanCallbackAdapter scanCallback = null;
 
-                for(ScanCallbackAdapter callback : callbackList) {
-                    if(callback.bleScanCallback == bleScanCallback) {
-                        scanCallback = callback;
-                        break;
-                    }
+            for(ScanCallbackAdapter callback : callbackList) {
+                if(callback.bleScanCallback == bleScanCallback) {
+                    scanCallback = callback;
+                    break;
                 }
-
-                if(scanCallback == null) {
-                    scanCallback = new ScanCallbackAdapter(bleScanCallback);
-
-                    callbackList.add(scanCallback);
-                }
-
-                ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
-
-                scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
-
-                ViseLog.e("Start scanning");
-
-                return true;
             }
+
+            if(scanCallback == null) {
+                scanCallback = new ScanCallbackAdapter(bleScanCallback);
+
+                callbackList.add(scanCallback);
+            }
+
+            ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+
+            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+
+            ViseLog.e("Start scanning");
+
+            return true;
         }
 
         return false;
@@ -89,31 +119,41 @@ public class BleDeviceScanner {
             throw new IllegalArgumentException("IBleScanCallback can't be null.");
         }
 
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        if(!isBleEnable()) {
+            return false;
+        }
 
-        if (adapter != null) {
-            BluetoothLeScanner scanner = adapter.getBluetoothLeScanner();
+        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
 
-            if(scanner != null) {
-                ScanCallbackAdapter scanCallback = null;
+        if(scanner != null) {
+            ScanCallbackAdapter scanCallback = null;
 
-                for(ScanCallbackAdapter callback : callbackList) {
-                    if(callback.bleScanCallback == bleScanCallback) {
-                        scanCallback = callback;
-                        break;
-                    }
-                }
-
-                if(scanCallback != null) {
-                    callbackList.remove(scanCallback);
-
-                    scanner.stopScan(scanCallback);
-
-                    ViseLog.e("Scan stopped");
-
-                    return true;
+            for(ScanCallbackAdapter callback : callbackList) {
+                if(callback.bleScanCallback == bleScanCallback) {
+                    scanCallback = callback;
+                    break;
                 }
             }
+
+            if(scanCallback != null) {
+                callbackList.remove(scanCallback);
+
+                scanner.stopScan(scanCallback);
+
+                ViseLog.e("Scan stopped");
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public static boolean isBleEnable() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+
+        if(adapter != null) {
+            return adapter.isEnabled();
         }
 
         return false;

@@ -18,20 +18,14 @@ public class BleUtil {
         activity.startActivityForResult(intent, requestCode);
     }
 
-    public static boolean isSupportBle(Context context) {
-        if (context == null || !context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            return false;
-        }
-        BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        return manager.getAdapter() != null;
-    }
+    public static boolean isBleEnable() {
+        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 
-    public static boolean isBleEnable(Context context) {
-        if (!isSupportBle(context)) {
-            return false;
+        if(adapter != null) {
+            return adapter.isEnabled();
         }
-        BluetoothManager manager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
-        return manager.getAdapter().isEnabled();
+
+        return false;
     }
 
 
