@@ -6,10 +6,6 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.model.BleDeviceDetailInfo;
@@ -20,6 +16,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_DISABLE;
+import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_INNER_ERROR;
 
 /**
  *
@@ -36,97 +34,73 @@ import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
 public class BleDeviceScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
 
-    private static volatile boolean canUsed = BluetoothAdapter.getDefaultAdapter().isEnabled(); // 蓝牙扫描功能是否可用
-
-    public static class BtStateChangeReceiver extends BroadcastReceiver {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(BluetoothAdapter.ACTION_STATE_CHANGED.equals(intent.getAction())) {
-                int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
-
-                switch (state) {
-                    case BluetoothAdapter.STATE_ON:
-                        canUsed = true;
-
-                        Toast.makeText(context, "蓝牙已打开。", Toast.LENGTH_SHORT).show();
-
-                        break;
-
-                    case BluetoothAdapter.STATE_OFF:
-                        canUsed = false;
-
-                        break;
-
-                }
-
-            }
-        }
-    }
-
+    private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
 
     private BleDeviceScanner() {
 
     }
 
     // 开始扫描
-    public static boolean startScan(ScanFilter scanFilter, IBleScanCallback bleScanCallback) {
-        if(!canUsed) {
-            return false;
-        }
-
+    public static void startScan(ScanFilter scanFilter, final IBleScanCallback bleScanCallback) {
         if(bleScanCallback == null) {
-            throw new IllegalArgumentException("IBleScanCallback can't be null");
+            throw new IllegalArgumentException("IBleScanCallback is null");
         }
 
-        if(!isBleEnable()) {
-            return false;
-        }
+        BluetoothLeScanner scanner;
+        ScanCallbackAdapter scanCallback = null;
 
-        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+        synchronized (BleDeviceScanner.class) {
+            if (!BleDeviceScanner.isBleEnabled()) {
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_DISABLE);
+                return;
+            }
 
-        if(scanner != null) {
-            ScanCallbackAdapter scanCallback = null;
+            if (bleInnerError) {
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
+                return;
+            }
 
-            for(ScanCallbackAdapter callback : callbackList) {
-                if(callback.bleScanCallback == bleScanCallback) {
+            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+
+            for (ScanCallbackAdapter callback : callbackList) {
+                if (callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
                     break;
                 }
             }
 
-            if(scanCallback == null) {
+            if (scanCallback == null) {
                 scanCallback = new ScanCallbackAdapter(bleScanCallback);
 
                 callbackList.add(scanCallback);
+            } else {
+                bleScanCallback.onScanFailed(IBleScanCallback.SCAN_FAILED_ALREADY_STARTED);
+                return;
             }
-
-            ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
-
-            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
-
-            ViseLog.e("Start scanning");
-
-            return true;
         }
 
-        return false;
+        ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+
+        scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+
+        ViseLog.e("Start scanning");
     }
 
     // 停止扫描
-    public static boolean stopScan(IBleScanCallback bleScanCallback) {
+    public static void stopScan(IBleScanCallback bleScanCallback) {
         if(bleScanCallback == null) {
-            throw new IllegalArgumentException("IBleScanCallback can't be null.");
+            throw new IllegalArgumentException("IBleScanCallback is null.");
         }
 
-        if(!isBleEnable()) {
-            return false;
-        }
+        BluetoothLeScanner scanner;
+        ScanCallbackAdapter scanCallback = null;
 
-        BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+        synchronized (BleDeviceScanner.class) {
+            if(!isBleEnabled()) {
+                return;
+            }
 
-        if(scanner != null) {
-            ScanCallbackAdapter scanCallback = null;
+            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
 
             for(ScanCallbackAdapter callback : callbackList) {
                 if(callback.bleScanCallback == bleScanCallback) {
@@ -137,26 +111,25 @@ public class BleDeviceScanner {
 
             if(scanCallback != null) {
                 callbackList.remove(scanCallback);
-
-                scanner.stopScan(scanCallback);
-
-                ViseLog.e("Scan stopped");
-
-                return true;
             }
         }
 
-        return false;
+        if(scanCallback != null)
+            scanner.stopScan(scanCallback);
+
+        ViseLog.e("Scan stopped");
+
     }
 
-    public static boolean isBleEnable() {
+    // 蓝牙是否已开启
+    public static boolean isBleEnabled() {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
 
-        if(adapter != null) {
-            return adapter.isEnabled();
-        }
+        return (adapter != null && adapter.isEnabled() && adapter.getBluetoothLeScanner() != null);
+    }
 
-        return false;
+    public static void clearInnerError() {
+        bleInnerError = false;
     }
 
     private static class ScanCallbackAdapter extends ScanCallback {
@@ -178,18 +151,19 @@ public class BleDeviceScanner {
 
             BleDeviceDetailInfo bleDeviceDetailInfo = new BleDeviceDetailInfo(result.getDevice(), result.getRssi(), recordBytes, result.getTimestampNanos());
 
-            if(bleScanCallback != null)
+            if(bleScanCallback != null) {
                 bleScanCallback.onDeviceFound(bleDeviceDetailInfo);
+            }
         }
 
         @Override
         public void onScanFailed(int errorCode) {
             super.onScanFailed(errorCode);
 
-            canUsed = false;
+            bleInnerError = true;
 
             if(bleScanCallback != null)
-                bleScanCallback.onScanFailed(errorCode);
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
         }
 
         @Override

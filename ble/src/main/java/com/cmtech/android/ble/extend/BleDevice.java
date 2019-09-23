@@ -10,9 +10,9 @@ import android.os.Looper;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
+import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleScanCallback;
-import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.model.BleDeviceDetailInfo;
@@ -28,7 +28,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import static android.bluetooth.le.ScanCallback.SCAN_FAILED_APPLICATION_REGISTRATION_FAILED;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
 import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
@@ -84,21 +83,14 @@ public abstract class BleDevice {
                     ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
 
                     BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
-
                     if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
                         stopScanForever();
-
                         setState(connectState);
-
-                        Toast.makeText(context, "设备未配对，不能连接，请先配对。", Toast.LENGTH_LONG).show();
-
+                        Toast.makeText(context, "设备未配对，请先配对。", Toast.LENGTH_LONG).show();
                         bleDeviceDetailInfo.getDevice().createBond();
-
                     } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
                         BleDeviceScanner.stopScan(BleDevice.this.bleScanCallback);
-
                         setState(connectState);
-
                         processFoundDevice(bleDeviceDetailInfo);
                     }
                 }
@@ -112,14 +104,22 @@ public abstract class BleDevice {
                 public void run() {
                     ViseLog.e("Scan failed with errorCode: = " + errorCode);
 
-                    stopScanForever();
+                    switch (errorCode) {
+                        case SCAN_FAILED_ALREADY_STARTED:
+                            Toast.makeText(context, "正在扫描中。", Toast.LENGTH_LONG).show();
+                            break;
 
-                    setState(connectState);
+                        case SCAN_FAILED_BLE_DISABLE:
+                            stopScanForever();
+                            setState(connectState);
+                            Toast.makeText(context, "蓝牙已关闭。", Toast.LENGTH_LONG).show();
+                            break;
 
-                    if(errorCode == SCAN_FAILED_APPLICATION_REGISTRATION_FAILED) {
-                        notifyReconnectFailure();
-
-                        //Toast.makeText(context, "由于多次重连蓝牙，系统已禁用蓝牙。请重启蓝牙。", Toast.LENGTH_LONG).show();
+                        case SCAN_FAILED_BLE_INNER_ERROR:
+                            stopScanForever();
+                            setState(connectState);
+                            notifyReconnectFailure();
+                            break;
                     }
                 }
             });
@@ -353,13 +353,7 @@ public abstract class BleDevice {
                             public void run() {
                                 setState(DEVICE_SCANNING);
 
-                                if(!BleDeviceScanner.startScan(scanFilter, bleScanCallback)) {
-                                    stopScanForever();
-
-                                    setState(connectState);
-
-                                    Toast.makeText(context, "蓝牙错误。", Toast.LENGTH_SHORT).show();
-                                }
+                                BleDeviceScanner.startScan(scanFilter, bleScanCallback);
                             }
                         });
                     }
