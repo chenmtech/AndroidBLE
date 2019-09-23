@@ -9,6 +9,7 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.util.Pair;
 
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
@@ -48,7 +49,9 @@ public class BleDeviceGatt {
 
     private boolean enable;//是否设置使能
 
-    private volatile HashMap<String, BleGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
+    private volatile Pair<IBleDataCallback, BleGattChannel> readPair = null;
+
+    //private volatile HashMap<String, BleGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
     private volatile HashMap<String, BleGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
     private volatile HashMap<String, BleGattChannel> enableInfoMap = new HashMap<>();//设置使能GATT信息集合
 
@@ -146,10 +149,12 @@ public class BleDeviceGatt {
             ViseLog.i("onCharacteristicRead  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                handleSuccessData(readInfoMap, characteristic.getValue(), status, true);
+                readPair.first.onSuccess(characteristic.getValue(), readPair.second);
             } else {
                 readFailure(new GattException(status));
             }
+
+            //readPair = null;
         }
 
         /**
@@ -185,7 +190,7 @@ public class BleDeviceGatt {
                     String bluetoothGattInfoKey = gattInfoEntry.getKey();
                     BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
                     if (receiveKey.equals(bluetoothGattInfoKey)) {
-                        receiveValue.onSuccess(characteristic.getValue(), bluetoothGattInfoValue, deviceDetailInfo);
+                        receiveValue.onSuccess(characteristic.getValue(), bluetoothGattInfoValue);
                     }
                 }
             }
@@ -202,7 +207,7 @@ public class BleDeviceGatt {
             ViseLog.i("onDescriptorRead  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                handleSuccessData(readInfoMap, descriptor.getValue(), status, true);
+                readPair.first.onSuccess(descriptor.getValue(), readPair.second);
             } else {
                 readFailure(new GattException(status));
             }
@@ -293,10 +298,9 @@ public class BleDeviceGatt {
             if (!bleDataCallbackMap.containsKey(key)) {
                 bleDataCallbackMap.put(key, bleDataCallback);
             }
+
             if (propertyType == PropertyType.PROPERTY_READ) {
-                if (!readInfoMap.containsKey(key)) {
-                    readInfoMap.put(key, bleGattChannel);
-                }
+                readPair = new Pair<>(bleDataCallback, bleGattChannel);
             } else if (propertyType == PropertyType.PROPERTY_WRITE) {
                 if (!writeInfoMap.containsKey(key)) {
                     writeInfoMap.put(key, bleGattChannel);
@@ -324,13 +328,14 @@ public class BleDeviceGatt {
             if (bleDataCallbackMap.containsKey(key)) {
                 bleDataCallbackMap.remove(key);
             }
-            if (readInfoMap.containsKey(key)) {
-                readInfoMap.remove(key);
-            } else if (writeInfoMap.containsKey(key)) {
+            if (writeInfoMap.containsKey(key)) {
                 writeInfoMap.remove(key);
             } else if (enableInfoMap.containsKey(key)) {
                 enableInfoMap.remove(key);
             }
+
+            if(readPair.second == bleGattChannel)
+                readPair = null;
         }
     }
 
@@ -357,10 +362,6 @@ public class BleDeviceGatt {
      * 读取数据
      */
     public void readData() {
-        if (!checkBluetoothGattInfo(readInfoMap)) {
-            return;
-        }
-
         handler.removeMessages(MSG_READ_DATA_TIMEOUT);
 
         read();
@@ -528,9 +529,7 @@ public class BleDeviceGatt {
         if (writeInfoMap != null) {
             writeInfoMap.clear();
         }
-        if (readInfoMap != null) {
-            readInfoMap.clear();
-        }
+        readPair = null;
         if (enableInfoMap != null) {
             enableInfoMap.clear();
         }
@@ -613,15 +612,16 @@ public class BleDeviceGatt {
         handler.removeMessages(MSG_READ_DATA_TIMEOUT);
         handler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
+        if(readPair == null || readPair.second == null) return false;
+
+        BleGattChannel channel = readPair.second;
+
         boolean success = false;
-        for (Map.Entry<String, BleGattChannel> entry : readInfoMap.entrySet()) {
-            String bluetoothGattInfoKey = entry.getKey();
-            BleGattChannel bluetoothGattInfoValue = entry.getValue();
-            if (bluetoothGatt != null && bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() != null) {
-                success = bluetoothGatt.readDescriptor(bluetoothGattInfoValue.getDescriptor());
-            } else if (bluetoothGatt != null && bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() == null) {
-                success = bluetoothGatt.readCharacteristic(bluetoothGattInfoValue.getCharacteristic());
-            }
+
+        if (bluetoothGatt != null && channel.getCharacteristic() != null && channel.getDescriptor() != null) {
+            success = bluetoothGatt.readDescriptor(channel.getDescriptor());
+        } else if (bluetoothGatt != null && channel.getCharacteristic() != null && channel.getDescriptor() == null) {
+            success = bluetoothGatt.readCharacteristic(channel.getCharacteristic());
         }
         return success;
     }
@@ -682,7 +682,8 @@ public class BleDeviceGatt {
      * @param bleException exception
      */
     private void readFailure(BleException bleException) {
-        handleFailureData(readInfoMap, bleException, true);
+        readPair.first.onFailure(bleException);
+        readPair = null;
         ViseLog.i("readFailure " + bleException);
     }
 
@@ -717,7 +718,7 @@ public class BleDeviceGatt {
                 String bluetoothGattInfoKey = gattInfoEntry.getKey();
                 BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
                 if (bleCallbackKey.equals(bluetoothGattInfoKey)) {
-                    bleCallbackValue.onSuccess(value, bluetoothGattInfoValue, deviceDetailInfo);
+                    bleCallbackValue.onSuccess(value, bluetoothGattInfoValue);
                     removeBleCallbackKey = bleCallbackKey;
                     removeBluetoothGattInfoKey = bluetoothGattInfoKey;
                 }

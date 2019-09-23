@@ -3,7 +3,6 @@ package com.cmtech.android.ble.extend;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
@@ -32,8 +31,8 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         @Override
-        public void onSuccess(byte[] data, BleGattChannel bleGattChannel, BleDeviceDetailInfo bleDeviceDetailInfo) {
-            onSerialCommandSuccess(bleCallback, data, bleGattChannel, bleDeviceDetailInfo);
+        public void onSuccess(byte[] data, BleGattChannel bleGattChannel) {
+            onSerialCommandSuccess(bleCallback, data, bleGattChannel);
         }
 
         @Override
@@ -76,7 +75,7 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel, BleDeviceDetailInfo bleDeviceDetailInfo) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
@@ -86,7 +85,7 @@ class BleSerialGattCommand extends BleGattCommand {
         removeBleCallback();
 
         if(bleCallback != null) {
-            bleCallback.onSuccess(data, bleGattChannel, bleDeviceDetailInfo);
+            bleCallback.onSuccess(data, bleGattChannel);
         }
 
         done = true;

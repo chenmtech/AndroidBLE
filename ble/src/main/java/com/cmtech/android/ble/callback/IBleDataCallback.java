@@ -1,8 +1,7 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.extend.BleGattChannel;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.model.BleDeviceDetailInfo;
+import com.cmtech.android.ble.extend.BleGattChannel;
 
 /**
  *
@@ -18,7 +17,7 @@ import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 
 public interface IBleDataCallback {
     // 数据操作成功
-    void onSuccess(byte[] data, BleGattChannel bleGattChannel, BleDeviceDetailInfo bleDeviceDetailInfo);
+    void onSuccess(byte[] data, BleGattChannel bleGattChannel);
 
     // 数据操作失败
     void onFailure(BleException exception);

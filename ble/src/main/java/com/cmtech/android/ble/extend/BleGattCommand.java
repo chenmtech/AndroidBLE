@@ -79,7 +79,7 @@ class BleGattCommand{
                 throw new NullPointerException("The dataOpCallback of instant commands is null. ");
             }
 
-            dataOpCallback.onSuccess(null, null, null);
+            dataOpCallback.onSuccess(null, null);
 
             return true;
         }
