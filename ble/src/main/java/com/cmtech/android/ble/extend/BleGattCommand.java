@@ -92,9 +92,7 @@ class BleGattCommand{
 
         switch (channel.getPropertyType()) {
             case PROPERTY_READ:
-                bleDeviceGatt.bindChannel( dataOpCallback, channel);
-
-                bleDeviceGatt.readData();
+                bleDeviceGatt.readData(dataOpCallback, channel);
                 break;
 
             case PROPERTY_WRITE:
