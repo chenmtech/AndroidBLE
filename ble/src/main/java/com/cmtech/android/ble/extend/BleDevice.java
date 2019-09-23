@@ -71,6 +71,8 @@ public abstract class BleDevice {
 
     private final Handler mHandler;
 
+    private final Handler callbackHandler;
+
     private ExecutorService connService; // 定时连接服务
 
     // 扫描回调
@@ -82,17 +84,7 @@ public abstract class BleDevice {
                 public void run() {
                     ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
 
-                    BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
-                    if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-                        stopScanForever();
-                        setState(connectState);
-                        Toast.makeText(context, "设备未配对，请先配对。", Toast.LENGTH_LONG).show();
-                        bleDeviceDetailInfo.getDevice().createBond();
-                    } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-                        BleDeviceScanner.stopScan(BleDevice.this.bleScanCallback);
-                        setState(connectState);
-                        processFoundDevice(bleDeviceDetailInfo);
-                    }
+                    processFoundDevice(bleDeviceDetailInfo);
                 }
             });
         }
@@ -131,7 +123,7 @@ public abstract class BleDevice {
         // 连接成功
         @Override
         public void onConnectSuccess(final BleDeviceGatt bleDeviceGatt) {
-            mHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     processConnectSuccess(bleDeviceGatt);
@@ -142,7 +134,7 @@ public abstract class BleDevice {
         // 连接失败
         @Override
         public void onConnectFailure(final BleException exception) {
-            mHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     processConnectFailure(exception);
@@ -153,7 +145,7 @@ public abstract class BleDevice {
         // 连接中断
         @Override
         public void onDisconnect() {
-            mHandler.post(new Runnable() {
+            callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     processDisconnect();
@@ -173,6 +165,8 @@ public abstract class BleDevice {
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
 
         mHandler = new Handler(Looper.getMainLooper());
+
+        callbackHandler = new Handler(Looper.getMainLooper());
 
         stateListeners = new LinkedList<>();
     }
@@ -412,10 +406,20 @@ public abstract class BleDevice {
     private void processFoundDevice(final BleDeviceDetailInfo bleDeviceDetailInfo) {
         ViseLog.e("处理找到的设备: " + bleDeviceDetailInfo);
 
-        if(isDisconnect()) {
-            new BleDeviceGatt(bleDeviceDetailInfo).connect(context, connectCallback);
+        BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
 
-            setState(DEVICE_CONNECTING);
+        if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
+            stopScanForever();
+            setState(connectState);
+            Toast.makeText(context, "设备未配对，请先配对。", Toast.LENGTH_LONG).show();
+            bleDeviceDetailInfo.getDevice().createBond();
+        } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
+            BleDeviceScanner.stopScan(BleDevice.this.bleScanCallback);
+            setState(connectState);
+            if(isDisconnect()) {
+                new BleDeviceGatt(bleDeviceDetailInfo).connect(context, connectCallback);
+                setState(DEVICE_CONNECTING);
+            }
         }
     }
 

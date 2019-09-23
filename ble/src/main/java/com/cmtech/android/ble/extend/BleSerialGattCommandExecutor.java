@@ -28,7 +28,7 @@ class BleSerialGattCommandExecutor {
 
     BleSerialGattCommandExecutor(BleDevice device) {
         if(device == null) {
-            throw new NullPointerException("BleSerialGattCommandExecutor.device不能为null");
+            throw new IllegalArgumentException("BleDevice is null");
         }
 
         this.device = device;
@@ -36,11 +36,9 @@ class BleSerialGattCommandExecutor {
 
     // 启动Gatt命令执行器
     final void start() {
-        if(device == null || device.getBleDeviceGatt() == null) {
-            throw new NullPointerException("The device mirror must not be null when BleSerialGattCommandExecutor is started.");
+        if(device.getBleDeviceGatt() == null || isAlive()) {
+            return;
         }
-
-        if(isAlive()) return;
 
         ViseLog.e("启动gattCmdExecutor");
 

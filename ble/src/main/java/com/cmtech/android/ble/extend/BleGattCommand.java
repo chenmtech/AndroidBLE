@@ -76,7 +76,7 @@ class BleGattCommand{
     boolean execute() throws InterruptedException{
         if(isInstantCommand) {
             if(dataOpCallback == null) {
-                throw new NullPointerException("The dataOpCallback of instant commands must not be null. ");
+                throw new NullPointerException("The dataOpCallback of instant commands is null. ");
             }
 
             dataOpCallback.onSuccess(null, null, null);
@@ -85,7 +85,7 @@ class BleGattCommand{
         }
 
         if(device == null || device.getBleDeviceGatt() == null || channel == null) {
-            throw new NullPointerException("The device mirror or channel of the non-instant commands must not be null.");
+            throw new NullPointerException("The gatt or channel of the non-instant commands is null.");
         }
 
         BleDeviceGatt bleDeviceGatt = device.getBleDeviceGatt();
@@ -220,7 +220,7 @@ class BleGattCommand{
         BleGattCommand build() {
             if(isInstantCommand) {
                 if(dataCallback == null) {
-                    throw new NullPointerException("The dataOpCallback of instant commands must not be null. ");
+                    throw new NullPointerException("The dataOpCallback of instant commands is null. ");
                 }
 
                 return new BleGattCommand(null, null, dataCallback,
@@ -229,21 +229,21 @@ class BleGattCommand{
             } else {
 
                 if(device == null || device.getBleDeviceGatt() == null || element == null) {
-                    throw new NullPointerException("The device mirror or element of the non-instant commands must not be null.");
+                    throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
                 }
 
                 if (propertyType == PropertyType.PROPERTY_WRITE
                         || propertyType == PropertyType.PROPERTY_NOTIFY
                         || propertyType == PropertyType.PROPERTY_INDICATE) {
                     if (data == null || data.length == 0) {
-                        throw new NullPointerException("The data of the write, notify or indicate commands must not be null");
+                        throw new NullPointerException("The data of the write, notify or indicate commands is null");
                     };
                 }
 
                 if (propertyType == PropertyType.PROPERTY_NOTIFY
                         || propertyType == PropertyType.PROPERTY_INDICATE) {
                     if (data[0] == 1 && notifyOpCallback == null) {
-                        throw new NullPointerException("The callback of the 'enable' notify or indicate commands must not be null");
+                        throw new NullPointerException("The callback of the 'enable' notify or indicate commands is null");
                     }
                 }
 
