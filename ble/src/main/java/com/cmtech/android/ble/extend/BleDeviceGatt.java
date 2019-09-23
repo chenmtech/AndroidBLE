@@ -48,10 +48,11 @@ public class BleDeviceGatt {
 
     private boolean enable;//是否设置使能
 
-    private volatile HashMap<String, BleGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
     private volatile HashMap<String, BleGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
+    private volatile HashMap<String, BleGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
     private volatile HashMap<String, BleGattChannel> enableInfoMap = new HashMap<>();//设置使能GATT信息集合
-    private volatile HashMap<String, IBleDataCallback> bleCallbackMap = new HashMap<>();//数据操作回调集合
+
+    private volatile HashMap<String, IBleDataCallback> bleDataCallbackMap = new HashMap<>();//数据操作回调集合
     private volatile HashMap<String, IBleDataCallback> receiveCallbackMap = new HashMap<>();//数据接收回调集合
 
     private final Handler handler = new Handler(Looper.myLooper()) {
@@ -87,13 +88,12 @@ public class BleDeviceGatt {
             if (newState == BluetoothGatt.STATE_CONNECTED) {
                 gatt.discoverServices();
 
-                //bluetoothGatt = gatt;
-
+                bluetoothGatt = gatt;
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                if(bluetoothGatt != null)
-                    bluetoothGatt.disconnect();
+                //if(bluetoothGatt != null)
+                //    bluetoothGatt.disconnect();
 
-                close();
+                //close();
 
                 if (connectCallback != null) {
                     handler.removeCallbacksAndMessages(null);
@@ -163,7 +163,7 @@ public class BleDeviceGatt {
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                handleSuccessData(writeInfoMap, characteristic.getValue(), status, false);
+                handleSuccessData(writeInfoMap, characteristic.getValue(), status, true);
             } else {
                 writeFailure(new GattException(status));
             }
@@ -219,7 +219,7 @@ public class BleDeviceGatt {
             ViseLog.i("onDescriptorWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                handleSuccessData(writeInfoMap, descriptor.getValue(), status, false);
+                handleSuccessData(writeInfoMap, descriptor.getValue(), status, true);
             } else {
                 writeFailure(new GattException(status));
             }
@@ -265,6 +265,10 @@ public class BleDeviceGatt {
      * @param connectCallback connectCallback
      */
     public synchronized void connect(Context context, IBleConnectCallback connectCallback) {
+        if(connectCallback == null) {
+            throw new IllegalArgumentException("IBleConnectCallback is null");
+        }
+
         this.connectCallback = connectCallback;
 
         handler.removeCallbacksAndMessages(null);
@@ -279,15 +283,15 @@ public class BleDeviceGatt {
     /**
      * 绑定一个具备读写或可通知能力的通道，设置需要操作数据的相关信息，包含：数据操作回调，数据操作类型，数据通道建立所需的UUID。
      *
-     * @param bleCallback bleCallback
+     * @param bleDataCallback bleDataCallback
      * @param bleGattChannel gatt Channel to bind
      */
-    public synchronized void bindChannel(IBleDataCallback bleCallback, BleGattChannel bleGattChannel) {
-        if (bleCallback != null && bleGattChannel != null) {
+    public synchronized void bindChannel(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel) {
+        if (bleDataCallback != null && bleGattChannel != null) {
             String key = bleGattChannel.getGattInfoKey();
             PropertyType propertyType = bleGattChannel.getPropertyType();
-            if (!bleCallbackMap.containsKey(key)) {
-                bleCallbackMap.put(key, bleCallback);
+            if (!bleDataCallbackMap.containsKey(key)) {
+                bleDataCallbackMap.put(key, bleDataCallback);
             }
             if (propertyType == PropertyType.PROPERTY_READ) {
                 if (!readInfoMap.containsKey(key)) {
@@ -317,8 +321,8 @@ public class BleDeviceGatt {
     public synchronized void unbindChannel(BleGattChannel bleGattChannel) {
         if (bleGattChannel != null) {
             String key = bleGattChannel.getGattInfoKey();
-            if (bleCallbackMap.containsKey(key)) {
-                bleCallbackMap.remove(key);
+            if (bleDataCallbackMap.containsKey(key)) {
+                bleDataCallbackMap.remove(key);
             }
             if (readInfoMap.containsKey(key)) {
                 readInfoMap.remove(key);
@@ -441,7 +445,7 @@ public class BleDeviceGatt {
      * @param key blecallback key
      */
     public synchronized void removeBleCallback(String key) {
-        bleCallbackMap.remove(key);
+        bleDataCallbackMap.remove(key);
     }
 
     /**
@@ -511,12 +515,12 @@ public class BleDeviceGatt {
      * 清除设备资源，在不使用该设备时调用
      */
     public synchronized void clear() {
-        ViseLog.i("deviceMirror clear.");
+        ViseLog.i("BleDeviceGatt clear.");
         disconnect();
         refreshDeviceCache();
         close();
-        if (bleCallbackMap != null) {
-            bleCallbackMap.clear();
+        if (bleDataCallbackMap != null) {
+            bleDataCallbackMap.clear();
         }
         if (receiveCallbackMap != null) {
             receiveCallbackMap.clear();
@@ -653,10 +657,7 @@ public class BleDeviceGatt {
      * @param bleException 回调异常
      */
     private void connectFailure(BleException bleException) {
-        if(bluetoothGatt != null)
-            bluetoothGatt.disconnect();
-
-        close();
+        clear();
 
         if (connectCallback != null) {
             connectCallback.onConnectFailure(bleException);
@@ -709,7 +710,7 @@ public class BleDeviceGatt {
 
         String removeBleCallbackKey = null;
         String removeBluetoothGattInfoKey = null;
-        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleCallbackMap.entrySet()) {
+        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleDataCallbackMap.entrySet()) {
             String bleCallbackKey = callbackEntry.getKey();
             IBleDataCallback bleCallbackValue = callbackEntry.getValue();
             for (Map.Entry<String, BleGattChannel> gattInfoEntry : bluetoothGattInfoHashMap.entrySet()) {
@@ -722,9 +723,9 @@ public class BleDeviceGatt {
                 }
             }
         }
-        synchronized (bleCallbackMap) {
+        synchronized (bleDataCallbackMap) {
             if (isRemoveCall && removeBleCallbackKey != null) {
-                bleCallbackMap.remove(removeBleCallbackKey);
+                bleDataCallbackMap.remove(removeBleCallbackKey);
                 bluetoothGattInfoHashMap.remove(removeBluetoothGattInfoKey);
             }
         }
@@ -743,7 +744,7 @@ public class BleDeviceGatt {
 
         String removeBleCallbackKey = null;
         String removeBluetoothGattInfoKey = null;
-        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleCallbackMap.entrySet()) {
+        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleDataCallbackMap.entrySet()) {
             String bleCallbackKey = callbackEntry.getKey();
             IBleDataCallback bleCallbackValue = callbackEntry.getValue();
             for (Map.Entry<String, BleGattChannel> gattInfoEntry : bluetoothGattInfoHashMap.entrySet()) {
@@ -755,9 +756,9 @@ public class BleDeviceGatt {
                 }
             }
         }
-        synchronized (bleCallbackMap) {
+        synchronized (bleDataCallbackMap) {
             if (isRemoveCall && removeBleCallbackKey != null) {
-                bleCallbackMap.remove(removeBleCallbackKey);
+                bleDataCallbackMap.remove(removeBleCallbackKey);
                 bluetoothGattInfoHashMap.remove(removeBluetoothGattInfoKey);
             }
         }
