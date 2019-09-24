@@ -82,7 +82,7 @@ class BleSerialGattCommand extends BleGattCommand {
             ViseLog.i("Command Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
         }
 
-        removeBleCallback();
+        //removeBleCallback();
 
         if(bleCallback != null) {
             bleCallback.onSuccess(data, bleGattChannel);
@@ -96,7 +96,7 @@ class BleSerialGattCommand extends BleGattCommand {
     private synchronized void onSerialCommandFailure(IBleDataCallback bleCallback, BleException exception) {
         ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
-        removeBleCallback();
+        //removeBleCallback();
 
         if(bleCallback != null)
             bleCallback.onFailure(exception);

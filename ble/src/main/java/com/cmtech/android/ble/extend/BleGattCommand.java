@@ -96,25 +96,17 @@ class BleGattCommand{
                 break;
 
             case PROPERTY_WRITE:
-                bleDeviceGatt.bindChannel( dataOpCallback, channel);
-
-                bleDeviceGatt.writeData(writtenData);
+                bleDeviceGatt.writeData(dataOpCallback, channel, writtenData);
                 break;
 
             case PROPERTY_NOTIFY:
             case PROPERTY_INDICATE:
                 boolean isIndication = (channel.getPropertyType() == PropertyType.PROPERTY_INDICATE);
 
-                bleDeviceGatt.bindChannel( dataOpCallback, channel);
-
-                if(writtenData[0] == 1) {
-                    bleDeviceGatt.registerNotify(isIndication);
-
-                    bleDeviceGatt.setNotifyListener(channel.getGattInfoKey(), notifyOpCallback);
-                } else {
-                    bleDeviceGatt.unregisterNotify(isIndication);
-
-                    bleDeviceGatt.removeReceiveCallback(channel.getGattInfoKey());
+                if(writtenData[0] == 1) { // enable
+                    bleDeviceGatt.enable(dataOpCallback, channel, notifyOpCallback, true, isIndication);
+                } else { // disable
+                    bleDeviceGatt.enable(dataOpCallback, channel, notifyOpCallback, false, isIndication);
                 }
                 break;
 
@@ -144,7 +136,7 @@ class BleGattCommand{
                 return "";
         }
     }
-
+/*
     void removeBleCallback() {
         if(isInstantCommand) return;
 
@@ -153,7 +145,7 @@ class BleGattCommand{
         if(device != null && device.getBleDeviceGatt() != null) {
             device.getBleDeviceGatt().removeBleCallback(channel.getGattInfoKey());
         }
-    }
+    }*/
 
     static class Builder {
         private BleGattElement element;

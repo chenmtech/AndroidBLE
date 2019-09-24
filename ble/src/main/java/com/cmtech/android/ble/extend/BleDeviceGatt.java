@@ -16,7 +16,6 @@ import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleRssiCallback;
 import com.cmtech.android.ble.common.BleConfig;
 import com.cmtech.android.ble.common.BleConstant;
-import com.cmtech.android.ble.common.PropertyType;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
@@ -45,21 +44,9 @@ public class BleDeviceGatt {
 
     private IBleConnectCallback connectCallback;//连接回调
 
-    private boolean isIndication;//是否是指示器方式
-
-    private boolean enable;//是否设置使能
-
     private volatile Pair<IBleDataCallback, BleGattChannel> readPair = null;
     private volatile Pair<IBleDataCallback, BleGattChannel> writePair = null;
-
-
-
-    //private volatile HashMap<String, BleGattChannel> readInfoMap = new HashMap<>();//读取数据GATT信息集合
-    private volatile HashMap<String, BleGattChannel> writeInfoMap = new HashMap<>();//写入数据GATT信息集合
-    private volatile HashMap<String, BleGattChannel> enableInfoMap = new HashMap<>();//设置使能GATT信息集合
-
-    private volatile HashMap<String, IBleDataCallback> bleDataCallbackMap = new HashMap<>();//数据操作回调集合
-    private volatile HashMap<String, IBleDataCallback> receiveCallbackMap = new HashMap<>();//数据接收回调集合
+    private volatile Map<UUID, IBleDataCallback> notifyCallbackMap = new HashMap<>();
 
     private final Handler handler = new Handler(Looper.myLooper()) {
         @Override
@@ -156,8 +143,6 @@ public class BleDeviceGatt {
             } else {
                 readFailure(new GattException(status));
             }
-
-            //readPair = null;
         }
 
         /**
@@ -171,7 +156,6 @@ public class BleDeviceGatt {
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                //handleSuccessData(writeInfoMap, characteristic.getValue(), status, true);
                 writePair.first.onSuccess(characteristic.getValue(), writePair.second);
             } else {
                 writeFailure(new GattException(status));
@@ -187,15 +171,13 @@ public class BleDeviceGatt {
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             ViseLog.i("onCharacteristicChanged data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            for (Map.Entry<String, IBleDataCallback> receiveEntry : receiveCallbackMap.entrySet()) {
-                String receiveKey = receiveEntry.getKey();
-                IBleDataCallback receiveValue = receiveEntry.getValue();
-                for (Map.Entry<String, BleGattChannel> gattInfoEntry : enableInfoMap.entrySet()) {
-                    String bluetoothGattInfoKey = gattInfoEntry.getKey();
-                    BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
-                    if (receiveKey.equals(bluetoothGattInfoKey)) {
-                        receiveValue.onSuccess(characteristic.getValue(), bluetoothGattInfoValue);
-                    }
+            for (Map.Entry<UUID, IBleDataCallback> notifyEntry : notifyCallbackMap.entrySet()) {
+                UUID notifyKey = notifyEntry.getKey();
+                IBleDataCallback notifyValue = notifyEntry.getValue();
+
+                if(notifyKey.equals(characteristic.getUuid())) {
+                    notifyValue.onSuccess(characteristic.getValue(), null);
+                    break;
                 }
             }
         }
@@ -228,15 +210,9 @@ public class BleDeviceGatt {
             ViseLog.i("onDescriptorWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
             if (status == GATT_SUCCESS) {
-                //handleSuccessData(writeInfoMap, descriptor.getValue(), status, true);
                 writePair.first.onSuccess(descriptor.getValue(), writePair.second);
             } else {
                 writeFailure(new GattException(status));
-            }
-            if (status == GATT_SUCCESS) {
-                handleSuccessData(enableInfoMap, descriptor.getValue(), status, false);
-            } else {
-                enableFailure(new GattException(status));
             }
         }
 
@@ -291,86 +267,48 @@ public class BleDeviceGatt {
     }
 
     /**
-     * 绑定一个具备读写或可通知能力的通道，设置需要操作数据的相关信息，包含：数据操作回调，数据操作类型，数据通道建立所需的UUID。
-     *
-     * @param bleDataCallback bleDataCallback
-     * @param bleGattChannel gatt Channel to bind
-     */
-    public synchronized void bindChannel(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel) {
-        if (bleDataCallback != null && bleGattChannel != null) {
-            String key = bleGattChannel.getGattInfoKey();
-            PropertyType propertyType = bleGattChannel.getPropertyType();
-            if (!bleDataCallbackMap.containsKey(key)) {
-                bleDataCallbackMap.put(key, bleDataCallback);
-            }
-
-            if (propertyType == PropertyType.PROPERTY_WRITE) {
-                if (!writeInfoMap.containsKey(key)) {
-                    writeInfoMap.put(key, bleGattChannel);
-                }
-            } else if (propertyType == PropertyType.PROPERTY_NOTIFY) {
-                if (!enableInfoMap.containsKey(key)) {
-                    enableInfoMap.put(key, bleGattChannel);
-                }
-            } else if (propertyType == PropertyType.PROPERTY_INDICATE) {
-                if (!enableInfoMap.containsKey(key)) {
-                    enableInfoMap.put(key, bleGattChannel);
-                }
-            }
-        }
-    }
-
-    /**
-     * 解绑通道
-     *
-     * @param bleGattChannel gattChannel to unbind
-     */
-    public synchronized void unbindChannel(BleGattChannel bleGattChannel) {
-        if (bleGattChannel != null) {
-            String key = bleGattChannel.getGattInfoKey();
-            if (bleDataCallbackMap.containsKey(key)) {
-                bleDataCallbackMap.remove(key);
-            }
-            if (writeInfoMap.containsKey(key)) {
-                writeInfoMap.remove(key);
-            } else if (enableInfoMap.containsKey(key)) {
-                enableInfoMap.remove(key);
-            }
-
-            if(readPair.second == bleGattChannel)
-                readPair = null;
-        }
-    }
-
-    /**
      * 写入数据
      *
      * @param data written data
      */
-    public void writeData(byte[] data) {
+    public synchronized boolean writeData(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel, byte[] data) {
         if (data == null || data.length > 20) {
             ViseLog.e("this data is null or length beyond 20 byte.");
-            return;
+            return false;
         }
-        if (!checkBluetoothGattInfo(writeInfoMap)) {
-            return;
+
+        if(bleDataCallback == null || bleGattChannel == null) {
+            throw new IllegalArgumentException("The callback or channel is null.");
         }
 
         handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
+        handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
-        write(data);
+        boolean success = false;
+        if (bluetoothGatt != null && bleGattChannel.getCharacteristic() != null && bleGattChannel.getDescriptor() != null) {
+            bleGattChannel.getDescriptor().setValue(data);
+            success = bluetoothGatt.writeDescriptor(bleGattChannel.getDescriptor());
+        } else if (bluetoothGatt != null && bleGattChannel.getCharacteristic() != null && bleGattChannel.getDescriptor() == null) {
+            bleGattChannel.getCharacteristic().setValue(data);
+            success = bluetoothGatt.writeCharacteristic(bleGattChannel.getCharacteristic());
+        }
+
+        if(success)
+            writePair = Pair.create(bleDataCallback, bleGattChannel);
+
+        return success;
     }
 
     /**
      * 读取数据
      */
-    public boolean readData(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel) {
-        handler.removeMessages(MSG_READ_DATA_TIMEOUT);
-        handler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
-
+    public synchronized boolean readData(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel) {
         if (bleDataCallback == null || bleGattChannel == null) {
             throw new IllegalArgumentException("The callback or channel is null.");
         }
+
+        handler.removeMessages(MSG_READ_DATA_TIMEOUT);
+        handler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
 
@@ -387,6 +325,67 @@ public class BleDeviceGatt {
     }
 
     /**
+     * 设置使能
+     *
+     * @param enable       是否具备使能
+     * @param isIndication 是否是指示器方式
+     * @return isSuccess
+     */
+    public synchronized boolean enable(IBleDataCallback bleDataCallback, BleGattChannel bleGattChannel, IBleDataCallback receiveCallback, boolean enable, boolean isIndication) {
+        handler.removeMessages(MSG_RECEIVE_DATA_TIMEOUT);
+        handler.sendEmptyMessageDelayed(MSG_RECEIVE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
+
+        boolean success = false;
+        if (bluetoothGatt != null && bleGattChannel.getCharacteristic() != null) {
+            success = bluetoothGatt.setCharacteristicNotification(bleGattChannel.getCharacteristic(), enable);
+        }
+        BluetoothGattDescriptor bluetoothGattDescriptor = null;
+        if (bleGattChannel.getCharacteristic() != null && bleGattChannel.getDescriptor() != null) {
+            bluetoothGattDescriptor = bleGattChannel.getDescriptor();
+        } else if (bleGattChannel.getCharacteristic() != null && bleGattChannel.getDescriptor() == null) {
+            if (bleGattChannel.getCharacteristic().getDescriptors() != null
+                    && bleGattChannel.getCharacteristic().getDescriptors().size() == 1) {
+                bluetoothGattDescriptor = bleGattChannel.getCharacteristic().getDescriptors().get(0);
+            } else {
+                bluetoothGattDescriptor = bleGattChannel.getCharacteristic()
+                        .getDescriptor(UUID.fromString(BleConstant.CLIENT_CHARACTERISTIC_CONFIG));
+            }
+        }
+        if (bluetoothGattDescriptor != null) {
+            bleGattChannel.setDescriptor(bluetoothGattDescriptor);
+            if (isIndication) {
+                if (enable) {
+                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+                } else {
+                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                }
+            } else {
+                if (enable) {
+                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                } else {
+                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                }
+            }
+            if (bluetoothGatt != null) {
+                bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
+            }
+        }
+
+        if(success) {
+            writePair = Pair.create(bleDataCallback, bleGattChannel);
+
+            if(enable) {
+                notifyCallbackMap.put(bleGattChannel.getCharacteristicUUID(), receiveCallback);
+            } else {
+                notifyCallbackMap.remove(bleGattChannel.getCharacteristicUUID());
+            }
+        }
+        return success;
+    }
+
+
+
+    /**
      * 获取设备信号值
      *
      * @param rssiCallback rssiCallback
@@ -396,49 +395,6 @@ public class BleDeviceGatt {
         if (bluetoothGatt != null) {
             bluetoothGatt.readRemoteRssi();
         }
-    }
-
-    /**
-     * 注册获取数据通知
-     *
-     * @param isIndication isIndication
-     */
-    public void registerNotify(boolean isIndication) {
-        if (!checkBluetoothGattInfo(enableInfoMap)) {
-            return;
-        }
-
-        handler.removeMessages(MSG_RECEIVE_DATA_TIMEOUT);
-
-        enable = true;
-        this.isIndication = isIndication;
-        enable(enable, this.isIndication);
-    }
-
-    /**
-     * 取消获取数据通知
-     *
-     * @param isIndication isIndication
-     */
-    public void unregisterNotify(boolean isIndication) {
-        if (!checkBluetoothGattInfo(enableInfoMap)) {
-            return;
-        }
-        handler.removeMessages(MSG_RECEIVE_DATA_TIMEOUT);
-
-        enable = false;
-        this.isIndication = isIndication;
-        enable(enable, this.isIndication);
-    }
-
-    /**
-     * 设置接收数据监听
-     *
-     * @param key             接收数据回调key，由serviceUUID+characteristicUUID+descriptorUUID组成
-     * @param receiveCallback 接收数据回调
-     */
-    public void setNotifyListener(String key, IBleDataCallback receiveCallback) {
-        receiveCallbackMap.put(key, receiveCallback);
     }
 
     /**
@@ -459,23 +415,6 @@ public class BleDeviceGatt {
         return deviceDetailInfo;
     }
 
-    /**
-     * 移除数据操作回调
-     *
-     * @param key blecallback key
-     */
-    public synchronized void removeBleCallback(String key) {
-        bleDataCallbackMap.remove(key);
-    }
-
-    /**
-     * 移除接收数据回调
-     *
-     * @param key receive callback key
-     */
-    public synchronized void removeReceiveCallback(String key) {
-        receiveCallbackMap.remove(key);
-    }
 
     /**
      * 刷新设备缓存
@@ -539,110 +478,12 @@ public class BleDeviceGatt {
         disconnect();
         refreshDeviceCache();
         close();
-        if (bleDataCallbackMap != null) {
-            bleDataCallbackMap.clear();
-        }
-        if (receiveCallbackMap != null) {
-            receiveCallbackMap.clear();
-        }
+
         writePair = null;
         readPair = null;
-        if (enableInfoMap != null) {
-            enableInfoMap.clear();
-        }
+        notifyCallbackMap.clear();
+
         handler.removeCallbacksAndMessages(null);
-    }
-
-    /**
-     * 检查BluetoothGattChannel集合是否有值
-     *
-     * @param bluetoothGattInfoHashMap hashMap
-     * @return has gatt info
-     */
-    private boolean checkBluetoothGattInfo(HashMap<String, BleGattChannel> bluetoothGattInfoHashMap) {
-        if (bluetoothGattInfoHashMap == null || bluetoothGattInfoHashMap.size() == 0) {
-            ViseLog.e("this bluetoothGattInfo map is not value.");
-            return false;
-        }
-        return true;
-    }
-
-    /**
-     * 设置使能
-     *
-     * @param enable       是否具备使能
-     * @param isIndication 是否是指示器方式
-     * @return isSuccess
-     */
-    private synchronized boolean enable(boolean enable, boolean isIndication) {
-        handler.removeMessages(MSG_RECEIVE_DATA_TIMEOUT);
-        handler.sendEmptyMessageDelayed(MSG_RECEIVE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
-
-        boolean success = false;
-        for (Map.Entry<String, BleGattChannel> entry : enableInfoMap.entrySet()) {
-            String bluetoothGattInfoKey = entry.getKey();
-            BleGattChannel bluetoothGattInfoValue = entry.getValue();
-            if (bluetoothGatt != null && bluetoothGattInfoValue.getCharacteristic() != null) {
-                success = bluetoothGatt.setCharacteristicNotification(bluetoothGattInfoValue.getCharacteristic(), enable);
-            }
-            BluetoothGattDescriptor bluetoothGattDescriptor = null;
-            if (bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() != null) {
-                bluetoothGattDescriptor = bluetoothGattInfoValue.getDescriptor();
-            } else if (bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() == null) {
-                if (bluetoothGattInfoValue.getCharacteristic().getDescriptors() != null
-                        && bluetoothGattInfoValue.getCharacteristic().getDescriptors().size() == 1) {
-                    bluetoothGattDescriptor = bluetoothGattInfoValue.getCharacteristic().getDescriptors().get(0);
-                } else {
-                    bluetoothGattDescriptor = bluetoothGattInfoValue.getCharacteristic()
-                            .getDescriptor(UUID.fromString(BleConstant.CLIENT_CHARACTERISTIC_CONFIG));
-                }
-            }
-            if (bluetoothGattDescriptor != null) {
-                bluetoothGattInfoValue.setDescriptor(bluetoothGattDescriptor);
-                if (isIndication) {
-                    if (enable) {
-                        bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                    } else {
-                        bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                    }
-                } else {
-                    if (enable) {
-                        bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-                    } else {
-                        bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-                    }
-                }
-                if (bluetoothGatt != null) {
-                    bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
-                }
-            }
-        }
-        return success;
-    }
-
-    /**
-     * 写入数据
-     *
-     * @param data written data
-     * @return isSuccess
-     */
-    private synchronized boolean write(byte[] data) {
-        handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-        handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
-
-        boolean success = false;
-        for (Map.Entry<String, BleGattChannel> entry : writeInfoMap.entrySet()) {
-            String bluetoothGattInfoKey = entry.getKey();
-            BleGattChannel bluetoothGattInfoValue = entry.getValue();
-            if (bluetoothGatt != null && bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() != null) {
-                bluetoothGattInfoValue.getDescriptor().setValue(data);
-                success = bluetoothGatt.writeDescriptor(bluetoothGattInfoValue.getDescriptor());
-            } else if (bluetoothGatt != null && bluetoothGattInfoValue.getCharacteristic() != null && bluetoothGattInfoValue.getDescriptor() == null) {
-                bluetoothGattInfoValue.getCharacteristic().setValue(data);
-                success = bluetoothGatt.writeCharacteristic(bluetoothGattInfoValue.getCharacteristic());
-            }
-        }
-        return success;
     }
 
     /**
@@ -666,7 +507,8 @@ public class BleDeviceGatt {
      * @param bleException exception
      */
     private void enableFailure(BleException bleException) {
-        handleFailureData(enableInfoMap, bleException, true);
+        handler.removeCallbacksAndMessages(null);
+        writePair.first.onFailure(bleException);
         ViseLog.i("enableFailure " + bleException);
     }
 
@@ -692,71 +534,4 @@ public class BleDeviceGatt {
         ViseLog.i("writeFailure " + bleException);
     }
 
-    /**
-     * 处理数据发送成功
-     *
-     * @param bluetoothGattInfoHashMap hashMap
-     * @param value                    待发送数据
-     * @param status                   发送数据状态
-     * @param isRemoveCall             是否需要移除回调
-     */
-    private synchronized void handleSuccessData(HashMap<String, BleGattChannel> bluetoothGattInfoHashMap, byte[] value, int status,
-                                                boolean isRemoveCall) {
-        handler.removeCallbacksAndMessages(null);
-
-        String removeBleCallbackKey = null;
-        String removeBluetoothGattInfoKey = null;
-        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleDataCallbackMap.entrySet()) {
-            String bleCallbackKey = callbackEntry.getKey();
-            IBleDataCallback bleCallbackValue = callbackEntry.getValue();
-            for (Map.Entry<String, BleGattChannel> gattInfoEntry : bluetoothGattInfoHashMap.entrySet()) {
-                String bluetoothGattInfoKey = gattInfoEntry.getKey();
-                BleGattChannel bluetoothGattInfoValue = gattInfoEntry.getValue();
-                if (bleCallbackKey.equals(bluetoothGattInfoKey)) {
-                    bleCallbackValue.onSuccess(value, bluetoothGattInfoValue);
-                    removeBleCallbackKey = bleCallbackKey;
-                    removeBluetoothGattInfoKey = bluetoothGattInfoKey;
-                }
-            }
-        }
-        synchronized (bleDataCallbackMap) {
-            if (isRemoveCall && removeBleCallbackKey != null) {
-                bleDataCallbackMap.remove(removeBleCallbackKey);
-                bluetoothGattInfoHashMap.remove(removeBluetoothGattInfoKey);
-            }
-        }
-    }
-
-    /**
-     * 处理数据发送失败
-     *
-     * @param bluetoothGattInfoHashMap  hashMap
-     * @param bleException             回调异常
-     * @param isRemoveCall             是否需要移除回调
-     */
-    private synchronized void handleFailureData(HashMap<String, BleGattChannel> bluetoothGattInfoHashMap, BleException bleException,
-                                                boolean isRemoveCall) {
-        handler.removeCallbacksAndMessages(null);
-
-        String removeBleCallbackKey = null;
-        String removeBluetoothGattInfoKey = null;
-        for (Map.Entry<String, IBleDataCallback> callbackEntry : bleDataCallbackMap.entrySet()) {
-            String bleCallbackKey = callbackEntry.getKey();
-            IBleDataCallback bleCallbackValue = callbackEntry.getValue();
-            for (Map.Entry<String, BleGattChannel> gattInfoEntry : bluetoothGattInfoHashMap.entrySet()) {
-                String bluetoothGattInfoKey = gattInfoEntry.getKey();
-                if (bleCallbackKey.equals(bluetoothGattInfoKey)) {
-                    bleCallbackValue.onFailure(bleException);
-                    removeBleCallbackKey = bleCallbackKey;
-                    removeBluetoothGattInfoKey = bluetoothGattInfoKey;
-                }
-            }
-        }
-        synchronized (bleDataCallbackMap) {
-            if (isRemoveCall && removeBleCallbackKey != null) {
-                bleDataCallbackMap.remove(removeBleCallbackKey);
-                bluetoothGattInfoHashMap.remove(removeBluetoothGattInfoKey);
-            }
-        }
-    }
 }
