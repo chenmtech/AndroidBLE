@@ -15,7 +15,6 @@ import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.TimeoutException;
-import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -58,6 +57,8 @@ public abstract class BleDevice {
     private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
 
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
+
+    private BleDeviceDetailInfo deviceDetailInfo;//设备详细信息
 
     private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
 
@@ -417,7 +418,8 @@ public abstract class BleDevice {
             BleDeviceScanner.stopScan(BleDevice.this.bleScanCallback);
             setState(connectState);
             if(isDisconnect()) {
-                new BleDeviceGatt(bleDeviceDetailInfo).connect(context, connectCallback);
+                BleDevice.this.deviceDetailInfo = bleDeviceDetailInfo;
+                new BleDeviceGatt().connect(context, bleDeviceDetailInfo.getDevice(), connectCallback);
                 setState(DEVICE_CONNECTING);
             }
         }

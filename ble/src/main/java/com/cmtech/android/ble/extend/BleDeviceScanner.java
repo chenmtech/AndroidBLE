@@ -8,7 +8,6 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 
 import com.cmtech.android.ble.callback.IBleScanCallback;
-import com.cmtech.android.ble.model.BleDeviceDetailInfo;
 import com.vise.log.ViseLog;
 
 import java.util.ArrayList;

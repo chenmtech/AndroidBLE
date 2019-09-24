@@ -31,8 +31,8 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         @Override
-        public void onSuccess(byte[] data, BleGattChannel bleGattChannel) {
-            onSerialCommandSuccess(bleCallback, data, bleGattChannel);
+        public void onSuccess(byte[] data, BleGattElementOnline bleGattElementOnline) {
+            onSerialCommandSuccess(bleCallback, data, bleGattElementOnline);
         }
 
         @Override
@@ -48,7 +48,7 @@ class BleSerialGattCommand extends BleGattCommand {
     }
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
-                                       IBleDataCallback dataCallback, IBleDataCallback notifyCallback, boolean isInstantCommand) {
+                                       IBleDataCallback dataCallback, IBleDataCallback notifyCallback) {
         if(device.getBleDeviceGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
@@ -58,8 +58,7 @@ class BleSerialGattCommand extends BleGattCommand {
                 .setPropertyType(propertyType)
                 .setData(data)
                 .setDataCallback(dataCallback)
-                .setNotifyOpCallback(notifyCallback)
-                .setInstantCommand(isInstantCommand).build();
+                .setNotifyOpCallback(notifyCallback).build();
 
         return new BleSerialGattCommand(command);
     }
@@ -75,17 +74,15 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattChannel bleGattChannel) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattElementOnline bleGattElementOnline) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
             ViseLog.i("Command Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
         }
 
-        //removeBleCallback();
-
         if(bleCallback != null) {
-            bleCallback.onSuccess(data, bleGattChannel);
+            bleCallback.onSuccess(data, bleGattElementOnline);
         }
 
         done = true;
@@ -96,11 +93,8 @@ class BleSerialGattCommand extends BleGattCommand {
     private synchronized void onSerialCommandFailure(IBleDataCallback bleCallback, BleException exception) {
         ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
 
-        //removeBleCallback();
-
         if(bleCallback != null)
             bleCallback.onFailure(exception);
-
         if(device != null) {
             device.disconnect();
         }

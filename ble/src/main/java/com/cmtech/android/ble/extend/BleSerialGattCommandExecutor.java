@@ -68,7 +68,7 @@ class BleSerialGattCommandExecutor {
     // 读
     final void read(BleGattElement element, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_READ,
-                null, dataCallback, null, false);
+                null, dataCallback, null);
 
         if(command != null)
             executeCommand(command);
@@ -77,7 +77,7 @@ class BleSerialGattCommandExecutor {
     // 写多字节
     final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_WRITE,
-                data, dataCallback, null, false);
+                data, dataCallback, null);
 
         if(command != null)
             executeCommand(command);
@@ -96,7 +96,7 @@ class BleSerialGattCommandExecutor {
     private void notify(BleGattElement element, boolean enable
             , IBleDataCallback dataCallback, IBleDataCallback notifyOpCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_NOTIFY,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, notifyOpCallback, false);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, notifyOpCallback);
 
         if(command != null)
             executeCommand(command);
@@ -110,7 +110,7 @@ class BleSerialGattCommandExecutor {
     private void indicate(BleGattElement element, boolean enable
             , IBleDataCallback dataCallback, IBleDataCallback indicateOpCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_INDICATE,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, indicateOpCallback, false);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, indicateOpCallback);
 
         if(command != null)
             executeCommand(command);
@@ -118,8 +118,8 @@ class BleSerialGattCommandExecutor {
 
     // 无需等待响应立刻执行完毕
     final void runInstantly(IBleDataCallback dataCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, null,
-                null, dataCallback, null, true);
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, PropertyType.PROPERTY_INSTANTRUN,
+                null, dataCallback, null);
 
         if(command != null)
             executeCommand(command);

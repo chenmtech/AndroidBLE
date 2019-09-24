@@ -1,15 +1,12 @@
 package com.cmtech.android.ble.common;
 
-/**
- * @Description: 属性类型
- * @author: <a href="http://xiaoyaoyou1212.360doc.com">DAWI</a>
- * @date: 2017/10/17 20:27
- */
+
 public enum PropertyType {
     PROPERTY_READ(0x01),
     PROPERTY_WRITE(0x02),
     PROPERTY_NOTIFY(0x04),
-    PROPERTY_INDICATE(0x08);
+    PROPERTY_INDICATE(0x08),
+    PROPERTY_INSTANTRUN(0x10); //即时命令属性，即不需要等待蓝牙响应，立即执行回调的命令
 
     private int propertyValue;
 

@@ -5,54 +5,45 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-import com.cmtech.android.ble.common.PropertyType;
-
 import java.util.UUID;
 
-/**
- * @Description: BluetoothGatt 相关信息
- * @author: <a href="http://xiaoyaoyou1212.360doc.com">DAWI</a>
- * @date: 2017/10/17 16:25
- */
-public class BleGattChannel {
 
-    private BluetoothGatt bluetoothGatt;
-    private BluetoothGattService service;
-    private BluetoothGattCharacteristic characteristic;
+
+public class BleGattElementOnline {
+    private final BluetoothGattService service;
+    private final BluetoothGattCharacteristic characteristic;
     private BluetoothGattDescriptor descriptor;
-    private String gattInfoKey;
-    private PropertyType propertyType;
-    private UUID serviceUUID;
-    private UUID characteristicUUID;
+
+    private final UUID serviceUUID;
+    private final UUID characteristicUUID;
     private UUID descriptorUUID;
 
-    private BleGattChannel(BluetoothGatt bluetoothGatt, PropertyType propertyType, UUID serviceUUID, UUID characteristicUUID, UUID descriptorUUID) {
-        this.bluetoothGatt = bluetoothGatt;
-        this.propertyType = propertyType;
+    private BleGattElementOnline(BluetoothGatt bluetoothGatt, UUID serviceUUID, UUID characteristicUUID, UUID descriptorUUID) {
         this.serviceUUID = serviceUUID;
         this.characteristicUUID = characteristicUUID;
         this.descriptorUUID = descriptorUUID;
-        StringBuilder stringBuilder = new StringBuilder();
-        if (propertyType != null) {
-            stringBuilder.append(propertyType.getPropertyValue());
-        }
+
         if (serviceUUID != null && bluetoothGatt != null) {
             service = bluetoothGatt.getService(serviceUUID);
-            stringBuilder.append(serviceUUID.toString());
-        }
+        } else
+            service = null;
+
         if (service != null && characteristicUUID != null) {
             characteristic = service.getCharacteristic(characteristicUUID);
-            stringBuilder.append(characteristicUUID.toString());
-        }
+        } else
+            characteristic = null;
+
         if (characteristic != null && descriptorUUID != null) {
             descriptor = characteristic.getDescriptor(descriptorUUID);
-            stringBuilder.append(descriptorUUID.toString());
         }
-        gattInfoKey = stringBuilder.toString();
     }
 
-    public BluetoothGatt getBluetoothGatt() {
-        return bluetoothGatt;
+    public BleGattElementOnline(BluetoothGatt bluetoothGatt, BleGattElement element) {
+        this(bluetoothGatt, element.getServiceUuid(), element.getCharacteristicUuid(), element.getDescriptorUuid());
+    }
+
+    public BluetoothGattService getService() {
+        return service;
     }
 
     public BluetoothGattCharacteristic getCharacteristic() {
@@ -63,17 +54,14 @@ public class BleGattChannel {
         return descriptor;
     }
 
-    public BluetoothGattService getService() {
-        return service;
-    }
-
-    public BleGattChannel setDescriptor(BluetoothGattDescriptor descriptor) {
+    public BleGattElementOnline setDescriptor(BluetoothGattDescriptor descriptor) {
         this.descriptor = descriptor;
+        descriptorUUID = descriptor.getUuid();
         return this;
     }
 
-    public String getGattInfoKey() {
-        return gattInfoKey;
+    public UUID getServiceUUID() {
+        return serviceUUID;
     }
 
     public UUID getCharacteristicUUID() {
@@ -84,17 +72,8 @@ public class BleGattChannel {
         return descriptorUUID;
     }
 
-    public PropertyType getPropertyType() {
-        return propertyType;
-    }
-
-    public UUID getServiceUUID() {
-        return serviceUUID;
-    }
-
     public static class Builder {
         private BluetoothGatt bluetoothGatt;
-        private PropertyType propertyType;
         private UUID serviceUUID;
         private UUID characteristicUUID;
         private UUID descriptorUUID;
@@ -117,18 +96,13 @@ public class BleGattChannel {
             return this;
         }
 
-        public Builder setPropertyType(PropertyType propertyType) {
-            this.propertyType = propertyType;
-            return this;
-        }
-
         public Builder setServiceUUID(UUID serviceUUID) {
             this.serviceUUID = serviceUUID;
             return this;
         }
 
-        public BleGattChannel builder() {
-            return new BleGattChannel(bluetoothGatt, propertyType, serviceUUID, characteristicUUID, descriptorUUID);
+        public BleGattElementOnline builder() {
+            return new BleGattElementOnline(bluetoothGatt, serviceUUID, characteristicUUID, descriptorUUID);
         }
     }
 }
