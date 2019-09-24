@@ -83,14 +83,9 @@ public class BleDeviceGatt {
 
                 bluetoothGatt = gatt;
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                //if(bluetoothGatt != null)
-                //    bluetoothGatt.disconnect();
-
-                //close();
+                handler.removeCallbacksAndMessages(null);
 
                 if (connectCallback != null) {
-                    handler.removeCallbacksAndMessages(null);
-
                     clear();
 
                     if (status == GATT_SUCCESS) {
@@ -118,8 +113,6 @@ public class BleDeviceGatt {
             if (status == 0) {
                 ViseLog.i("onServicesDiscovered connectSuccess.");
 
-                //bluetoothGatt = gatt;
-
                 if (connectCallback != null) {
                     connectCallback.onConnectSuccess(BleDeviceGatt.this);
                 }
@@ -138,6 +131,8 @@ public class BleDeviceGatt {
         public void onCharacteristicRead(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             ViseLog.i("onCharacteristicRead  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
+            handler.removeMessages(MSG_READ_DATA_TIMEOUT);
+
             if (status == GATT_SUCCESS) {
                 readPair.first.onSuccess(characteristic.getValue(), readPair.second);
             } else {
@@ -155,6 +150,8 @@ public class BleDeviceGatt {
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
+            handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
+
             if (status == GATT_SUCCESS) {
                 writePair.first.onSuccess(characteristic.getValue(), writePair.second);
             } else {
@@ -192,6 +189,8 @@ public class BleDeviceGatt {
         public void onDescriptorRead(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             ViseLog.i("onDescriptorRead  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
+            handler.removeMessages(MSG_READ_DATA_TIMEOUT);
+
             if (status == GATT_SUCCESS) {
                 readPair.first.onSuccess(descriptor.getValue(), readPair.second);
             } else {
@@ -209,6 +208,8 @@ public class BleDeviceGatt {
         public void onDescriptorWrite(BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
             ViseLog.i("onDescriptorWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(descriptor.getValue()) +
                     "  ,thread: " + Thread.currentThread());
+            handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
+
             if (status == GATT_SUCCESS) {
                 writePair.first.onSuccess(descriptor.getValue(), writePair.second);
             } else {
