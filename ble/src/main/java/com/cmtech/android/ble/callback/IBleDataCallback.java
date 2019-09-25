@@ -1,7 +1,7 @@
 package com.cmtech.android.ble.callback;
 
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.extend.BleGattElementOnline;
+import com.cmtech.android.ble.extend.BleGattElement;
 
 /**
  *
@@ -17,7 +17,7 @@ import com.cmtech.android.ble.extend.BleGattElementOnline;
 
 public interface IBleDataCallback {
     // 数据操作成功
-    void onSuccess(byte[] data, BleGattElementOnline gattElement);
+    void onSuccess(byte[] data, BleGattElement element);
 
     // 数据操作失败
     void onFailure(BleException exception);

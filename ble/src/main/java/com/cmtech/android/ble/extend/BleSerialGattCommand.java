@@ -8,9 +8,9 @@ import com.vise.log.ViseLog;
 
 /**
  *
- * ClassName:      BleSerialGattCommandExecutor
+ * ClassName:      BleSerialGattCommand
  * Description:    串行Gatt命令，所谓串行是指当命令发出后，并不立即执行下一条命令。
- *                 而是等待接收到蓝牙设备返回的响应后，才继续执行下一条命令
+ *                 而是等待接收到蓝牙设备返回的响应并执行回调后，才会继续执行下一条命令
  * Author:         chenm
  * CreateDate:     2019-06-20 07:02
  * UpdateUser:     chenm
@@ -31,8 +31,8 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         @Override
-        public void onSuccess(byte[] data, BleGattElementOnline bleGattElementOnline) {
-            onSerialCommandSuccess(bleCallback, data, bleGattElementOnline);
+        public void onSuccess(byte[] data, BleGattElement element) {
+            onSerialCommandSuccess(bleCallback, data, element);
         }
 
         @Override
@@ -44,11 +44,11 @@ class BleSerialGattCommand extends BleGattCommand {
     private BleSerialGattCommand(BleGattCommand gattCommand) {
         super(gattCommand);
 
-        dataOpCallback = new BleSerialCommandDataCallbackDecorator(dataOpCallback);
+        dataCallback = new BleSerialCommandDataCallbackDecorator(dataCallback);
     }
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, PropertyType propertyType, byte[] data,
-                                       IBleDataCallback dataCallback, IBleDataCallback notifyCallback) {
+                                       IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         if(device.getBleDeviceGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
@@ -58,7 +58,7 @@ class BleSerialGattCommand extends BleGattCommand {
                 .setPropertyType(propertyType)
                 .setData(data)
                 .setDataCallback(dataCallback)
-                .setNotifyOpCallback(notifyCallback).build();
+                .setReceiveCallback(receiveCallback).build();
 
         return new BleSerialGattCommand(command);
     }
@@ -74,7 +74,7 @@ class BleSerialGattCommand extends BleGattCommand {
         return true;
     }
 
-    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattElementOnline bleGattElementOnline) {
+    private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattElement bleGattElement) {
         if(data == null) {
             ViseLog.i("Command Success: <" + this + ">");
         } else {
@@ -82,7 +82,7 @@ class BleSerialGattCommand extends BleGattCommand {
         }
 
         if(bleCallback != null) {
-            bleCallback.onSuccess(data, bleGattElementOnline);
+            bleCallback.onSuccess(data, bleGattElement);
         }
 
         done = true;

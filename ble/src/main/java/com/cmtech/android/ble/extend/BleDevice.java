@@ -516,16 +516,16 @@ public abstract class BleDevice {
         gattCmdExecutor.write(element, data, dataCallback);
     }
 
-    protected final void notify(BleGattElement element, boolean enable, IBleDataCallback notifyOpCallback) {
-        gattCmdExecutor.notify(element, enable, notifyOpCallback);
+    protected final void notify(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+        gattCmdExecutor.notify(element, enable, receiveCallback);
     }
 
-    protected final void indicate(BleGattElement element, boolean enable, IBleDataCallback indicateOpCallback) {
-        gattCmdExecutor.indicate(element, enable, indicateOpCallback);
+    protected final void indicate(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+        gattCmdExecutor.indicate(element, enable, receiveCallback);
     }
 
-    protected final void runInstantly(IBleDataCallback dataCallback) {
-        gattCmdExecutor.runInstantly(dataCallback);
+    protected final void runInstantly(IBleDataCallback callback) {
+        gattCmdExecutor.runInstantly(callback);
     }
 
 

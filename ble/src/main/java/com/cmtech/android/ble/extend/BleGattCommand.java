@@ -8,7 +8,7 @@ import com.cmtech.android.ble.utils.HexUtil;
 /**
   *
   * ClassName:      BleGattCommand
-  * Description:    表示一条Gatt命令
+  * Description:    表示一条Gatt命令，包含Gatt命令执行所需的全部信息
   * Author:         chenm
   * CreateDate:     2018-03-01 06:42
   * UpdateUser:     chenm
@@ -19,34 +19,22 @@ import com.cmtech.android.ble.utils.HexUtil;
 
 class BleGattCommand{
     final BleDevice device; // 执行命令的设备
-
-    private final BleGattElementOnline channel; // 执行命令的通道
-
+    private final BleGattElement element; // 执行命令的通道
     private final PropertyType propertyType;
-
-    IBleDataCallback dataOpCallback; // 数据操作回调
-
+    IBleDataCallback dataCallback; // 数据操作回调
     private final byte[] writtenData; // 如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable数据
-
-    private final IBleDataCallback notifyOpCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
-
+    private final IBleDataCallback receiveCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
     private final String elementString; // 命令操作的element的描述符
 
-    private BleGattCommand(BleDevice device, BleGattElementOnline channel, PropertyType propertyType,
-                           IBleDataCallback dataOpCallback,
-                           byte[] writtenData, IBleDataCallback notifyOpCallback, String elementString) {
+    private BleGattCommand(BleDevice device, BleGattElement element, PropertyType propertyType,
+                           IBleDataCallback dataCallback,
+                           byte[] writtenData, IBleDataCallback receiveCallback, String elementString) {
         this.device = device;
-
-        this.channel = channel;
-
+        this.element = element;
         this.propertyType = propertyType;
-
-        this.dataOpCallback = dataOpCallback;
-
+        this.dataCallback = dataCallback;
         this.writtenData = writtenData;
-
-        this.notifyOpCallback = notifyOpCallback;
-
+        this.receiveCallback = receiveCallback;
         this.elementString = elementString;
     }
 
@@ -55,17 +43,11 @@ class BleGattCommand{
             throw new NullPointerException();
 
         this.device = gattCommand.device;
-
-        this.channel = gattCommand.channel;
-
+        this.element = gattCommand.element;
         this.propertyType = gattCommand.propertyType;
-
-        this.dataOpCallback = gattCommand.dataOpCallback;
-
+        this.dataCallback = gattCommand.dataCallback;
         this.writtenData = gattCommand.writtenData;
-
-        this.notifyOpCallback = gattCommand.notifyOpCallback;
-
+        this.receiveCallback = gattCommand.receiveCallback;
         this.elementString = gattCommand.elementString;
     }
 
@@ -75,28 +57,27 @@ class BleGattCommand{
      */
     boolean execute() throws InterruptedException{
         if(propertyType == PropertyType.PROPERTY_INSTANTRUN) {
-            if(dataOpCallback == null) {
-                throw new NullPointerException("The dataOpCallback of instant commands is null. ");
+            if(dataCallback == null) {
+                throw new NullPointerException("The dataCallback of instant commands is null. ");
             }
 
-            dataOpCallback.onSuccess(null, null);
+            dataCallback.onSuccess(null, null);
 
             return true;
         }
-
-        if(device == null || device.getBleDeviceGatt() == null || channel == null) {
-            throw new NullPointerException("The gatt or channel of the non-instant commands is null.");
+        if(device == null || device.getBleDeviceGatt() == null || element == null) {
+            throw new NullPointerException("The gatt or element of the non-instant commands is null.");
         }
 
         BleDeviceGatt bleDeviceGatt = device.getBleDeviceGatt();
 
         switch (propertyType) {
             case PROPERTY_READ:
-                bleDeviceGatt.readData(channel, dataOpCallback);
+                bleDeviceGatt.readData(element, dataCallback);
                 break;
 
             case PROPERTY_WRITE:
-                bleDeviceGatt.writeData(channel, dataOpCallback, writtenData);
+                bleDeviceGatt.writeData(element, dataCallback, writtenData);
                 break;
 
             case PROPERTY_NOTIFY:
@@ -104,9 +85,9 @@ class BleGattCommand{
                 boolean isIndication = (propertyType == PropertyType.PROPERTY_INDICATE);
 
                 if(writtenData[0] == 1) { // enable
-                    bleDeviceGatt.enable(channel, dataOpCallback, notifyOpCallback, true, isIndication);
+                    bleDeviceGatt.enable(element, dataCallback, receiveCallback, true, isIndication);
                 } else { // disable
-                    bleDeviceGatt.enable(channel, dataOpCallback, notifyOpCallback, false, isIndication);
+                    bleDeviceGatt.enable(element, dataCallback, receiveCallback, false, isIndication);
                 }
                 break;
 
@@ -139,17 +120,12 @@ class BleGattCommand{
     }
 
     static class Builder {
-        private BleGattElement element;
-
-        private PropertyType propertyType;
-
         private BleDevice device;
-
+        private BleGattElement element;
+        private PropertyType propertyType;
         private byte[] data;
-
         private IBleDataCallback dataCallback;
-
-        private IBleDataCallback notifyOpCallback;
+        private IBleDataCallback receiveCallback;
 
         Builder() {
         }
@@ -184,8 +160,8 @@ class BleGattCommand{
             return this;
         }
 
-        Builder setNotifyOpCallback(IBleDataCallback notifyOpCallback) {
-            this.notifyOpCallback = notifyOpCallback;
+        Builder setReceiveCallback(IBleDataCallback receiveCallback) {
+            this.receiveCallback = receiveCallback;
 
             return this;
         }
@@ -193,7 +169,7 @@ class BleGattCommand{
         BleGattCommand build() {
             if(propertyType == PropertyType.PROPERTY_INSTANTRUN) {
                 if(dataCallback == null) {
-                    throw new NullPointerException("The dataOpCallback of instant commands is null. ");
+                    throw new NullPointerException("The dataCallback of instant commands is null. ");
                 }
 
                 return new BleGattCommand(null, null, propertyType, dataCallback,
@@ -215,19 +191,12 @@ class BleGattCommand{
 
                 if (propertyType == PropertyType.PROPERTY_NOTIFY
                         || propertyType == PropertyType.PROPERTY_INDICATE) {
-                    if (data[0] == 1 && notifyOpCallback == null) {
-                        throw new NullPointerException("The callback of the 'enable' notify or indicate commands is null");
+                    if (data[0] == 1 && receiveCallback == null) {
+                        throw new NullPointerException("The receive callback of the 'enable' notify or indicate commands is null");
                     }
                 }
 
-                BleGattElementOnline.Builder builder = new BleGattElementOnline.Builder();
-
-                BleGattElementOnline channel = builder.setBluetoothGatt(device.getBleDeviceGatt().getBluetoothGatt())
-                        .setServiceUUID(element.getServiceUuid())
-                        .setCharacteristicUUID(element.getCharacteristicUuid())
-                        .setDescriptorUUID(element.getDescriptorUuid()).builder();
-
-                return new BleGattCommand(device, channel, propertyType, dataCallback, data, notifyOpCallback, element.toString());
+                return new BleGattCommand(device, element, propertyType, dataCallback, data, receiveCallback, element.toString());
             }
         }
     }

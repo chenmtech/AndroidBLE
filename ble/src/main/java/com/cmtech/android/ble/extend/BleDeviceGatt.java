@@ -15,7 +15,6 @@ import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleRssiCallback;
 import com.cmtech.android.ble.common.BleConfig;
-import com.cmtech.android.ble.common.BleConstant;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
@@ -33,15 +32,27 @@ import static com.cmtech.android.ble.common.BleConstant.MSG_CONNECT_TIMEOUT;
 import static com.cmtech.android.ble.common.BleConstant.MSG_READ_DATA_TIMEOUT;
 import static com.cmtech.android.ble.common.BleConstant.MSG_WRITE_DATA_TIMEOUT;
 
+/**
+ *
+ * ClassName:      BleDeviceGatt
+ * Description:    设备Gatt操作类，完成Gatt操作
+ * Author:         chenm
+ * CreateDate:     2018-06-27 08:56
+ * UpdateUser:     chenm
+ * UpdateDate:     2019-06-28 08:56
+ * UpdateRemark:   更新说明
+ * Version:        1.0
+ */
+
 public class BleDeviceGatt {
 
     private BluetoothGatt bluetoothGatt; //底层蓝牙GATT
     private IBleRssiCallback rssiCallback; //获取信号值回调
     private IBleConnectCallback connectCallback;//连接回调
 
-    private volatile Pair<BleGattElementOnline, IBleDataCallback> readChannelCallback = null; // 读操作的Channel和Callback
-    private volatile Pair<BleGattElementOnline, IBleDataCallback> writeChannelCallback = null; // 写操作的Channel和Callback
-    private volatile Map<UUID, Pair<BleGattElementOnline, IBleDataCallback>> notifyChannelCallbackMap = new HashMap<>(); // Notify或Indicate操作的Channel和Callback Map
+    private volatile Pair<BleGattElement, IBleDataCallback> readChannelCallback = null; // 读操作的Channel和Callback
+    private volatile Pair<BleGattElement, IBleDataCallback> writeChannelCallback = null; // 写操作的Channel和Callback
+    private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyChannelCallbackMap = new HashMap<>(); // Notify或Indicate操作的Channel和Callback Map
 
     private final Handler handler = new Handler(Looper.myLooper()) {
         @Override
@@ -159,10 +170,9 @@ public class BleDeviceGatt {
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
             ViseLog.i("onCharacteristicChanged data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
-            for (Map.Entry<UUID, Pair<BleGattElementOnline, IBleDataCallback>> notifyEntry : notifyChannelCallbackMap.entrySet()) {
+            for (Map.Entry<UUID, Pair<BleGattElement, IBleDataCallback>> notifyEntry : notifyChannelCallbackMap.entrySet()) {
                 UUID notifyKey = notifyEntry.getKey();
-                Pair<BleGattElementOnline, IBleDataCallback> notifyValue = notifyEntry.getValue();
-
+                Pair<BleGattElement, IBleDataCallback> notifyValue = notifyEntry.getValue();
                 if(notifyValue != null && notifyValue.second != null && notifyKey.equals(characteristic.getUuid())) {
                     notifyValue.second.onSuccess(characteristic.getValue(), notifyValue.first);
                     break;
@@ -260,9 +270,8 @@ public class BleDeviceGatt {
     /**
      * 读取数据
      */
-    public synchronized boolean readData(BleGattElementOnline bleGattElementOnline, IBleDataCallback bleDataCallback) {
-        if (bleDataCallback == null || bleGattElementOnline == null) {
-            ViseLog.e("The callback or channel is null.");
+    public synchronized boolean readData(BleGattElement gattElement, IBleDataCallback dataCallback) {
+        if (bluetoothGatt == null || dataCallback == null || gattElement == null) {
             return false;
         }
 
@@ -270,15 +279,18 @@ public class BleDeviceGatt {
         handler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
-
-        if (bluetoothGatt != null && bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() != null) {
-            success = bluetoothGatt.readDescriptor(bleGattElementOnline.getDescriptor());
-        } else if (bluetoothGatt != null && bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() == null) {
-            success = bluetoothGatt.readCharacteristic(bleGattElementOnline.getCharacteristic());
+        BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
+        BluetoothGattDescriptor descriptor = gattElement.getDescriptor(bluetoothGatt);
+        if(characteristic != null) {
+            if (descriptor != null) {
+                success = bluetoothGatt.readDescriptor(descriptor);
+            } else {
+                success = bluetoothGatt.readCharacteristic(characteristic);
+            }
         }
 
         if(success)
-            readChannelCallback = Pair.create(bleGattElementOnline, bleDataCallback);
+            readChannelCallback = Pair.create(gattElement, dataCallback);
 
         return success;
     }
@@ -288,14 +300,12 @@ public class BleDeviceGatt {
      *
      * @param data written data
      */
-    public synchronized boolean writeData(BleGattElementOnline bleGattElementOnline, IBleDataCallback bleDataCallback, byte[] data) {
+    public synchronized boolean writeData(BleGattElement gattElement, IBleDataCallback dataCallback, byte[] data) {
         if (data == null || data.length > 20) {
             ViseLog.e("this data is null or length beyond 20 byte.");
             return false;
         }
-
-        if(bleDataCallback == null || bleGattElementOnline == null) {
-            ViseLog.e("The callback or channel is null.");
+        if(bluetoothGatt == null || dataCallback == null || gattElement == null) {
             return false;
         }
 
@@ -303,16 +313,20 @@ public class BleDeviceGatt {
         handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
-        if (bluetoothGatt != null && bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() != null) {
-            bleGattElementOnline.getDescriptor().setValue(data);
-            success = bluetoothGatt.writeDescriptor(bleGattElementOnline.getDescriptor());
-        } else if (bluetoothGatt != null && bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() == null) {
-            bleGattElementOnline.getCharacteristic().setValue(data);
-            success = bluetoothGatt.writeCharacteristic(bleGattElementOnline.getCharacteristic());
+        BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
+        BluetoothGattDescriptor descriptor = gattElement.getDescriptor(bluetoothGatt);
+        if(characteristic != null) {
+            if (descriptor != null) {
+                descriptor.setValue(data);
+                success = bluetoothGatt.writeDescriptor(descriptor);
+            } else {
+                characteristic.setValue(data);
+                success = bluetoothGatt.writeCharacteristic(characteristic);
+            }
         }
 
         if(success)
-            writeChannelCallback = Pair.create(bleGattElementOnline, bleDataCallback);
+            writeChannelCallback = Pair.create(gattElement, dataCallback);
 
         return success;
     }
@@ -324,9 +338,8 @@ public class BleDeviceGatt {
      * @param isIndication 是否是指示器方式
      * @return isSuccess
      */
-    public synchronized boolean enable(BleGattElementOnline bleGattElementOnline, IBleDataCallback bleDataCallback, IBleDataCallback receiveCallback, boolean enable, boolean isIndication) {
-        if(bleDataCallback == null || bleGattElementOnline == null || receiveCallback == null) {
-            ViseLog.e("The callback or channel is null.");
+    public synchronized boolean enable(BleGattElement gattElement, IBleDataCallback dataCallback, IBleDataCallback receiveCallback, boolean enable, boolean isIndication) {
+        if(bluetoothGatt == null || dataCallback == null || gattElement == null) {
             return false;
         }
 
@@ -334,55 +347,41 @@ public class BleDeviceGatt {
         handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
-        if (bluetoothGatt != null && bleGattElementOnline.getCharacteristic() != null) {
-            success = bluetoothGatt.setCharacteristicNotification(bleGattElementOnline.getCharacteristic(), enable);
+        BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
+        BluetoothGattDescriptor descriptor = gattElement.getDescriptor(bluetoothGatt);
+        if(characteristic == null || descriptor == null) {
+            return false;
         }
-        BluetoothGattDescriptor bluetoothGattDescriptor = null;
-        if (bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() != null) {
-            bluetoothGattDescriptor = bleGattElementOnline.getDescriptor();
-        } else if (bleGattElementOnline.getCharacteristic() != null && bleGattElementOnline.getDescriptor() == null) {
-            if (bleGattElementOnline.getCharacteristic().getDescriptors() != null
-                    && bleGattElementOnline.getCharacteristic().getDescriptors().size() == 1) {
-                bluetoothGattDescriptor = bleGattElementOnline.getCharacteristic().getDescriptors().get(0);
-            } else {
-                bluetoothGattDescriptor = bleGattElementOnline.getCharacteristic()
-                        .getDescriptor(UUID.fromString(BleConstant.CLIENT_CHARACTERISTIC_CONFIG));
-            }
-        }
-        if (bluetoothGattDescriptor != null) {
-            bleGattElementOnline.setDescriptor(bluetoothGattDescriptor);
+        success = bluetoothGatt.setCharacteristicNotification(characteristic, enable);
+        if(success) {
             if (isIndication) {
                 if (enable) {
-                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
                 } else {
-                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                    descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
                 }
             } else {
                 if (enable) {
-                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                    descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
                 } else {
-                    bluetoothGattDescriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+                    descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
                 }
             }
-            if (bluetoothGatt != null) {
-                bluetoothGatt.writeDescriptor(bluetoothGattDescriptor);
-            }
+            success = bluetoothGatt.writeDescriptor(descriptor);
         }
 
         if(success) {
-            writeChannelCallback = Pair.create(bleGattElementOnline, bleDataCallback);
+            writeChannelCallback = Pair.create(gattElement, dataCallback);
 
             if(enable) {
-                notifyChannelCallbackMap.put(bleGattElementOnline.getCharacteristicUUID(), Pair.create(bleGattElementOnline, receiveCallback));
+                notifyChannelCallbackMap.put(gattElement.getCharacteristicUUID(), Pair.create(gattElement, receiveCallback));
             } else {
-                notifyChannelCallbackMap.remove(bleGattElementOnline.getCharacteristicUUID());
+                notifyChannelCallbackMap.remove(gattElement.getCharacteristicUUID());
             }
         }
 
         return success;
     }
-
-
 
     /**
      * 获取设备信号值
@@ -442,9 +441,7 @@ public class BleDeviceGatt {
     public synchronized void close() {
         if (bluetoothGatt != null) {
             ViseLog.e("BluetoothGatt is closed");
-
             bluetoothGatt.close();
-
             bluetoothGatt = null;
         }
     }

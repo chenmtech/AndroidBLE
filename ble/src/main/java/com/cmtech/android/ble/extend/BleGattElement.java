@@ -29,46 +29,38 @@ public class BleGattElement {
     private static final int TYPE_DESCRIPTOR = 3;          // descriptor element类型
 
     private final UUID serviceUuid; // 服务UUID
-
     private final UUID characteristicUuid; // 特征UUID
-
     private final UUID descriptorUuid; // 描述符UUID
-
     private final String description; // element的描述
 
     // 用短的UUID字符串构建Element
-    public BleGattElement(String serviceShortString, String characteristicShortString, String descriptorShortString, String baseUuidString, String description) {
-        this(UuidUtil.shortStringToUuid(serviceShortString, baseUuidString),
-             UuidUtil.shortStringToUuid(characteristicShortString, baseUuidString),
-             UuidUtil.shortStringToUuid(descriptorShortString, baseUuidString), description);
+    public BleGattElement(String serviceString, String characteristicString, String descriptorString, String baseUuidString, String description) {
+        this(UuidUtil.stringToUuid(serviceString, baseUuidString),
+             UuidUtil.stringToUuid(characteristicString, baseUuidString),
+             UuidUtil.stringToUuid(descriptorString, baseUuidString), description);
     }
 
     // 用UUID构建Element
     private BleGattElement(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, String description) {
         this.serviceUuid = serviceUuid;
-
         this.characteristicUuid = characteristicUuid;
-
         this.descriptorUuid = descriptorUuid;
 
         String servStr = (serviceUuid == null) ? null : UuidUtil.longToShortString(serviceUuid.toString());
-
         String charaStr = (characteristicUuid == null) ? null : UuidUtil.longToShortString(characteristicUuid.toString());
-
         String descStr = (descriptorUuid == null) ? null : UuidUtil.longToShortString(descriptorUuid.toString());
-
         this.description = description + "[" + servStr + "-" + charaStr + "-" + descStr + "]";
     }
 
-    UUID getServiceUuid() {
+    UUID getServiceUUID() {
         return serviceUuid;
     }
 
-    UUID getCharacteristicUuid() {
+    UUID getCharacteristicUUID() {
         return characteristicUuid;
     }
 
-    UUID getDescriptorUuid() {
+    UUID getDescriptorUUID() {
         return descriptorUuid;
     }
 
@@ -76,37 +68,42 @@ public class BleGattElement {
     Object retrieveGattObject(BleDevice device) {
         if(device == null) return null;
 
-        return retrieveGattObject(device.getBleDeviceGatt());
+        return retrieveGattObject(device.getBleDeviceGatt().getBluetoothGatt());
     }
 
     // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
-    private Object retrieveGattObject(BleDeviceGatt bleDeviceGatt) {
-
-        if(bleDeviceGatt == null || bleDeviceGatt.getBluetoothGatt() == null) return null;
-
-        BluetoothGatt gatt = bleDeviceGatt.getBluetoothGatt();
+    private Object retrieveGattObject(BluetoothGatt gatt) {
+        if(gatt == null) return null;
 
         BluetoothGattService service;
-
         BluetoothGattCharacteristic characteristic;
-
         BluetoothGattDescriptor descriptor;
-
         Object element = null;
-
         if( (service = gatt.getService(serviceUuid)) != null) {
             element = service;
-
             if( (characteristic = service.getCharacteristic(characteristicUuid)) != null ) {
                 element = characteristic;
-
                 if( (descriptor = characteristic.getDescriptor(descriptorUuid)) != null ) {
                     element = descriptor;
                 }
             }
         }
-
         return element;
+    }
+
+    BluetoothGattCharacteristic getCharacteristic(BluetoothGatt gatt) {
+        BluetoothGattService service;
+        if( (service = gatt.getService(serviceUuid)) != null) {
+            return service.getCharacteristic(characteristicUuid);
+        }
+        return null;
+    }
+
+    BluetoothGattDescriptor getDescriptor(BluetoothGatt gatt) {
+        Object element = retrieveGattObject(gatt);
+        if(element instanceof BluetoothGattDescriptor)
+            return (BluetoothGattDescriptor)element;
+        return null;
     }
 
     // element的类型

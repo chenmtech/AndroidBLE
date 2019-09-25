@@ -20,10 +20,17 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * @Description: 设备信息
- * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
- * @date: 16/8/5 20:44.
+ *
+ * ClassName:      BleDeviceDetailInfo
+ * Description:    设备详细信息，当成功扫描到设备后保存设备的详细信息
+ * Author:         chenm
+ * CreateDate:     2018-06-27 08:56
+ * UpdateUser:     chenm
+ * UpdateDate:     2019-06-28 08:56
+ * UpdateRemark:   更新说明
+ * Version:        1.0
  */
+
 public class BleDeviceDetailInfo implements Parcelable {
 
     /**

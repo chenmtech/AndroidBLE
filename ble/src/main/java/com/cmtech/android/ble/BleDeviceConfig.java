@@ -35,11 +35,11 @@ public class BleDeviceConfig {
         BleDeviceType.addSupportedType(deviceType);
     }
 
-    public static void setConnectStateDescription(BleDeviceState connectState, String description) {
+    public static void setStateDescription(BleDeviceState connectState, String description) {
         connectState.setDescription(description);
     }
 
-    public static void setConnectStateIcon(BleDeviceState connectState, int icon) {
+    public static void setStateIcon(BleDeviceState connectState, int icon) {
         connectState.setIcon(icon);
     }
 

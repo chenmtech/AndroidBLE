@@ -71,7 +71,7 @@ class BleSerialGattCommandExecutor {
                 null, dataCallback, null);
 
         if(command != null)
-            executeCommand(command);
+            sendCommand(command);
     }
 
     // 写多字节
@@ -80,7 +80,7 @@ class BleSerialGattCommandExecutor {
                 data, dataCallback, null);
 
         if(command != null)
-            executeCommand(command);
+            sendCommand(command);
     }
 
     // 写单字节
@@ -89,31 +89,31 @@ class BleSerialGattCommandExecutor {
     }
 
     // Notify
-    final void notify(BleGattElement element, boolean enable, IBleDataCallback notifyOpCallback) {
-        notify(element, enable, null, notifyOpCallback);
+    final void notify(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+        notify(element, enable, null, receiveCallback);
     }
 
     private void notify(BleGattElement element, boolean enable
-            , IBleDataCallback dataCallback, IBleDataCallback notifyOpCallback) {
+            , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_NOTIFY,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, notifyOpCallback);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
 
         if(command != null)
-            executeCommand(command);
+            sendCommand(command);
     }
 
     // Indicate
-    final void indicate(BleGattElement element, boolean enable, IBleDataCallback indicateOpCallback) {
-        indicate(element, enable, null, indicateOpCallback);
+    final void indicate(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+        indicate(element, enable, null, receiveCallback);
     }
 
     private void indicate(BleGattElement element, boolean enable
-            , IBleDataCallback dataCallback, IBleDataCallback indicateOpCallback) {
+            , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, PropertyType.PROPERTY_INDICATE,
-                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, indicateOpCallback);
+                (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
 
         if(command != null)
-            executeCommand(command);
+            sendCommand(command);
     }
 
     // 无需等待响应立刻执行完毕
@@ -122,10 +122,10 @@ class BleSerialGattCommandExecutor {
                 null, dataCallback, null);
 
         if(command != null)
-            executeCommand(command);
+            sendCommand(command);
     }
 
-    private void executeCommand(final BleGattCommand command) {
+    private void sendCommand(final BleGattCommand command) {
         if(isAlive()) {
             gattCmdService.execute(new Runnable() {
                 @Override

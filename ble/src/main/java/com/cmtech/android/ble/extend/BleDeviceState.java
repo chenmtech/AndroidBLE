@@ -5,7 +5,7 @@ import com.cmtech.android.ble.R;
 /**
   *
   * ClassName:      BleDeviceState
-  * Description:    BleDevice设备状态，在BLE包基础上增加了扫描中和关闭两个状态
+  * Description:    BleDevice设备状态类
   * Author:         chenm
   * CreateDate:     2018/4/21 下午4:47
   * UpdateUser:     chenm
@@ -24,50 +24,35 @@ public class BleDeviceState {
     private static final int CONNECT_DISCONNECT_CODE = 0x06; // 连接断开
 
     public static final BleDeviceState DEVICE_CLOSED = new BleDeviceState(DEVICE_CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
-
     public static final BleDeviceState DEVICE_SCANNING = new BleDeviceState(DEVICE_SCANNING_CODE, "正在扫描", R.mipmap.ic_scanning_32px);
-
     public static final BleDeviceState DEVICE_CONNECTING = new BleDeviceState(DEVICE_CONNECTING_CODE, "正在连接", R.mipmap.ic_connecting_32px);
-
     public static final BleDeviceState DEVICE_DISCONNECTING = new BleDeviceState(DEVICE_DISCONNECTING_CODE, "正在断开", R.mipmap.ic_connecting_32px);
-
     public static final BleDeviceState CONNECT_SUCCESS = new BleDeviceState(CONNECT_SUCCESS_CODE, "连接成功", R.mipmap.ic_connected_32px);
-
     public static final BleDeviceState CONNECT_FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
-
     public static final BleDeviceState CONNECT_DISCONNECT = new BleDeviceState(CONNECT_DISCONNECT_CODE, "连接断开", R.mipmap.ic_disconnect_32px);
 
-    private int code;
-
-    private String description;
-
-    private int icon;
+    private final int code; // 状态码
+    private String description; // 状态描述
+    private int icon; // 状态图标
 
     private BleDeviceState(int code, String description, int icon) {
         this.code = code;
-
         this.description = description;
-
         this.icon = icon;
     }
-
 
     public int getCode() {
         return code;
     }
-
     public String getDescription() {
         return description;
     }
-
     public void setDescription(String description) {
         this.description = description;
     }
-
     public int getIcon() {
         return icon;
     }
-
     public void setIcon(int icon) {
         this.icon = icon;
     }
