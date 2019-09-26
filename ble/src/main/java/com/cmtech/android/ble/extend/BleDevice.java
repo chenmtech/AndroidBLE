@@ -444,7 +444,7 @@ public abstract class BleDevice {
     private void processConnectFailure(final BleException bleException) {
         ViseLog.e("处理连接失败: " + bleException );
 
-        if(connectState != CONNECT_FAILURE) {
+        if(state != CONNECT_FAILURE) {
             gattCmdExecutor.stop();
 
             bleDeviceGatt = null;
@@ -461,7 +461,7 @@ public abstract class BleDevice {
 
     // 处理连接断开
     private void processDisconnect() {
-        if(connectState != CONNECT_DISCONNECT) {
+        if(state != CONNECT_DISCONNECT) {
             ViseLog.e("处理连接断开");
 
             gattCmdExecutor.stop();

@@ -85,7 +85,7 @@ public class BleDeviceGatt {
                 bluetoothGatt = gatt;
                 gatt.discoverServices();
             } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                handler.removeCallbacksAndMessages(null);
+                //handler.removeCallbacksAndMessages(null);
 
                 clear();
                 if (connectCallback != null) {
@@ -275,7 +275,7 @@ public class BleDeviceGatt {
             return false;
         }
 
-        handler.removeMessages(MSG_READ_DATA_TIMEOUT);
+        //handler.removeMessages(MSG_READ_DATA_TIMEOUT);
         handler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
@@ -309,7 +309,7 @@ public class BleDeviceGatt {
             return false;
         }
 
-        handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
+        //handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
         handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
@@ -343,7 +343,7 @@ public class BleDeviceGatt {
             return false;
         }
 
-        handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
+        //handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
         handler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
 
         boolean success = false;
@@ -407,13 +407,13 @@ public class BleDeviceGatt {
     /**
      * 主动断开设备连接
      */
-    public synchronized void disconnect() {
+    void disconnect() {
         if (bluetoothGatt != null) {
             ViseLog.e("BluetoothGatt is disconnected");
 
             bluetoothGatt.disconnect();
         }
-        handler.removeCallbacksAndMessages(null);
+        //handler.removeCallbacksAndMessages(null);
     }
 
     /**
@@ -438,7 +438,7 @@ public class BleDeviceGatt {
     /**
      * 关闭GATT
      */
-    public synchronized void close() {
+    private void close() {
         if (bluetoothGatt != null) {
             ViseLog.e("BluetoothGatt is closed");
             bluetoothGatt.close();
@@ -475,7 +475,7 @@ public class BleDeviceGatt {
      * @param bleException 回调异常
      */
     private void connectFailure(BleException bleException) {
-        handler.removeCallbacksAndMessages(null);
+        handler.removeMessages(MSG_CONNECT_TIMEOUT);
         clear();
         if (connectCallback != null) {
             connectCallback.onConnectFailure(bleException);
@@ -489,7 +489,7 @@ public class BleDeviceGatt {
      * @param bleException exception
      */
     private void readFailure(BleException bleException) {
-        handler.removeCallbacksAndMessages(null);
+        handler.removeMessages(MSG_READ_DATA_TIMEOUT);
         if(readChannelCallback.second != null)
             readChannelCallback.second.onFailure(bleException);
         ViseLog.i("readFailure " + bleException);
@@ -501,7 +501,7 @@ public class BleDeviceGatt {
      * @param bleException exception
      */
     private void writeFailure(BleException bleException) {
-        handler.removeCallbacksAndMessages(null);
+        handler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
         if(writeChannelCallback.second != null)
             writeChannelCallback.second.onFailure(bleException);
         ViseLog.i("writeFailure " + bleException);
