@@ -61,7 +61,6 @@ public abstract class BleDevice {
     private int battery = -1; // 设备电池电量
     private final List<OnBleDeviceStateListener> stateListeners; // 设备状态监听器列表
     private final Handler mHandler;
-    private final Handler callbackHandler;
     private ExecutorService connService; // 定时连接服务
 
     // 扫描回调
@@ -112,34 +111,19 @@ public abstract class BleDevice {
         // 连接成功
         @Override
         public void onConnectSuccess(final BleDeviceGatt bleDeviceGatt) {
-            callbackHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    processConnectSuccess(bleDeviceGatt);
-                }
-            });
+            processConnectSuccess(bleDeviceGatt);
         }
 
         // 连接失败
         @Override
         public void onConnectFailure(final BleException exception) {
-            callbackHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    processConnectFailure(exception);
-                }
-            });
+            processConnectFailure(exception);
         }
 
         // 连接中断
         @Override
         public void onDisconnect() {
-            callbackHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    processDisconnect();
-                }
-            });
+            processDisconnect();
         }
     };
 
@@ -150,7 +134,6 @@ public abstract class BleDevice {
         scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
         mHandler = new Handler(Looper.getMainLooper());
-        callbackHandler = new Handler(Looper.getMainLooper());
         stateListeners = new LinkedList<>();
     }
 
@@ -160,15 +143,10 @@ public abstract class BleDevice {
 
     public void updateRegisterInfo(BleDeviceRegisterInfo registerInfo) {
         this.registerInfo.setMacAddress(registerInfo.getMacAddress());
-
         this.registerInfo.setUuidString(registerInfo.getUuidString());
-
         this.registerInfo.setImagePath(registerInfo.getImagePath());
-
         this.registerInfo.setAutoConnect(registerInfo.autoConnect());
-
         this.registerInfo.setReconnectTimes(registerInfo.getReconnectTimes());
-
         this.registerInfo.setWarnAfterReconnectFailure(registerInfo.isWarnAfterReconnectFailure());
     }
 
@@ -298,8 +276,6 @@ public abstract class BleDevice {
         } else if(state == CONNECT_SUCCESS) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
 
-            mHandler.removeCallbacksAndMessages(null);
-
             disconnect(); // 设备处于连接成功时，断开连接
         } else if(state == DEVICE_SCANNING) {
             stopScanForever();
@@ -345,6 +321,7 @@ public abstract class BleDevice {
     public void disconnect() {
         ViseLog.e("BleDevice.disconnect()");
 
+        mHandler.removeCallbacksAndMessages(null);
         mHandler.post(new Runnable() {
             @Override
             public void run() {
