@@ -51,29 +51,17 @@ public abstract class BleDevice {
     private static final int CONNECT_INTERVAL_IN_SECOND = 20; // 自动连接间隔秒数
 
     private final Context context;
-
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备实时状态
-
     private volatile BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
-
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
-
-    private BleDeviceDetailInfo deviceDetailInfo;//设备详细信息
-
+    private BleDeviceDetailInfo deviceDetailInfo;//设备详细信息，扫描到设备后赋值
     private BleDeviceGatt bleDeviceGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
-
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
-
     private final ScanFilter scanFilter; // 扫描过滤器
-
     private int battery = -1; // 设备电池电量
-
     private final List<OnBleDeviceStateListener> stateListeners; // 设备状态监听器列表
-
     private final Handler mHandler;
-
     private final Handler callbackHandler;
-
     private ExecutorService connService; // 定时连接服务
 
     // 扫描回调
@@ -158,17 +146,11 @@ public abstract class BleDevice {
 
     public BleDevice(Context context, BleDeviceRegisterInfo registerInfo) {
         this.context = context;
-
         this.registerInfo = registerInfo;
-
         scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
-
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-
         mHandler = new Handler(Looper.getMainLooper());
-
         callbackHandler = new Handler(Looper.getMainLooper());
-
         stateListeners = new LinkedList<>();
     }
 

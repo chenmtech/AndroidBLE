@@ -22,7 +22,7 @@ import java.util.Set;
 /**
  *
  * ClassName:      BleDeviceDetailInfo
- * Description:    设备详细信息，当成功扫描到设备后保存设备的详细信息
+ * Description:    设备详细信息，比如地址，绑定状态，支持的Service，名称，RSSI等
  * Author:         chenm
  * CreateDate:     2018-06-27 08:56
  * UpdateUser:     chenm
