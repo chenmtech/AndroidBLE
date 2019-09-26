@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
@@ -49,6 +50,8 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 
 public abstract class BleDevice {
     private static final int CONNECT_INTERVAL_IN_SECOND = 20; // 自动连接间隔秒数
+    private static final int MSG_START_SCAN = 0;
+    private static final int MSG_DISCONNECT = 1;
 
     private final Context context;
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备实时状态
@@ -60,49 +63,50 @@ public abstract class BleDevice {
     private final ScanFilter scanFilter; // 扫描过滤器
     private int battery = -1; // 设备电池电量
     private final List<OnBleDeviceStateListener> stateListeners; // 设备状态监听器列表
-    private final Handler mHandler;
     private ExecutorService connService; // 定时连接服务
+
+    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == MSG_START_SCAN) {
+                setState(DEVICE_SCANNING);
+                BleDeviceScanner.startScan(scanFilter, bleScanCallback);
+            } else if (msg.what == MSG_DISCONNECT) {
+                doDisconnect();
+            }
+        }
+    };
 
     // 扫描回调
     private final IBleScanCallback bleScanCallback = new IBleScanCallback() {
         @Override
         public void onDeviceFound(final BleDeviceDetailInfo bleDeviceDetailInfo) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
+            ViseLog.e("Found device: " + bleDeviceDetailInfo.getAddress());
 
-                    processFoundDevice(bleDeviceDetailInfo);
-                }
-            });
+            processFoundDevice(bleDeviceDetailInfo);
         }
 
         @Override
         public void onScanFailed(final int errorCode) {
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ViseLog.e("Scan failed with errorCode: = " + errorCode);
+            ViseLog.e("Scan failed with errorCode: = " + errorCode);
 
-                    switch (errorCode) {
-                        case SCAN_FAILED_ALREADY_STARTED:
-                            Toast.makeText(context, "正在扫描中。", Toast.LENGTH_LONG).show();
-                            break;
+            switch (errorCode) {
+                case SCAN_FAILED_ALREADY_STARTED:
+                    Toast.makeText(context, "正在扫描中。", Toast.LENGTH_LONG).show();
+                    break;
 
-                        case SCAN_FAILED_BLE_DISABLE:
-                            stopScanForever();
-                            setState(connectState);
-                            Toast.makeText(context, "蓝牙已关闭。", Toast.LENGTH_LONG).show();
-                            break;
+                case SCAN_FAILED_BLE_DISABLE:
+                    stopScanForever();
+                    setState(connectState);
+                    Toast.makeText(context, "蓝牙已关闭。", Toast.LENGTH_LONG).show();
+                    break;
 
-                        case SCAN_FAILED_BLE_INNER_ERROR:
-                            stopScanForever();
-                            setState(connectState);
-                            notifyReconnectFailure();
-                            break;
-                    }
-                }
-            });
+                case SCAN_FAILED_BLE_INNER_ERROR:
+                    stopScanForever();
+                    setState(connectState);
+                    notifyReconnectFailure();
+                    break;
+            }
         }
     };
 
@@ -133,7 +137,6 @@ public abstract class BleDevice {
         this.registerInfo = registerInfo;
         scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-        mHandler = new Handler(Looper.getMainLooper());
         stateListeners = new LinkedList<>();
     }
 
@@ -301,14 +304,7 @@ public abstract class BleDevice {
                 @Override
                 public void run() {
                     if(isDisconnect()) {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                setState(DEVICE_SCANNING);
-
-                                BleDeviceScanner.startScan(scanFilter, bleScanCallback);
-                            }
-                        });
+                        mHandler.sendEmptyMessage(MSG_START_SCAN);
                     }
                 }
             }, 0, CONNECT_INTERVAL_IN_SECOND, TimeUnit.SECONDS);
@@ -322,12 +318,7 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.disconnect()");
 
         mHandler.removeCallbacksAndMessages(null);
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                doDisconnect();
-            }
-        });
+        mHandler.sendEmptyMessage(MSG_DISCONNECT);
     }
 
     // 关闭设备
