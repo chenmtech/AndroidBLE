@@ -20,7 +20,7 @@ import com.vise.log.ViseLog;
  */
 
 class BleSerialGattCommand extends BleGattCommand {
-    private boolean done = true; // 标记命令是否执行完毕
+    private boolean finish = true; // 标记命令是否执行完毕
 
     // IBleCallback的装饰类，在一般的回调响应任务完成后，执行串行命令所需动作
     private class BleSerialCommandDataCallbackDecorator implements IBleDataCallback {
@@ -65,9 +65,9 @@ class BleSerialGattCommand extends BleGattCommand {
 
     @Override
     synchronized boolean execute() throws InterruptedException{
-        done = super.execute();
+        finish = super.execute();
 
-        while(!done) {
+        while(!finish) {
             wait();
         }
 
@@ -76,25 +76,26 @@ class BleSerialGattCommand extends BleGattCommand {
 
     private synchronized void onSerialCommandSuccess(IBleDataCallback bleCallback, byte[] data, BleGattElement bleGattElement) {
         if(data == null) {
-            ViseLog.i("Command Success: <" + this + ">");
+            ViseLog.i("Command Success: " + this);
         } else {
-            ViseLog.i("Command Success: <" + this + "> The return data is " + HexUtil.encodeHexStr(data));
+            ViseLog.i("Command Success: " + this + " Return data: " + HexUtil.encodeHexStr(data));
         }
 
         if(bleCallback != null) {
             bleCallback.onSuccess(data, bleGattElement);
         }
 
-        done = true;
+        finish = true;
 
         notifyAll();
     }
 
     private synchronized void onSerialCommandFailure(IBleDataCallback bleCallback, BleException exception) {
-        ViseLog.e("Command Failure: <" + this + "> Exception: " + exception);
+        ViseLog.e("Command Failure: " + this + " Exception: " + exception);
 
         if(bleCallback != null)
             bleCallback.onFailure(exception);
+
         if(device != null) {
             device.sendDisconnectMessage();
         }

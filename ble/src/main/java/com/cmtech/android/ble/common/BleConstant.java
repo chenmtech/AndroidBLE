@@ -19,7 +19,4 @@ public class BleConstant {
 
     public static final int DEFAULT_MAX_CONNECT_COUNT = 5;
 
-    public static final int MSG_CONNECT_TIMEOUT = 0x01;
-    public static final int MSG_WRITE_DATA_TIMEOUT = 0x02;
-    public static final int MSG_READ_DATA_TIMEOUT = 0x03;
 }

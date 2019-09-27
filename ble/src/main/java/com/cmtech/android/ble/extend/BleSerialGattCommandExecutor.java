@@ -45,7 +45,7 @@ class BleSerialGattCommandExecutor {
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "MT_Gatt_Cmd");
+                return new Thread(runnable, "MT_GATT_CMD");
             }
         });
     }

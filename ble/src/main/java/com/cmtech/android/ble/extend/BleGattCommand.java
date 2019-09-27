@@ -35,28 +35,12 @@ class BleGattCommand{
         this.dataCallback = dataCallback;
         this.writtenData = writtenData;
         this.receiveCallback = receiveCallback;
-        switch (gattCmdType) {
-            case GATT_CMD_READ:
-                this.description = gattCmdType +" "+ description;
-                break;
-            case GATT_CMD_WRITE:
-                this.description = gattCmdType + " " + description + " " + HexUtil.encodeHexStr(writtenData);
-                break;
-            case GATT_CMD_NOTIFY:
-            case GATT_CMD_INDICATE:
-                this.description = gattCmdType + " " + description + " " + ((writtenData[0] != 0));
-                break;
-            case GATT_CMD_INSTANTRUN:
-                this.description = gattCmdType + " " + description;
-                break;
-            default:
-                this.description = description;
-        }
+        this.description = description;
     }
 
     BleGattCommand(BleGattCommand gattCommand) {
         if(gattCommand == null)
-            throw new NullPointerException();
+            throw new IllegalArgumentException("BleGattCommand is null.");
 
         this.device = gattCommand.device;
         this.element = gattCommand.element;
@@ -74,7 +58,7 @@ class BleGattCommand{
     boolean execute() throws InterruptedException{
         if(gattCmdType == GattCmdType.GATT_CMD_INSTANTRUN) {
             if(dataCallback == null) {
-                throw new NullPointerException("The dataCallback of instant commands is null. ");
+                throw new IllegalStateException("The dataCallback of instant commands is null. ");
             }
 
             dataCallback.onSuccess(null, null);
@@ -82,7 +66,7 @@ class BleGattCommand{
             return true;
         }
         if(device == null || device.getBleDeviceGatt() == null || element == null) {
-            throw new NullPointerException("The gatt or element of the non-instant commands is null.");
+            throw new IllegalStateException("The gatt or element of the non-instant commands is null.");
         }
 
         BleDeviceGatt bleDeviceGatt = device.getBleDeviceGatt();
@@ -98,13 +82,7 @@ class BleGattCommand{
 
             case GATT_CMD_NOTIFY:
             case GATT_CMD_INDICATE:
-                boolean isIndication = (gattCmdType == GattCmdType.GATT_CMD_INDICATE);
-
-                if(writtenData[0] == 1) { // enable
-                    bleDeviceGatt.enable(element, dataCallback, receiveCallback, true, isIndication);
-                } else { // disable
-                    bleDeviceGatt.enable(element, dataCallback, receiveCallback, false, isIndication);
-                }
+                bleDeviceGatt.enable(element, dataCallback, receiveCallback, (writtenData[0] == 1), (gattCmdType == GattCmdType.GATT_CMD_INDICATE));
                 break;
 
             default:
@@ -173,31 +151,37 @@ class BleGattCommand{
                 }
 
                 return new BleGattCommand(null, null, gattCmdType, dataCallback,
-                        null, null, "This is an instant command.");
-
-            } else {
-
-                if(device == null || device.getBleDeviceGatt() == null || element == null) {
-                    throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
-                }
-
-                if (gattCmdType == GattCmdType.GATT_CMD_WRITE
-                        || gattCmdType == GattCmdType.GATT_CMD_NOTIFY
-                        || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
-                    if (data == null || data.length == 0) {
-                        throw new NullPointerException("The data of the write, notify or indicate commands is null");
-                    };
-                }
-
-                if (gattCmdType == GattCmdType.GATT_CMD_NOTIFY
-                        || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
-                    if (data[0] == 1 && receiveCallback == null) {
-                        throw new NullPointerException("The receive callback of the 'enable' notify or indicate commands is null");
-                    }
-                }
-
-                return new BleGattCommand(device, element, gattCmdType, dataCallback, data, receiveCallback, element.toString());
+                        null, null, "<" + gattCmdType + ">");
             }
+
+            if(device == null || device.getBleDeviceGatt() == null || element == null) {
+                throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
+            }
+
+            if (gattCmdType == GattCmdType.GATT_CMD_WRITE
+                    || gattCmdType == GattCmdType.GATT_CMD_NOTIFY
+                    || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
+                if (data == null || data.length == 0) {
+                    throw new NullPointerException("The data of the write, notify or indicate commands is null");
+                }
+            }
+
+            if (gattCmdType == GattCmdType.GATT_CMD_NOTIFY
+                    || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
+                if (data[0] == 1 && receiveCallback == null) {
+                    throw new NullPointerException("The receive callback of the 'enable' notify or indicate commands is null");
+                }
+            }
+
+            String description = "<" + gattCmdType + " " + element.toString();
+            if(gattCmdType == GattCmdType.GATT_CMD_WRITE) {
+                description += HexUtil.encodeHexStr(data);
+            } else if(gattCmdType == GattCmdType.GATT_CMD_INDICATE || gattCmdType == GattCmdType.GATT_CMD_NOTIFY) {
+                description += ((data[0] == 1) ? "enable" : "disable");
+            }
+            description += ">";
+
+            return new BleGattCommand(device, element, gattCmdType, dataCallback, data, receiveCallback, description);
         }
     }
 }

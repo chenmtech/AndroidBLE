@@ -35,92 +35,66 @@ public class BleDeviceRegisterInfo implements Serializable{
     public static final boolean DEFAULT_WARN_AFTER_RECONNECT_FAILURE = true; // 重连失败后是否报警
 
     private String macAddress = ""; // 设备mac地址
-
     private String nickName = DEFAULT_DEVICE_NICKNAME; // 设备昵称
-
     private String uuidString = ""; // 设备广播Uuid16位字符串
-
     private String imagePath = DEFAULT_DEVICE_IMAGEPATH; // 设备图标路径名
-
     private boolean autoConnect = DEFAULT_DEVICE_AUTOCONNECT; // 设备打开后是否自动连接
-
     private int reconnectTimes = DEFAULT_DEVICE_RECONNECT_TIMES; // 连接断开后重连次数
-
     private boolean warnAfterReconnectFailure = DEFAULT_WARN_AFTER_RECONNECT_FAILURE; // 重连失败后是否报警
 
     public BleDeviceRegisterInfo() {
-
     }
 
     public BleDeviceRegisterInfo(String macAddress, String nickName, String uuidString, String imagePath,
                                  boolean autoConnect, int reconnectTimes, boolean warnAfterReconnectFailure) {
         this.macAddress = macAddress;
-
         this.nickName = nickName;
-
         this.uuidString = uuidString;
-
         this.imagePath = imagePath;
-
         this.autoConnect = autoConnect;
-
         this.reconnectTimes = reconnectTimes;
-
         this.warnAfterReconnectFailure = warnAfterReconnectFailure;
     }
 
     public String getMacAddress() {
         return macAddress;
     }
-
     public void setMacAddress(String macAddress) {
         this.macAddress = macAddress;
     }
-
     public String getNickName() {
         return nickName;
     }
-
     public void setNickName(String nickName) {
         this.nickName = nickName;
     }
-
     public String getUuidString() {
         return uuidString;
     }
-
     public void setUuidString(String uuidString) {
         this.uuidString = uuidString;
     }
-
     public String getImagePath() {
         return imagePath;
     }
-
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
-
     public boolean autoConnect() {
         return autoConnect;
     }
-
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
-
     public int getReconnectTimes() {
         return reconnectTimes;
     }
-
     public void setReconnectTimes(int reconnectTimes) {
         this.reconnectTimes = reconnectTimes;
     }
-
     public boolean isWarnAfterReconnectFailure() {
         return warnAfterReconnectFailure;
     }
-
     public void setWarnAfterReconnectFailure(boolean warnAfterReconnectFailure) {
         this.warnAfterReconnectFailure = warnAfterReconnectFailure;
     }
@@ -244,11 +218,8 @@ public class BleDeviceRegisterInfo implements Serializable{
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-
         if (o == null || getClass() != o.getClass()) return false;
-
         BleDeviceRegisterInfo that = (BleDeviceRegisterInfo) o;
-
         return macAddress.equalsIgnoreCase(that.macAddress);
     }
 
