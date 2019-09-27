@@ -51,7 +51,7 @@ import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
 public abstract class BleDevice {
     private static final int CONNECT_INTERVAL_IN_SECOND = 10; // 自动连接间隔秒数
 
-    private static final int MSG_SCAN_ACTION = 0; // 开始扫描连接
+    private static final int MSG_CONNECT_ACTION = 0; // 连接
     private static final int MSG_DISCONNECT_ACTION = 1; // 断开连接
     public static final int MSG_CONNECT_TIMEOUT = 2; // 连接超时
     public static final int MSG_WRITE_DATA_TIMEOUT = 3; // 写数据超时
@@ -72,7 +72,7 @@ public abstract class BleDevice {
     private final Handler actionHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == MSG_SCAN_ACTION) {
+            if (msg.what == MSG_CONNECT_ACTION) {
                 if(isDisconnect()) {
                     setState(DEVICE_SCANNING);
                     BleDeviceScanner.startScan(scanFilter, bleScanCallback);
@@ -117,12 +117,10 @@ public abstract class BleDevice {
                     break;
                 case SCAN_FAILED_BLE_DISABLE:
                     stopScanForever();
-                    setState(connectState);
                     Toast.makeText(context, "蓝牙已关闭。", Toast.LENGTH_LONG).show();
                     break;
                 case SCAN_FAILED_BLE_INNER_ERROR:
                     stopScanForever();
-                    setState(connectState);
                     notifyReconnectFailure();
                     break;
             }
@@ -259,12 +257,11 @@ public abstract class BleDevice {
 
         if(isDisconnect()) {
             sendConnectMessage();
-        } else if(state == CONNECT_SUCCESS) {
+        } else if(isConnect()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
             sendDisconnectMessage(); // 设备处于连接成功时，断开连接
         } else if(state == DEVICE_SCANNING) {
             stopScanForever();
-            setState(connectState);
         } else {
             Toast.makeText(context, "当前状态无法执行命令，请稍等...", Toast.LENGTH_SHORT).show();
         }
@@ -285,12 +282,12 @@ public abstract class BleDevice {
                 @Override
                 public void run() {
                     if(isDisconnect()) {
-                        actionHandler.sendEmptyMessage(MSG_SCAN_ACTION);
+                        actionHandler.sendEmptyMessage(MSG_CONNECT_ACTION);
                     }
                 }
             }, 0, CONNECT_INTERVAL_IN_SECOND, TimeUnit.SECONDS);
         } else {
-            Toast.makeText(context, "正在自动连接中，请稍等。", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "自动连接中，请稍等。", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -327,6 +324,7 @@ public abstract class BleDevice {
         ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
         actionHandler.removeCallbacksAndMessages(null);
         BleDeviceScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
+        setState(connectState);
     }
 
     // 处理找到的设备
@@ -336,7 +334,6 @@ public abstract class BleDevice {
         BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
         if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
             stopScanForever();
-            setState(connectState);
             Toast.makeText(context, "设备未配对，请先配对。", Toast.LENGTH_LONG).show();
             bleDeviceDetailInfo.getDevice().createBond();
         } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
@@ -364,6 +361,7 @@ public abstract class BleDevice {
         }
 
         ViseLog.e("处理连接成功: " + bleDeviceGatt);
+
         if(state == DEVICE_SCANNING) {
             BleDeviceScanner.stopScan(bleScanCallback);
         }
@@ -377,18 +375,14 @@ public abstract class BleDevice {
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
-        ViseLog.e("处理连接失败: " + bleException );
-
         if(state != CONNECT_FAILURE) {
+            ViseLog.e("处理连接失败: " + bleException );
+
             gattCmdExecutor.stop();
             bleDeviceGatt = null;
             setConnectState(CONNECT_FAILURE);
             executeAfterConnectFailure();
         }
-
-        /*if(bleException instanceof TimeoutException) {
-            stopScanForever();
-        }*/
     }
 
     // 处理连接断开
@@ -450,9 +444,6 @@ public abstract class BleDevice {
     protected final void runInstantly(IBleDataCallback callback) {
         gattCmdExecutor.runInstantly(callback);
     }
-
-
-
 
 
 
