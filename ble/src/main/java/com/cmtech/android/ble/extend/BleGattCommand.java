@@ -1,7 +1,7 @@
 package com.cmtech.android.ble.extend;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.common.PropertyType;
+import com.cmtech.android.ble.common.GattCmdType;
 import com.cmtech.android.ble.utils.HexUtil;
 
 
@@ -19,23 +19,39 @@ import com.cmtech.android.ble.utils.HexUtil;
 
 class BleGattCommand{
     final BleDevice device; // 执行命令的设备
-    private final BleGattElement element; // 执行命令的通道
-    private final PropertyType propertyType;
+    private final BleGattElement element; // 命令操作的element
+    private final GattCmdType gattCmdType; // 命令类型
     IBleDataCallback dataCallback; // 数据操作回调
-    private final byte[] writtenData; // 如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable数据
+    private final byte[] writtenData; // 待写数据。如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable值
     private final IBleDataCallback receiveCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
-    private final String elementString; // 命令操作的element的描述符
+    private final String description; // 命令描述符
 
-    private BleGattCommand(BleDevice device, BleGattElement element, PropertyType propertyType,
+    private BleGattCommand(BleDevice device, BleGattElement element, GattCmdType gattCmdType,
                            IBleDataCallback dataCallback,
-                           byte[] writtenData, IBleDataCallback receiveCallback, String elementString) {
+                           byte[] writtenData, IBleDataCallback receiveCallback, String description) {
         this.device = device;
         this.element = element;
-        this.propertyType = propertyType;
+        this.gattCmdType = gattCmdType;
         this.dataCallback = dataCallback;
         this.writtenData = writtenData;
         this.receiveCallback = receiveCallback;
-        this.elementString = elementString;
+        switch (gattCmdType) {
+            case GATT_CMD_READ:
+                this.description = gattCmdType +" "+ description;
+                break;
+            case GATT_CMD_WRITE:
+                this.description = gattCmdType + " " + description + " " + HexUtil.encodeHexStr(writtenData);
+                break;
+            case GATT_CMD_NOTIFY:
+            case GATT_CMD_INDICATE:
+                this.description = gattCmdType + " " + description + " " + ((writtenData[0] != 0));
+                break;
+            case GATT_CMD_INSTANTRUN:
+                this.description = gattCmdType + " " + description;
+                break;
+            default:
+                this.description = description;
+        }
     }
 
     BleGattCommand(BleGattCommand gattCommand) {
@@ -44,11 +60,11 @@ class BleGattCommand{
 
         this.device = gattCommand.device;
         this.element = gattCommand.element;
-        this.propertyType = gattCommand.propertyType;
+        this.gattCmdType = gattCommand.gattCmdType;
         this.dataCallback = gattCommand.dataCallback;
         this.writtenData = gattCommand.writtenData;
         this.receiveCallback = gattCommand.receiveCallback;
-        this.elementString = gattCommand.elementString;
+        this.description = gattCommand.description;
     }
 
     /**
@@ -56,7 +72,7 @@ class BleGattCommand{
      * @return 是否已经执行完命令，true-执行完 false-等待对方响应
      */
     boolean execute() throws InterruptedException{
-        if(propertyType == PropertyType.PROPERTY_INSTANTRUN) {
+        if(gattCmdType == GattCmdType.GATT_CMD_INSTANTRUN) {
             if(dataCallback == null) {
                 throw new NullPointerException("The dataCallback of instant commands is null. ");
             }
@@ -71,18 +87,18 @@ class BleGattCommand{
 
         BleDeviceGatt bleDeviceGatt = device.getBleDeviceGatt();
 
-        switch (propertyType) {
-            case PROPERTY_READ:
+        switch (gattCmdType) {
+            case GATT_CMD_READ:
                 bleDeviceGatt.readData(element, dataCallback);
                 break;
 
-            case PROPERTY_WRITE:
+            case GATT_CMD_WRITE:
                 bleDeviceGatt.writeData(element, dataCallback, writtenData);
                 break;
 
-            case PROPERTY_NOTIFY:
-            case PROPERTY_INDICATE:
-                boolean isIndication = (propertyType == PropertyType.PROPERTY_INDICATE);
+            case GATT_CMD_NOTIFY:
+            case GATT_CMD_INDICATE:
+                boolean isIndication = (gattCmdType == GattCmdType.GATT_CMD_INDICATE);
 
                 if(writtenData[0] == 1) { // enable
                     bleDeviceGatt.enable(element, dataCallback, receiveCallback, true, isIndication);
@@ -100,29 +116,13 @@ class BleGattCommand{
 
     @Override
     public String toString() {
-        switch (propertyType) {
-            case PROPERTY_READ:
-                return propertyType+" "+ elementString;
-
-            case PROPERTY_WRITE:
-                return propertyType + " " + elementString + " " + HexUtil.encodeHexStr(writtenData);
-
-            case PROPERTY_NOTIFY:
-            case PROPERTY_INDICATE:
-                return propertyType + " " + elementString + " " + ((writtenData[0] != 0));
-
-            case PROPERTY_INSTANTRUN:
-                return propertyType + " " + elementString;
-
-            default:
-                return "";
-        }
+        return description;
     }
 
     static class Builder {
         private BleDevice device;
         private BleGattElement element;
-        private PropertyType propertyType;
+        private GattCmdType gattCmdType;
         private byte[] data;
         private IBleDataCallback dataCallback;
         private IBleDataCallback receiveCallback;
@@ -142,8 +142,8 @@ class BleGattCommand{
             return this;
         }
 
-        Builder setPropertyType(PropertyType propertyType) {
-            this.propertyType = propertyType;
+        Builder setGattCmdType(GattCmdType gattCmdType) {
+            this.gattCmdType = gattCmdType;
 
             return this;
         }
@@ -167,12 +167,12 @@ class BleGattCommand{
         }
 
         BleGattCommand build() {
-            if(propertyType == PropertyType.PROPERTY_INSTANTRUN) {
+            if(gattCmdType == GattCmdType.GATT_CMD_INSTANTRUN) {
                 if(dataCallback == null) {
                     throw new NullPointerException("The dataCallback of instant commands is null. ");
                 }
 
-                return new BleGattCommand(null, null, propertyType, dataCallback,
+                return new BleGattCommand(null, null, gattCmdType, dataCallback,
                         null, null, "This is an instant command.");
 
             } else {
@@ -181,22 +181,22 @@ class BleGattCommand{
                     throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
                 }
 
-                if (propertyType == PropertyType.PROPERTY_WRITE
-                        || propertyType == PropertyType.PROPERTY_NOTIFY
-                        || propertyType == PropertyType.PROPERTY_INDICATE) {
+                if (gattCmdType == GattCmdType.GATT_CMD_WRITE
+                        || gattCmdType == GattCmdType.GATT_CMD_NOTIFY
+                        || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
                     if (data == null || data.length == 0) {
                         throw new NullPointerException("The data of the write, notify or indicate commands is null");
                     };
                 }
 
-                if (propertyType == PropertyType.PROPERTY_NOTIFY
-                        || propertyType == PropertyType.PROPERTY_INDICATE) {
+                if (gattCmdType == GattCmdType.GATT_CMD_NOTIFY
+                        || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
                     if (data[0] == 1 && receiveCallback == null) {
                         throw new NullPointerException("The receive callback of the 'enable' notify or indicate commands is null");
                     }
                 }
 
-                return new BleGattCommand(device, element, propertyType, dataCallback, data, receiveCallback, element.toString());
+                return new BleGattCommand(device, element, gattCmdType, dataCallback, data, receiveCallback, element.toString());
             }
         }
     }

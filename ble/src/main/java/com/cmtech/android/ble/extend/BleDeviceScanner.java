@@ -51,7 +51,7 @@ public class BleDeviceScanner {
         ScanCallbackAdapter scanCallback = null;
 
         synchronized (BleDeviceScanner.class) {
-            if (!BleDeviceScanner.isBleEnabled()) {
+            if (BleDeviceScanner.isBleDisabled()) {
                 bleScanCallback.onScanFailed(SCAN_FAILED_BLE_DISABLE);
                 return;
             }
@@ -97,42 +97,36 @@ public class BleDeviceScanner {
 
         BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
-
         synchronized (BleDeviceScanner.class) {
-            if(!isBleEnabled()) {
+            if(isBleDisabled()) {
                 return;
             }
-
             scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
-
             for(ScanCallbackAdapter callback : callbackList) {
                 if(callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
                     break;
                 }
             }
-
             if(scanCallback != null) {
                 callbackList.remove(scanCallback);
             }
         }
-
         if(scanCallback != null)
             scanner.stopScan(scanCallback);
 
         ViseLog.e("Scan stopped");
-
     }
 
     // 蓝牙是否已开启
-    public static boolean isBleEnabled() {
+    public static boolean isBleDisabled() {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
-
-        return (adapter != null && adapter.isEnabled() && adapter.getBluetoothLeScanner() != null);
+        return (adapter == null || !adapter.isEnabled() || adapter.getBluetoothLeScanner() == null);
     }
 
     public static void clearInnerError() {
         bleInnerError = false;
+        scanTimes = 0;
     }
 
     private static class ScanCallbackAdapter extends ScanCallback {

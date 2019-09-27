@@ -25,10 +25,9 @@ public class UuidUtil {
 
     // 16位短字符串转换为长字符串
     public static String shortToLongString(String shortString, String baseUuid) {
-        if(shortString == null || shortString.length() != 4) return null;
+        if(shortString == null || shortString.length() != 4 || baseUuid.length() != 36) return null;
 
         String sub = baseUuid.substring(4, 8);
-
         return baseUuid.replaceFirst(sub, shortString);
     }
 
@@ -44,9 +43,13 @@ public class UuidUtil {
     }
 
     public static UUID stringToUuid(String str, String baseUuid) {
-        if(str != null && str.length() == 4) {
+        if(str == null) return null;
+        if(str.length() == 4) {
             return shortStringToUuid(str, baseUuid);
         }
-        return (str == null) ? null : UUID.fromString(str);
+        if(str.length() == 36) {
+            return UUID.fromString(str);
+        }
+        return null;
     }
 }

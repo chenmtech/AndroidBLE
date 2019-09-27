@@ -23,11 +23,6 @@ import java.util.UUID;
  */
 
 public class BleGattElement {
-    private static final int TYPE_NULL = 0;                // 空ELement 类型
-    private static final int TYPE_SERVICE = 1;             // service element类型
-    private static final int TYPE_CHARACTERISTIC = 2;      // characteristic element类型
-    private static final int TYPE_DESCRIPTOR = 3;          // descriptor element类型
-
     private final UUID serviceUuid; // 服务UUID
     private final UUID characteristicUuid; // 特征UUID
     private final UUID descriptorUuid; // 描述符UUID
@@ -55,23 +50,20 @@ public class BleGattElement {
     UUID getServiceUUID() {
         return serviceUuid;
     }
-
     UUID getCharacteristicUUID() {
         return characteristicUuid;
     }
-
     UUID getDescriptorUUID() {
         return descriptorUuid;
     }
 
-    // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
+    // 从设备中搜寻该element对应的Gatt Object
     Object retrieveGattObject(BleDevice device) {
         if(device == null) return null;
 
         return retrieveGattObject(device.getBleDeviceGatt().getBluetoothGatt());
     }
 
-    // 从设备中搜寻element对应的Gatt Object，可用于验证Element是否存在于设备中
     private Object retrieveGattObject(BluetoothGatt gatt) {
         if(gatt == null) return null;
 
@@ -91,6 +83,7 @@ public class BleGattElement {
         return element;
     }
 
+    // 获取该element的characteristic
     BluetoothGattCharacteristic getCharacteristic(BluetoothGatt gatt) {
         BluetoothGattService service;
         if( (service = gatt.getService(serviceUuid)) != null) {
@@ -99,22 +92,12 @@ public class BleGattElement {
         return null;
     }
 
+    // 获取该element的descriptor
     BluetoothGattDescriptor getDescriptor(BluetoothGatt gatt) {
         Object element = retrieveGattObject(gatt);
         if(element instanceof BluetoothGattDescriptor)
             return (BluetoothGattDescriptor)element;
         return null;
-    }
-
-    // element的类型
-    public int getType() {
-        if(descriptorUuid != null) return TYPE_DESCRIPTOR;
-
-        if(characteristicUuid != null) return TYPE_CHARACTERISTIC;
-
-        if(serviceUuid != null) return TYPE_SERVICE;
-
-        return TYPE_NULL;
     }
 
     @Override
