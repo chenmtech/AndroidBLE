@@ -85,9 +85,18 @@ public class BleDeviceGatt {
                 @Override
                 public void run() {
                     if (newState == BluetoothGatt.STATE_CONNECTED) {
+                        if(bluetoothGatt != null && bluetoothGatt != gatt) {
+                            gatt.disconnect();
+                            return;
+                        }
+
                         bluetoothGatt = gatt;
                         gatt.discoverServices();
                     } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                        if(bluetoothGatt != null && bluetoothGatt != gatt) {
+                            return;
+                        }
+
                         clear();
                         if (connectCallback != null) {
                             if (status == GATT_SUCCESS) {

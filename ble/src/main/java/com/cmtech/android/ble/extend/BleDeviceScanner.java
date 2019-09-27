@@ -35,6 +35,8 @@ public class BleDeviceScanner {
 
     private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
 
+    private static int scanTimes = 0;
+
     private BleDeviceScanner() {
 
     }
@@ -82,7 +84,9 @@ public class BleDeviceScanner {
 
         scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
 
-        ViseLog.e("Start scanning");
+        scanTimes++;
+
+        ViseLog.e("Start scanning, scanTimes = " + scanTimes);
     }
 
     // 停止扫描
