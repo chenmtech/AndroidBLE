@@ -13,7 +13,7 @@ import java.util.UUID;
 /**
   *
   * ClassName:      BleGattElement
-  * Description:    表示Gatt的一个基本单元，可以是三种类型：SERVICE, CHARACTERISTIC, DESCRIPTOR
+  * Description:    表示Gatt的基本单元，可以是三种类型：SERVICE, CHARACTERISTIC, DESCRIPTOR
   * Author:         chenm
   * CreateDate:     2018-03-01 16:58
   * UpdateUser:     chenm
@@ -59,9 +59,7 @@ public class BleGattElement {
 
     // 从设备中搜寻该element对应的Gatt Object
     Object retrieveGattObject(BleDevice device) {
-        if(device == null) return null;
-
-        return retrieveGattObject(device.getBleDeviceGatt().getBluetoothGatt());
+        return (device == null) ? null : retrieveGattObject(device.getBleDeviceGatt().getBluetoothGatt());
     }
 
     private Object retrieveGattObject(BluetoothGatt gatt) {

@@ -17,9 +17,9 @@ import com.cmtech.android.ble.extend.BleDeviceDetailInfo;
 public interface IBleScanCallback {
     int SCAN_FAILED_ALREADY_STARTED = 1; // 已经在扫描
 
-    int SCAN_FAILED_BLE_DISABLE = 2; // 蓝牙未开启
+    int SCAN_FAILED_BLE_CLOSED = 2; // 蓝牙已关闭
 
-    int SCAN_FAILED_BLE_INNER_ERROR = 3; // 蓝牙内部错误
+    int SCAN_FAILED_BLE_ERROR = 3; // 蓝牙错误
 
     // 发现设备
     void onDeviceFound(BleDeviceDetailInfo bleDeviceDetailInfo);

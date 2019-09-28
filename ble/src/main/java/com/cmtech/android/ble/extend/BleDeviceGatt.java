@@ -47,9 +47,9 @@ public class BleDeviceGatt {
     private IBleRssiCallback rssiCallback; //获取信号值回调
     private IBleConnectCallback connectCallback;//连接回调
     private Handler callbackHandler;
-    private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Channel和Callback
-    private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Channel和Callback
-    private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Channel和Callback Map
+    private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Element和Callback
+    private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback
+    private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Element和Callback Map
 
 
     /**

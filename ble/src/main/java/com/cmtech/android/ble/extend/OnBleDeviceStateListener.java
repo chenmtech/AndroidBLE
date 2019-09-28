@@ -16,7 +16,7 @@ package com.cmtech.android.ble.extend;
 public interface OnBleDeviceStateListener {
     void onConnectStateUpdated(final BleDevice device); // 连接状态更新
 
-    void onReconnectFailureNotified(final BleDevice device, boolean warn); // 重连失败通知
+    void onBleErrorNotified(final BleDevice device, boolean warn); // 发生BLE错误通知
 
     void onBatteryUpdated(final BleDevice device); // 电池电量更新
 

@@ -15,8 +15,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
-import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_DISABLE;
-import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_INNER_ERROR;
+import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_CLOSED;
+import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_ERROR;
 
 /**
  *
@@ -52,12 +52,12 @@ public class BleDeviceScanner {
 
         synchronized (BleDeviceScanner.class) {
             if (BleDeviceScanner.isBleDisabled()) {
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_DISABLE);
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_CLOSED);
                 return;
             }
 
             if (bleInnerError) {
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_ERROR);
                 return;
             }
 
@@ -160,7 +160,7 @@ public class BleDeviceScanner {
             bleInnerError = true;
 
             if(bleScanCallback != null)
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
+                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_ERROR);
         }
 
         @Override

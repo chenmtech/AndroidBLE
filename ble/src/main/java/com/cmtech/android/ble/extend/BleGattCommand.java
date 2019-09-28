@@ -8,7 +8,7 @@ import com.cmtech.android.ble.utils.HexUtil;
 /**
   *
   * ClassName:      BleGattCommand
-  * Description:    表示一条Gatt命令，包含Gatt命令执行所需的全部信息
+  * Description:    表示Gatt命令，包含Gatt命令执行所需的全部信息
   * Author:         chenm
   * CreateDate:     2018-03-01 06:42
   * UpdateUser:     chenm
@@ -62,7 +62,6 @@ class BleGattCommand{
             }
 
             dataCallback.onSuccess(null, null);
-
             return true;
         }
         if(device == null || device.getBleDeviceGatt() == null || element == null) {
@@ -110,37 +109,31 @@ class BleGattCommand{
 
         Builder setDevice(BleDevice device) {
             this.device = device;
-
             return this;
         }
 
         Builder setBluetoothElement(BleGattElement element) {
             this.element = element;
-
             return this;
         }
 
         Builder setGattCmdType(GattCmdType gattCmdType) {
             this.gattCmdType = gattCmdType;
-
             return this;
         }
 
         Builder setDataCallback(IBleDataCallback dataCallback) {
             this.dataCallback = dataCallback;
-
             return this;
         }
 
         Builder setData(byte[] data) {
             this.data = data;
-
             return this;
         }
 
         Builder setReceiveCallback(IBleDataCallback receiveCallback) {
             this.receiveCallback = receiveCallback;
-
             return this;
         }
 
@@ -153,11 +146,9 @@ class BleGattCommand{
                 return new BleGattCommand(null, null, gattCmdType, dataCallback,
                         null, null, "<" + gattCmdType + ">");
             }
-
             if(device == null || device.getBleDeviceGatt() == null || element == null) {
                 throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
             }
-
             if (gattCmdType == GattCmdType.GATT_CMD_WRITE
                     || gattCmdType == GattCmdType.GATT_CMD_NOTIFY
                     || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
@@ -165,7 +156,6 @@ class BleGattCommand{
                     throw new NullPointerException("The data of the write, notify or indicate commands is null");
                 }
             }
-
             if (gattCmdType == GattCmdType.GATT_CMD_NOTIFY
                     || gattCmdType == GattCmdType.GATT_CMD_INDICATE) {
                 if (data[0] == 1 && receiveCallback == null) {
