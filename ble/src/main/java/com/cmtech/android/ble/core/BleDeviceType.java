@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import java.util.ArrayList;
 import java.util.List;

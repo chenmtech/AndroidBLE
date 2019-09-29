@@ -3,8 +3,8 @@ package com.cmtech.android.ble;
 import android.content.Context;
 
 import com.cmtech.android.ble.common.BleConfig;
-import com.cmtech.android.ble.extend.BleDeviceState;
-import com.cmtech.android.ble.extend.BleDeviceType;
+import com.cmtech.android.ble.core.BleDeviceState;
+import com.cmtech.android.ble.core.BleDeviceType;
 
 /**
  * BleDeviceConfig: 进行一些初始化和配置

@@ -1,7 +1,6 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.common.GattCmdType;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
@@ -47,14 +46,14 @@ class BleSerialGattCommand extends BleGattCommand {
         dataCallback = new BleSerialCommandDataCallbackDecorator(dataCallback);
     }
 
-    static BleSerialGattCommand create(BleDevice device, BleGattElement element, GattCmdType gattCmdType, byte[] data,
+    static BleSerialGattCommand create(BleDevice device, BleGattElement element, BleGattCmdType bleGattCmdType, byte[] data,
                                        IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         if(device.getBleDeviceGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
         BleGattCommand command = builder.setDevice(device)
                 .setBluetoothElement(element)
-                .setGattCmdType(gattCmdType)
+                .setBleGattCmdType(bleGattCmdType)
                 .setData(data)
                 .setDataCallback(dataCallback)
                 .setReceiveCallback(receiveCallback).build();

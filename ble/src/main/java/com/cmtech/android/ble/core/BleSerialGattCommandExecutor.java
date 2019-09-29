@@ -1,7 +1,6 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import com.cmtech.android.ble.callback.IBleDataCallback;
-import com.cmtech.android.ble.common.GattCmdType;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -67,7 +66,7 @@ class BleSerialGattCommandExecutor {
     // Gatt操作
     // 读
     final void read(BleGattElement element, IBleDataCallback dataCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, GattCmdType.GATT_CMD_READ,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_READ,
                 null, dataCallback, null);
 
         if(command != null)
@@ -76,7 +75,7 @@ class BleSerialGattCommandExecutor {
 
     // 写多字节
     final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, GattCmdType.GATT_CMD_WRITE,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_WRITE,
                 data, dataCallback, null);
 
         if(command != null)
@@ -95,7 +94,7 @@ class BleSerialGattCommandExecutor {
 
     private void notify(BleGattElement element, boolean enable
             , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, GattCmdType.GATT_CMD_NOTIFY,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_NOTIFY,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
 
         if(command != null)
@@ -109,7 +108,7 @@ class BleSerialGattCommandExecutor {
 
     private void indicate(BleGattElement element, boolean enable
             , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, GattCmdType.GATT_CMD_INDICATE,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_INDICATE,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
 
         if(command != null)
@@ -118,7 +117,7 @@ class BleSerialGattCommandExecutor {
 
     // 无需等待响应立刻执行完毕
     final void runInstantly(IBleDataCallback dataCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, GattCmdType.GATT_CMD_INSTANTRUN,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, BleGattCmdType.GATT_CMD_INSTANTRUN,
                 null, dataCallback, null);
 
         if(command != null)

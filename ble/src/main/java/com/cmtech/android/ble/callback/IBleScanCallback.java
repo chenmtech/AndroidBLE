@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.extend.BleDeviceDetailInfo;
+import com.cmtech.android.ble.core.BleDeviceDetailInfo;
 
 /**
  *

@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
@@ -28,13 +28,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_DISCONNECT;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_FAILURE;
-import static com.cmtech.android.ble.extend.BleDeviceState.CONNECT_SUCCESS;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CLOSED;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_CONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_DISCONNECTING;
-import static com.cmtech.android.ble.extend.BleDeviceState.DEVICE_SCANNING;
+import static com.cmtech.android.ble.core.BleDeviceState.CONNECT_DISCONNECT;
+import static com.cmtech.android.ble.core.BleDeviceState.CONNECT_FAILURE;
+import static com.cmtech.android.ble.core.BleDeviceState.CONNECT_SUCCESS;
+import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_CLOSED;
+import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_CONNECTING;
+import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_DISCONNECTING;
+import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_SCANNING;
 
 /**
   *

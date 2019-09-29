@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.extend.BleDeviceGatt;
+import com.cmtech.android.ble.core.BleDeviceGatt;
 import com.cmtech.android.ble.exception.BleException;
 
 /**

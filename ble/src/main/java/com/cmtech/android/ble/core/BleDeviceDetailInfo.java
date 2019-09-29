@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Bundle;

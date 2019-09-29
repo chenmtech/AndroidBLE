@@ -1,7 +1,7 @@
 package com.cmtech.android.ble.callback;
 
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.extend.BleGattElement;
+import com.cmtech.android.ble.core.BleGattElement;
 
 /**
  *

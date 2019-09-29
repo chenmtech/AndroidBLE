@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.extend;
+package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -25,9 +25,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-import static com.cmtech.android.ble.extend.BleDevice.MSG_CONNECT_TIMEOUT;
-import static com.cmtech.android.ble.extend.BleDevice.MSG_READ_DATA_TIMEOUT;
-import static com.cmtech.android.ble.extend.BleDevice.MSG_WRITE_DATA_TIMEOUT;
+import static com.cmtech.android.ble.core.BleDevice.MSG_CONNECT_TIMEOUT;
+import static com.cmtech.android.ble.core.BleDevice.MSG_READ_DATA_TIMEOUT;
+import static com.cmtech.android.ble.core.BleDevice.MSG_WRITE_DATA_TIMEOUT;
 
 /**
  *
