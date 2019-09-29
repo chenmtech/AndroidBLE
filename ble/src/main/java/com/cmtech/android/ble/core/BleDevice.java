@@ -257,7 +257,7 @@ public abstract class BleDevice {
     public void switchState() {
         ViseLog.e("BleDevice.switchState()");
 
-        if(!isClosed()) {
+        if(isClosed()) {
             throw new IllegalStateException("设备状态错误。");
         }
 
