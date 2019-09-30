@@ -35,7 +35,7 @@ class BleSerialGattCommandExecutor {
 
     // 启动Gatt命令执行器
     final void start() {
-        if(device.getBleDeviceGatt() == null || isAlive()) {
+        if(device.getBleGatt() == null || isAlive()) {
             return;
         }
 

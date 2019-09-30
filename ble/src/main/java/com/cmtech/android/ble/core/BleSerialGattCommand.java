@@ -48,7 +48,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
     static BleSerialGattCommand create(BleDevice device, BleGattElement element, BleGattCmdType bleGattCmdType, byte[] data,
                                        IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
-        if(device.getBleDeviceGatt() == null) return null;
+        if(device.getBleGatt() == null) return null;
 
         BleGattCommand.Builder builder = new BleGattCommand.Builder();
         BleGattCommand command = builder.setDevice(device)

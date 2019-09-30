@@ -1,6 +1,6 @@
 package com.cmtech.android.ble.callback;
 
-import com.cmtech.android.ble.core.BleDeviceGatt;
+import com.cmtech.android.ble.core.BleGatt;
 import com.cmtech.android.ble.exception.BleException;
 
 /**
@@ -17,7 +17,7 @@ import com.cmtech.android.ble.exception.BleException;
 
 public interface IBleConnectCallback {
     //连接成功
-    void onConnectSuccess(BleDeviceGatt bleDeviceGatt);
+    void onConnectSuccess(BleGatt bleGatt);
 
     //连接失败
     void onConnectFailure(BleException exception);

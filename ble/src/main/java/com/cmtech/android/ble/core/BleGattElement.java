@@ -59,7 +59,7 @@ public class BleGattElement {
 
     // 从设备中搜寻该element对应的Gatt Object
     Object retrieveGattObject(BleDevice device) {
-        return (device == null) ? null : retrieveGattObject(device.getBleDeviceGatt().getBluetoothGatt());
+        return (device == null) ? null : retrieveGattObject(device.getBleGatt().getBluetoothGatt());
     }
 
     private Object retrieveGattObject(BluetoothGatt gatt) {

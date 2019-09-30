@@ -31,7 +31,7 @@ import static com.cmtech.android.ble.core.BleDevice.MSG_WRITE_DATA_TIMEOUT;
 
 /**
  *
- * ClassName:      BleDeviceGatt
+ * ClassName:      BleGatt
  * Description:    设备Gatt操作类，完成Gatt操作
  * Author:         chenm
  * CreateDate:     2018-06-27 08:56
@@ -41,7 +41,7 @@ import static com.cmtech.android.ble.core.BleDevice.MSG_WRITE_DATA_TIMEOUT;
  * Version:        1.0
  */
 
-public class BleDeviceGatt {
+public class BleGatt {
 
     private BluetoothGatt bluetoothGatt; //底层蓝牙GATT
     private IBleRssiCallback rssiCallback; //获取信号值回调
@@ -113,7 +113,7 @@ public class BleDeviceGatt {
                         ViseLog.i("onServicesDiscovered connectSuccess.");
 
                         if (connectCallback != null) {
-                            connectCallback.onConnectSuccess(BleDeviceGatt.this);
+                            connectCallback.onConnectSuccess(BleGatt.this);
                         }
                     } else {
                         connectFailure(new ConnectException(gatt, status));
@@ -270,7 +270,7 @@ public class BleDeviceGatt {
 
 
 
-    BleDeviceGatt() {
+    BleGatt() {
     }
 
 
@@ -480,7 +480,7 @@ public class BleDeviceGatt {
      * 清除设备资源，在不使用该设备时调用
      */
     public synchronized void clear() {
-        ViseLog.i("BleDeviceGatt clear.");
+        ViseLog.i("BleGatt clear.");
         disconnect();
         refreshDeviceCache();
         close();
@@ -494,7 +494,7 @@ public class BleDeviceGatt {
 
     @Override
     public String toString() {
-        return "BleDeviceGatt{" + bluetoothGatt.getDevice().getAddress() +
+        return "BleGatt{" + bluetoothGatt.getDevice().getAddress() +
                 ", " + bluetoothGatt.getDevice().getName() +
                 '}';
     }
