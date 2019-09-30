@@ -327,12 +327,13 @@ public abstract class BleDevice {
     }
 
     private void stopScan(boolean forever) {
-        BleDeviceScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
         if(forever) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
-            actionHandler.removeCallbacksAndMessages(null);
-            setState(connectState);
         }
+
+        BleDeviceScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
+        actionHandler.removeMessages(MSG_START_CONNECT);
+        setState(connectState);
     }
 
     // 处理找到的设备
