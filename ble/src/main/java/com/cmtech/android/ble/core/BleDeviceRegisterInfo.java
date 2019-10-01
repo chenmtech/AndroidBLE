@@ -99,7 +99,7 @@ public class BleDeviceRegisterInfo implements Serializable{
         this.warnWhenBleError = warnWhenBleError;
     }
 
-    // 将设备基本信息保存到Pref
+    // 将设备注册信息保存到Pref
     public boolean saveToPref(SharedPreferences pref) {
         if(TextUtils.isEmpty(macAddress)) return false;
 
@@ -121,7 +121,7 @@ public class BleDeviceRegisterInfo implements Serializable{
         return editor.commit();
     }
 
-    // 从Pref中删除设备基本信息
+    // 从Pref中删除设备注册信息
     public boolean deleteFromPref(SharedPreferences pref) {
         if(TextUtils.isEmpty(macAddress)) return false;
 
@@ -144,7 +144,7 @@ public class BleDeviceRegisterInfo implements Serializable{
     }
 
     // 从Pref创建所有的设备基本信息
-    public static List<BleDeviceRegisterInfo> createAllFromPref(SharedPreferences pref) {
+    public static List<BleDeviceRegisterInfo> createFromPref(SharedPreferences pref) {
         Set<String> addressSet = new HashSet<>();
         addressSet = pref.getStringSet("addressSet", addressSet);
         if(addressSet == null || addressSet.isEmpty()) {
