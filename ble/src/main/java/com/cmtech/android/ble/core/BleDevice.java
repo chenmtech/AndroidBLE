@@ -67,7 +67,7 @@ public abstract class BleDevice {
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
     private final ScanFilter scanFilter; // 扫描过滤器
     private int battery = -1; // 设备电池电量
-    private final List<OnBleDeviceStateListener> stateListeners; // 设备状态监听器列表
+    private final List<OnBleDeviceUpdatedListener> stateListeners; // 设备状态监听器列表
     private ExecutorService connService; // 定时连接服务
     // 动作Handler
     private final Handler actionHandler = new Handler(Looper.getMainLooper()) {
@@ -455,20 +455,20 @@ public abstract class BleDevice {
 
 
     // 添加设备状态监听器
-    public final void addDeviceStateListener(OnBleDeviceStateListener listener) {
+    public final void addListener(OnBleDeviceUpdatedListener listener) {
         if(!stateListeners.contains(listener)) {
             stateListeners.add(listener);
         }
     }
 
     // 删除设备状态监听器
-    public final void removeDeviceStateListener(OnBleDeviceStateListener listener) {
+    public final void removeListener(OnBleDeviceUpdatedListener listener) {
         stateListeners.remove(listener);
     }
 
     // 更新设备状态
     public final void updateState() {
-        for(OnBleDeviceStateListener listener : stateListeners) {
+        for(OnBleDeviceUpdatedListener listener : stateListeners) {
             if(listener != null) {
                 listener.onConnectStateUpdated(this);
             }
@@ -483,7 +483,7 @@ public abstract class BleDevice {
 
     // Ble错误，是否报警
     private void notifyBleError(final boolean isWarn) {
-        for(final OnBleDeviceStateListener listener : stateListeners) {
+        for(final OnBleDeviceUpdatedListener listener : stateListeners) {
             if(listener != null) {
                 listener.onBleErrorNotified(BleDevice.this, isWarn);
             }
@@ -496,7 +496,7 @@ public abstract class BleDevice {
 
     // 更新电池电量
     private void updateBattery() {
-        for (final OnBleDeviceStateListener listener : stateListeners) {
+        for (final OnBleDeviceUpdatedListener listener : stateListeners) {
             if (listener != null) {
                 listener.onBatteryUpdated(this);
             }

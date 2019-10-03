@@ -3,8 +3,8 @@ package com.cmtech.android.ble.core;
 
 /**
  *
- * ClassName:      OnBleDeviceStateListener
- * Description:    Ble设备状态监听器
+ * ClassName:      OnBleDeviceUpdatedListener
+ * Description:    Ble设备更新监听器
  * Author:         chenm
  * CreateDate:     2018-03-12 07:02
  * UpdateUser:     chenm
@@ -13,11 +13,8 @@ package com.cmtech.android.ble.core;
  * Version:        1.0
  */
 
-public interface OnBleDeviceStateListener {
+public interface OnBleDeviceUpdatedListener {
     void onConnectStateUpdated(final BleDevice device); // 连接状态更新
-
-    void onBleErrorNotified(final BleDevice device, boolean warn); // 发生BLE错误通知
-
+    void onBleErrorNotified(final BleDevice device, boolean warn); // BLE错误通知
     void onBatteryUpdated(final BleDevice device); // 电池电量更新
-
 }
