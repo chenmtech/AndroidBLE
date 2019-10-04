@@ -77,7 +77,7 @@ public abstract class BleDevice {
                 if(isDisconnect()) {
                     actionHandler.removeMessages(MSG_START_CONNECT);
                     setState(DEVICE_SCANNING);
-                    BleDeviceScanner.startScan(scanFilter, bleScanCallback);
+                    BleScanner.startScan(scanFilter, bleScanCallback);
                 }
             } else if (msg.what == MSG_START_DISCONNECT) {
                 disconnect();
@@ -331,7 +331,7 @@ public abstract class BleDevice {
             ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
         }
 
-        BleDeviceScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
+        BleScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
         actionHandler.removeMessages(MSG_START_CONNECT);
         setState(connectState);
     }

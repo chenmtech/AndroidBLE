@@ -20,7 +20,7 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_E
 
 /**
  *
- * ClassName:      BleDeviceScanner
+ * ClassName:      BleScanner
  * Description:    低功耗蓝牙扫描仪类
  * Author:         chenm
  * CreateDate:     2019-09-19 07:02
@@ -30,14 +30,14 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_E
  * Version:        1.0
  */
 
-public class BleDeviceScanner {
+public class BleScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
 
     private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
 
     private static int scanTimes = 0;
 
-    private BleDeviceScanner() {
+    private BleScanner() {
 
     }
 
@@ -50,8 +50,8 @@ public class BleDeviceScanner {
         BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
 
-        synchronized (BleDeviceScanner.class) {
-            if (BleDeviceScanner.isBleDisabled()) {
+        synchronized (BleScanner.class) {
+            if (BleScanner.isBleDisabled()) {
                 bleScanCallback.onScanFailed(SCAN_FAILED_BLE_CLOSED);
                 return;
             }
@@ -97,7 +97,7 @@ public class BleDeviceScanner {
 
         BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
-        synchronized (BleDeviceScanner.class) {
+        synchronized (BleScanner.class) {
             if(isBleDisabled()) {
                 return;
             }
