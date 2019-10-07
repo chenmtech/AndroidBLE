@@ -307,15 +307,15 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
+        if(!isDisconnect()) {
+            throw new IllegalStateException("The device is not disconnected and can't be closed.");
+        }
+
         ViseLog.e("BleDevice.close()");
 
-        if(isDisconnect()) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
-            actionHandler.removeCallbacksAndMessages(null);
-            setState(BleDeviceState.DEVICE_CLOSED);
-        } else {
-            Toast.makeText(context, "当前状态无法关闭设备。", Toast.LENGTH_SHORT).show();
-        }
+        ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
+        actionHandler.removeCallbacksAndMessages(null);
+        setState(BleDeviceState.DEVICE_CLOSED);
     }
 
     protected void disconnect() {
