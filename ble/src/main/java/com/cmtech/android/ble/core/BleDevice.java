@@ -70,7 +70,7 @@ public abstract class BleDevice {
     private final ScanFilter scanFilter; // 扫描过滤器
     private int battery = NO_BATTERY; // 设备电池电量
     private final List<OnBleDeviceUpdatedListener> stateListeners; // 设备状态监听器列表
-    private ExecutorService connService; // 定时连接服务
+    private ExecutorService autoConnService; // 定时自动连接服务
     // 动作Handler
     private final Handler actionHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -266,7 +266,7 @@ public abstract class BleDevice {
         if(isDisconnect()) {
             startConnect();
         } else if(isConnect()) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
             startDisconnect();
         } else if(isScanning()) {
             stopScan(true);
@@ -277,16 +277,16 @@ public abstract class BleDevice {
 
     // 开始连接
     private void startConnect() {
-        if(connService == null || connService.isTerminated()) {
+        if(autoConnService == null || autoConnService.isTerminated()) {
             ViseLog.e("启动自动连接服务");
 
-            connService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+            autoConnService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
                 @Override
                 public Thread newThread(Runnable runnable) {
                     return new Thread(runnable, "MT_Auto_Connection");
                 }
             });
-            ((ScheduledExecutorService) connService).scheduleAtFixedRate(new Runnable() {
+            ((ScheduledExecutorService) autoConnService).scheduleAtFixedRate(new Runnable() {
                 @Override
                 public void run() {
                     if(isDisconnect()) {
@@ -315,7 +315,7 @@ public abstract class BleDevice {
 
         ViseLog.e("BleDevice.close()");
 
-        ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
+        ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
         actionHandler.removeCallbacksAndMessages(null);
         setState(BleDeviceState.DEVICE_CLOSED);
     }
@@ -330,7 +330,7 @@ public abstract class BleDevice {
 
     private void stopScan(boolean forever) {
         if(forever) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(connService);
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
         }
 
         BleScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
