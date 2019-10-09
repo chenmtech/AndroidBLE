@@ -9,10 +9,6 @@ import java.util.UUID;
  */
 
 public class UuidUtil {
-    private UuidUtil() {
-
-    }
-
     // byteArray转换为UUID
     public static UUID byteArrayToUuid(byte[] bytes) {
         byte[] tmp = new byte[bytes.length];

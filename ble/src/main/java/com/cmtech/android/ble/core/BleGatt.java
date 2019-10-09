@@ -7,15 +7,18 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Pair;
 
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleRssiCallback;
-import com.cmtech.android.ble.common.BleConfig;
+import com.cmtech.android.ble.BleConfig;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
+import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.utils.HexUtil;
 import com.vise.log.ViseLog;
 
@@ -25,9 +28,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-import static com.cmtech.android.ble.core.BleDevice.MSG_CONNECT_TIMEOUT;
-import static com.cmtech.android.ble.core.BleDevice.MSG_READ_DATA_TIMEOUT;
-import static com.cmtech.android.ble.core.BleDevice.MSG_WRITE_DATA_TIMEOUT;
 
 /**
  *
@@ -42,15 +42,30 @@ import static com.cmtech.android.ble.core.BleDevice.MSG_WRITE_DATA_TIMEOUT;
  */
 
 public class BleGatt {
+    private static final int MSG_CONNECT_TIMEOUT = 1; // 连接超时
+    private static final int MSG_WRITE_DATA_TIMEOUT = 2; // 写数据超时
+    private static final int MSG_READ_DATA_TIMEOUT = 3; // 读数据超时
 
     private BluetoothGatt bluetoothGatt; //底层蓝牙GATT
     private IBleRssiCallback rssiCallback; //获取信号值回调
     private IBleConnectCallback connectCallback;//连接回调
-    private Handler callbackHandler;
     private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Element和Callback
     private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback
     private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Element和Callback Map
 
+    // 回调Handler
+    private final Handler callbackHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == MSG_CONNECT_TIMEOUT) {
+                connectFailure(new TimeoutException());
+            } else if (msg.what == MSG_WRITE_DATA_TIMEOUT) {
+                writeFailure(new TimeoutException());
+            } else if (msg.what == MSG_READ_DATA_TIMEOUT) {
+                readFailure(new TimeoutException());
+            }
+        }
+    };
 
     /**
      * 蓝牙所有Gatt操作的回调
@@ -268,30 +283,23 @@ public class BleGatt {
         }
     };
 
-
-
     BleGatt() {
     }
-
 
     /**
      * 连接设备
      * @param context context
      * @param connectCallback connectCallback
      */
-    public synchronized void connect(Context context, BluetoothDevice device, IBleConnectCallback connectCallback, Handler callbackHandler) {
+    public synchronized void connect(Context context, BluetoothDevice device, IBleConnectCallback connectCallback) {
         if(device == null) {
             throw new IllegalArgumentException("BluetoothDevice is null");
         }
         if(connectCallback == null) {
             throw new IllegalArgumentException("IBleConnectCallback is null");
         }
-        if(callbackHandler == null) {
-            throw new IllegalArgumentException("Handler is null");
-        }
 
         this.connectCallback = connectCallback;
-        this.callbackHandler = callbackHandler;
         callbackHandler.removeMessages(MSG_CONNECT_TIMEOUT);
         callbackHandler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
         device.connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);

@@ -15,7 +15,6 @@ import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -54,11 +53,13 @@ public abstract class BleDevice {
     private static final int MSG_START_CONNECT = 0; // 开始连接
     private static final int MSG_START_DISCONNECT = 1; // 开始断开
 
-    public static final int MSG_CONNECT_TIMEOUT = 2; // 连接超时
-    public static final int MSG_WRITE_DATA_TIMEOUT = 3; // 写数据超时
-    public static final int MSG_READ_DATA_TIMEOUT = 4; // 读数据超时
-
     public final static int NO_BATTERY = -1; // 无电量信息
+
+    public interface OnBleDeviceUpdatedListener {
+        void onConnectStateUpdated(final BleDevice device); // 连接状态更新
+        void onBleErrorNotified(final BleDevice device, boolean warn); // BLE错误通知
+        void onBatteryUpdated(final BleDevice device); // 电池电量更新
+    }
 
     private final Context context;
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备实时状态
@@ -83,21 +84,6 @@ public abstract class BleDevice {
                 }
             } else if (msg.what == MSG_START_DISCONNECT) {
                 disconnect();
-            }
-        }
-    };
-    // gatt回调Handler
-    private final Handler gattCallbackHandler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            if(bleGatt != null) {
-                if (msg.what == MSG_CONNECT_TIMEOUT) {
-                    bleGatt.connectFailure(new TimeoutException());
-                } else if (msg.what == MSG_WRITE_DATA_TIMEOUT) {
-                    bleGatt.writeFailure(new TimeoutException());
-                } else if (msg.what == MSG_READ_DATA_TIMEOUT) {
-                    bleGatt.readFailure(new TimeoutException());
-                }
             }
         }
     };
@@ -350,7 +336,7 @@ public abstract class BleDevice {
         } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
             stopScan(false);
             BleDevice.this.deviceDetailInfo = bleDeviceDetailInfo;
-            new BleGatt().connect(context, bleDeviceDetailInfo.getDevice(), connectCallback, gattCallbackHandler);
+            new BleGatt().connect(context, bleDeviceDetailInfo.getDevice(), connectCallback);
             setState(DEVICE_CONNECTING);
         }
     }
