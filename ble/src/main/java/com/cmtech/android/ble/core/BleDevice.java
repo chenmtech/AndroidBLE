@@ -152,7 +152,6 @@ public abstract class BleDevice {
         this.registerInfo.setUuidString(registerInfo.getUuidString());
         this.registerInfo.setImagePath(registerInfo.getImagePath());
         this.registerInfo.setAutoConnect(registerInfo.autoConnect());
-        this.registerInfo.setReconnectTimes(registerInfo.getReconnectTimes());
         this.registerInfo.setWarnWhenBleError(registerInfo.isWarnWhenBleError());
     }
 

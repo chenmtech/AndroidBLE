@@ -31,7 +31,6 @@ public class BleDeviceRegisterInfo implements Serializable{
     public static final String DEFAULT_DEVICE_NICKNAME = ""; // 缺省设备名
     public static final String DEFAULT_DEVICE_IMAGEPATH = ""; // 缺省设备图标路径名
     public static final boolean DEFAULT_DEVICE_AUTOCONNECT = true; // 设备打开时是否自动连接
-    public static final int DEFAULT_DEVICE_RECONNECT_TIMES = 3; // 连接失败后的重连次数
     public static final boolean DEFAULT_WARN_WHEN_BLE_ERROR = true; // 缺省的蓝牙错误是否报警
 
     private String macAddress = ""; // 设备mac地址
@@ -39,20 +38,18 @@ public class BleDeviceRegisterInfo implements Serializable{
     private String uuidString = ""; // 设备广播Uuid16位字符串
     private String imagePath = DEFAULT_DEVICE_IMAGEPATH; // 设备图标路径名
     private boolean autoConnect = DEFAULT_DEVICE_AUTOCONNECT; // 设备打开后是否自动连接
-    private int reconnectTimes = DEFAULT_DEVICE_RECONNECT_TIMES; // 连接断开后重连次数
     private boolean warnWhenBleError = DEFAULT_WARN_WHEN_BLE_ERROR; // 重连失败后是否报警
 
     public BleDeviceRegisterInfo() {
     }
 
     public BleDeviceRegisterInfo(String macAddress, String nickName, String uuidString, String imagePath,
-                                 boolean autoConnect, int reconnectTimes, boolean warnWhenBleError) {
+                                 boolean autoConnect, boolean warnWhenBleError) {
         this.macAddress = macAddress;
         this.nickName = nickName;
         this.uuidString = uuidString;
         this.imagePath = imagePath;
         this.autoConnect = autoConnect;
-        this.reconnectTimes = reconnectTimes;
         this.warnWhenBleError = warnWhenBleError;
     }
 
@@ -86,12 +83,6 @@ public class BleDeviceRegisterInfo implements Serializable{
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
-    public int getReconnectTimes() {
-        return reconnectTimes;
-    }
-    public void setReconnectTimes(int reconnectTimes) {
-        this.reconnectTimes = reconnectTimes;
-    }
     public boolean isWarnWhenBleError() {
         return warnWhenBleError;
     }
@@ -116,7 +107,6 @@ public class BleDeviceRegisterInfo implements Serializable{
         editor.putString(macAddress+"_uuidString", uuidString);
         editor.putString(macAddress+"_imagePath", imagePath);
         editor.putBoolean(macAddress+"_autoConnect", autoConnect);
-        editor.putInt(macAddress+"_reconnectTimes", reconnectTimes);
         editor.putBoolean(macAddress+"_warnWhenBleError", warnWhenBleError);
         return editor.commit();
     }
@@ -138,7 +128,6 @@ public class BleDeviceRegisterInfo implements Serializable{
         editor.remove(macAddress+"_uuidString");
         editor.remove(macAddress+"_imagePath");
         editor.remove(macAddress+"_autoConnect");
-        editor.remove(macAddress+"_reconnectTimes");
         editor.remove(macAddress+"_warnWhenBleError");
         return editor.commit();
     }
@@ -175,9 +164,8 @@ public class BleDeviceRegisterInfo implements Serializable{
         String uuidString = pref.getString(macAddress+"_uuidString", "");
         String imagePath = pref.getString(macAddress+"_imagePath", DEFAULT_DEVICE_IMAGEPATH);
         boolean autoConnect = pref.getBoolean(macAddress+"_autoConnect", DEFAULT_DEVICE_AUTOCONNECT);
-        int reconnectTimes = pref.getInt(macAddress+"_reconnectTimes", DEFAULT_DEVICE_RECONNECT_TIMES);
         boolean warnWhenBleError = pref.getBoolean(macAddress+"_warnWhenBleError", DEFAULT_WARN_WHEN_BLE_ERROR);
-        return new BleDeviceRegisterInfo(address, nickName, uuidString, imagePath, autoConnect, reconnectTimes, warnWhenBleError);
+        return new BleDeviceRegisterInfo(address, nickName, uuidString, imagePath, autoConnect, warnWhenBleError);
     }
 
     @Override
