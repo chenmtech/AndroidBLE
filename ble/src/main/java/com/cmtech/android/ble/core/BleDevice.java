@@ -57,7 +57,7 @@ public abstract class BleDevice {
 
     public interface OnBleDeviceUpdatedListener {
         void onConnectStateUpdated(final BleDevice device); // 连接状态更新
-        void onBleErrorNotified(final BleDevice device, boolean warn); // BLE错误通知
+        void onBleErrorNotified(final BleDevice device); // BLE错误通知
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
     }
 
@@ -463,23 +463,15 @@ public abstract class BleDevice {
         }
     }
 
+    // Ble错误，是否报警
     private void notifyBleError() {
         if(registerInfo.isWarnWhenBleError()) {
-            notifyBleError(true);
-        }
-    }
-
-    // Ble错误，是否报警
-    private void notifyBleError(final boolean isWarn) {
-        for(final OnBleDeviceUpdatedListener listener : stateListeners) {
-            if(listener != null) {
-                listener.onBleErrorNotified(BleDevice.this, isWarn);
+            for(final OnBleDeviceUpdatedListener listener : stateListeners) {
+                if(listener != null) {
+                    listener.onBleErrorNotified(BleDevice.this);
+                }
             }
         }
-    }
-
-    public final void cancelNotifyBleError() {
-        notifyBleError(false);
     }
 
     // 更新电池电量

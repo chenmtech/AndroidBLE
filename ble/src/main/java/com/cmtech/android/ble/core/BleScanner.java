@@ -32,14 +32,8 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_E
 
 public class BleScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
-
     private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
-
-    private static int scanTimes = 0;
-
-    private BleScanner() {
-
-    }
+    private static int scanTimes = 0; // 发起扫描的次数
 
     // 开始扫描
     public static void startScan(ScanFilter scanFilter, final IBleScanCallback bleScanCallback) {
@@ -55,14 +49,12 @@ public class BleScanner {
                 bleScanCallback.onScanFailed(SCAN_FAILED_BLE_CLOSED);
                 return;
             }
-
             if (bleInnerError) {
                 bleScanCallback.onScanFailed(SCAN_FAILED_BLE_ERROR);
                 return;
             }
 
             scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
-
             for (ScanCallbackAdapter callback : callbackList) {
                 if (callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
@@ -72,7 +64,6 @@ public class BleScanner {
 
             if (scanCallback == null) {
                 scanCallback = new ScanCallbackAdapter(bleScanCallback);
-
                 callbackList.add(scanCallback);
             } else {
                 bleScanCallback.onScanFailed(IBleScanCallback.SCAN_FAILED_ALREADY_STARTED);
@@ -81,9 +72,7 @@ public class BleScanner {
         }
 
         ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
-
         scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
-
         scanTimes++;
 
         ViseLog.e("Start scanning, scanTimes = " + scanTimes);
@@ -136,7 +125,6 @@ public class BleScanner {
             if(bleScanCallback == null) {
                 throw new IllegalArgumentException("IBleScanCallback can't be null.");
             }
-
             this.bleScanCallback = bleScanCallback;
         }
 
@@ -145,9 +133,7 @@ public class BleScanner {
             super.onScanResult(callbackType, result);
 
             byte[] recordBytes = (result.getScanRecord() == null) ? null : result.getScanRecord().getBytes();
-
             BleDeviceDetailInfo bleDeviceDetailInfo = new BleDeviceDetailInfo(result.getDevice(), result.getRssi(), recordBytes, result.getTimestampNanos());
-
             if(bleScanCallback != null) {
                 bleScanCallback.onDeviceFound(bleDeviceDetailInfo);
             }
@@ -158,7 +144,6 @@ public class BleScanner {
             super.onScanFailed(errorCode);
 
             bleInnerError = true;
-
             if(bleScanCallback != null)
                 bleScanCallback.onScanFailed(SCAN_FAILED_BLE_ERROR);
         }
