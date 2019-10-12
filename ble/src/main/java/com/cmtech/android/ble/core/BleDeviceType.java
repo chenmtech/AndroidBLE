@@ -20,13 +20,13 @@ public class BleDeviceType {
     private final static List<BleDeviceType> SUPPORTED_DEVICE_TYPES = new ArrayList<>(); // 支持的设备类型数组
 
     private final String uuid; // 设备16位UUID字符串
-    private final int defaultImage; // 缺省图标
+    private final int defaultImageId; // 缺省图标ID
     private final String defaultNickname; // 缺省设备名
     private final String factoryClassName; // 设备工厂类名
 
-    public BleDeviceType(String uuid, int defaultImage, String defaultNickname, String factoryClassName) {
+    public BleDeviceType(String uuid, int defaultImageId, String defaultNickname, String factoryClassName) {
         this.uuid = uuid;
-        this.defaultImage = defaultImage;
+        this.defaultImageId = defaultImageId;
         this.defaultNickname = defaultNickname;
         this.factoryClassName = factoryClassName;
     }
@@ -50,8 +50,8 @@ public class BleDeviceType {
     public String getUuid() {
         return uuid;
     }
-    public int getDefaultImage() {
-        return defaultImage;
+    public int getDefaultImageId() {
+        return defaultImageId;
     }
     public String getDefaultNickname() {
         return defaultNickname;

@@ -2,7 +2,10 @@ package com.cmtech.android.ble.core;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
@@ -65,13 +68,27 @@ public abstract class BleDevice {
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备实时状态
     private BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
-    private BleDeviceDetailInfo deviceDetailInfo;//设备详细信息，扫描到设备后赋值
+    private BleDeviceDetailInfo detailInfo;//设备详细信息，扫描到设备后赋值
     private BleGatt bleGatt; // 设备Gatt，连接成功后赋值，完成连接以及数据通信等功能
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
     private final ScanFilter scanFilter; // 扫描过滤器
     private int battery = NO_BATTERY; // 设备电池电量
     private final List<OnBleDeviceUpdatedListener> stateListeners; // 设备状态监听器列表
     private ExecutorService autoConnService; // 定时自动连接服务
+
+    // 设备绑定状态广播接收器
+    private final BroadcastReceiver bondStateReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                if(device.getBondState() == BluetoothDevice.BOND_BONDED && getMacAddress().equalsIgnoreCase(device.getAddress())) {
+                    startConnect();
+                }
+            }
+        }
+    };
+
     // 动作Handler
     private final Handler actionHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -105,7 +122,7 @@ public abstract class BleDevice {
                     break;
                 case SCAN_FAILED_BLE_CLOSED:
                     stopScan(false);
-                    Toast.makeText(context, "蓝牙已关闭。", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "蓝牙已关闭，无法扫描。", Toast.LENGTH_LONG).show();
                     break;
                 case SCAN_FAILED_BLE_ERROR:
                     stopScan(true);
@@ -173,7 +190,7 @@ public abstract class BleDevice {
             if(deviceType == null) {
                 throw new IllegalStateException("The device type is not supported.");
             }
-            return ContextCompat.getDrawable(context, deviceType.getDefaultImage());
+            return ContextCompat.getDrawable(context, deviceType.getDefaultImageId());
         } else {
             return new BitmapDrawable(context.getResources(), getImagePath());
         }
@@ -233,6 +250,10 @@ public abstract class BleDevice {
         }
 
         ViseLog.e("BleDevice.open()");
+
+        IntentFilter bondIntent = new IntentFilter();
+        bondIntent.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        context.registerReceiver(bondStateReceiver, bondIntent);
 
         setState(CONNECT_DISCONNECT);
         if(registerInfo.autoConnect()) {
@@ -303,6 +324,8 @@ public abstract class BleDevice {
         ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
         actionHandler.removeCallbacksAndMessages(null);
         setState(BleDeviceState.DEVICE_CLOSED);
+
+        context.unregisterReceiver(bondStateReceiver);
     }
 
     protected void disconnect() {
@@ -330,11 +353,11 @@ public abstract class BleDevice {
         BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
         if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
             stopScan(true);
-            Toast.makeText(context, "设备未配对，请先配对。", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "设备未配对，无法连接。", Toast.LENGTH_LONG).show();
             bleDeviceDetailInfo.getDevice().createBond();
         } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
             stopScan(false);
-            BleDevice.this.deviceDetailInfo = bleDeviceDetailInfo;
+            BleDevice.this.detailInfo = bleDeviceDetailInfo;
             new BleGatt().connect(context, bleDeviceDetailInfo.getDevice(), connectCallback);
             setState(DEVICE_CONNECTING);
         }
