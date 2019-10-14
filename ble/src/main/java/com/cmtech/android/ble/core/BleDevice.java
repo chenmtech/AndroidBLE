@@ -11,7 +11,6 @@ import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
-import android.support.v4.content.ContextCompat;
 import android.widget.Toast;
 
 import com.cmtech.android.ble.callback.IBleConnectCallback;
@@ -183,11 +182,7 @@ public abstract class BleDevice {
     }
     public Drawable getImageDrawable() {
         if(getImagePath().equals("")) {
-            BleDeviceType deviceType = BleDeviceType.getFromUuid(getUuidString());
-            if(deviceType == null) {
-                throw new IllegalStateException("The device type is not supported.");
-            }
-            return ContextCompat.getDrawable(context, deviceType.getDefaultImageId());
+            return null;
         } else {
             return new BitmapDrawable(context.getResources(), getImagePath());
         }
