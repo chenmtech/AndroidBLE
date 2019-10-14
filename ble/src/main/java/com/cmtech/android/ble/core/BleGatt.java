@@ -315,7 +315,7 @@ public class BleGatt {
         }
 
         callbackHandler.removeMessages(MSG_READ_DATA_TIMEOUT);
-        callbackHandler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
+        callbackHandler.sendEmptyMessageDelayed(MSG_READ_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
 
         boolean success = false;
         BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
@@ -349,7 +349,7 @@ public class BleGatt {
         }
 
         callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
+        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
 
         boolean success = false;
         BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
@@ -383,7 +383,7 @@ public class BleGatt {
         }
 
         callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getOperateTimeout());
+        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
 
         boolean success = false;
         BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);

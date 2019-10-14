@@ -16,13 +16,8 @@ import com.cmtech.android.ble.exception.BleException;
  */
 
 public interface IBleConnectCallback {
-    //连接成功
-    void onConnectSuccess(BleGatt bleGatt);
-
-    //连接失败
-    void onConnectFailure(BleException exception);
-
-    //连接断开
-    void onDisconnect();
+    void onConnectSuccess(BleGatt bleGatt); //连接成功
+    void onConnectFailure(BleException exception); //连接失败
+    void onDisconnect(); //连接断开
 
 }

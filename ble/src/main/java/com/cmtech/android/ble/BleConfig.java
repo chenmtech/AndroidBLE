@@ -6,15 +6,14 @@ package com.cmtech.android.ble;
  * @date: 2017/10/16 11:46
  */
 public class BleConfig {
-    public static final String CCC_UUID = "00002902-0000-1000-8000-00805f9b34fb";
+    public static final String CCC_UUID = "00002902-0000-1000-8000-00805f9b34fb"; // client characteristic config UUID
     public static final String BT_BASE_UUID = "0000XXXX-0000-1000-8000-00805F9B34FB"; // 蓝牙标准基础UUID
-
-    private static final int DEFAULT_CONN_TIME = 30000;
-    private static final int DEFAULT_OPERATE_TIME = 3000;
+    private static final int DEFAULT_CONNECT_TIMEOUT = 30000; // 缺省连接超时时间
+    private static final int DEFAULT_DATA_OPERATE_TIMEOUT = 3000; // 缺省数据操作超时时间
 
     private static BleConfig instance;
-    private int connectTimeout = DEFAULT_CONN_TIME; //连接超时时间（毫秒）
-    private int operateTimeout = DEFAULT_OPERATE_TIME; //数据操作超时时间（毫秒）
+    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT; //连接超时时间（毫秒）
+    private int dataOperateTimeout = DEFAULT_DATA_OPERATE_TIMEOUT; //数据操作超时时间（毫秒）
 
     private BleConfig() {
     }
@@ -55,18 +54,18 @@ public class BleConfig {
      *
      * @return 返回数据操作超时时间
      */
-    public int getOperateTimeout() {
-        return operateTimeout;
+    public int getDataOperateTimeout() {
+        return dataOperateTimeout;
     }
 
     /**
      * 设置数据操作超时时间
      *
-     * @param operateTimeout 数据操作超时时间
+     * @param dataOperateTimeout 数据操作超时时间
      * @return 返回BleConfig
      */
-    public BleConfig setOperateTimeout(int operateTimeout) {
-        this.operateTimeout = operateTimeout;
+    public BleConfig setDataOperateTimeout(int dataOperateTimeout) {
+        this.dataOperateTimeout = dataOperateTimeout;
         return this;
     }
 }

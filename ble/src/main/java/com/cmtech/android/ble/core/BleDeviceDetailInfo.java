@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.cmtech.android.ble.common.BluetoothServiceType;
+import com.cmtech.android.ble.model.BluetoothServiceType;
 import com.cmtech.android.ble.model.adrecord.AdRecordStore;
 import com.cmtech.android.ble.model.resolver.BluetoothClassResolver;
 import com.cmtech.android.ble.utils.AdRecordUtil;

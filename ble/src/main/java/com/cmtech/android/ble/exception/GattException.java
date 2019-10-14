@@ -1,7 +1,5 @@
 package com.cmtech.android.ble.exception;
 
-import com.cmtech.android.ble.common.BleExceptionCode;
-
 /**
  * @Description: Gatt异常
  * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>

@@ -1,7 +1,5 @@
 package com.cmtech.android.ble.exception;
 
-import com.cmtech.android.ble.common.BleExceptionCode;
-
 import java.io.Serializable;
 
 /**

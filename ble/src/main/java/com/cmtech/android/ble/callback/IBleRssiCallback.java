@@ -15,9 +15,6 @@ import com.cmtech.android.ble.exception.BleException;
  */
 
 public interface IBleRssiCallback {
-    // 读取成功
-    void onSuccess(int rssi);
-
-    // 读取失败
-    void onFailure(BleException exception);
+    void onSuccess(int rssi); // 读取成功
+    void onFailure(BleException exception); // 读取失败
 }

@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.common;
+package com.cmtech.android.ble.exception;
 
 /**
  * @Description: BLE异常Code

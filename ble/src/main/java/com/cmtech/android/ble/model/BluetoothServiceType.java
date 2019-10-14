@@ -1,4 +1,4 @@
-package com.cmtech.android.ble.common;
+package com.cmtech.android.ble.model;
 
 import android.bluetooth.BluetoothClass;
 
