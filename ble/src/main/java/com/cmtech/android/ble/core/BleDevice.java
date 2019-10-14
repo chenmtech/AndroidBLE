@@ -52,7 +52,7 @@ import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_SCANNING;
 
 public abstract class BleDevice {
     private static final int AUTO_CONNECT_INTERVAL_SECOND = 10; // 自动连接间隔秒数
-
+    private static final int MIN_RSSI_WHEN_CONNECT = -75; // 设备建立连接要求的最小RSSI
     private static final int MSG_START_CONNECT = 0; // 开始连接
     private static final int MSG_START_DISCONNECT = 1; // 开始断开
 
@@ -82,8 +82,7 @@ public abstract class BleDevice {
             if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if(device.getBondState() == BluetoothDevice.BOND_BONDED && getMacAddress().equalsIgnoreCase(device.getAddress())) {
-                    BleDevice.this.context.unregisterReceiver(bondStateReceiver);
-                    startConnect();
+                    Toast.makeText(context, "设备绑定成功。", Toast.LENGTH_SHORT).show();
                 }
             }
         }
@@ -106,7 +105,9 @@ public abstract class BleDevice {
         @Override
         public void onDeviceFound(final BleDeviceDetailInfo bleDeviceDetailInfo) {
             ViseLog.e("The current rssi: " + bleDeviceDetailInfo.getRssi());
-            processFoundDevice(bleDeviceDetailInfo);
+
+            if(bleDeviceDetailInfo.getRssi() >= MIN_RSSI_WHEN_CONNECT)
+                processFoundDevice(bleDeviceDetailInfo);
         }
 
         @Override
@@ -121,7 +122,7 @@ public abstract class BleDevice {
                     stopScan(false);
                     Toast.makeText(context, "蓝牙已关闭，无法扫描。", Toast.LENGTH_LONG).show();
                     break;
-                case SCAN_FAILED_BLE_ERROR:
+                case SCAN_FAILED_BLE_INNER_ERROR:
                     stopScan(true);
                     notifyBleError();
                     break;
@@ -166,11 +167,7 @@ public abstract class BleDevice {
         return registerInfo;
     }
     public void updateRegisterInfo(BleDeviceRegisterInfo registerInfo) {
-        this.registerInfo.setMacAddress(registerInfo.getMacAddress());
-        this.registerInfo.setUuidString(registerInfo.getUuidString());
-        this.registerInfo.setImagePath(registerInfo.getImagePath());
-        this.registerInfo.setAutoConnect(registerInfo.autoConnect());
-        this.registerInfo.setWarnWhenBleError(registerInfo.isWarnWhenBleError());
+        this.registerInfo.update(registerInfo);
     }
     public String getMacAddress() {
         return registerInfo.getMacAddress();
@@ -179,7 +176,7 @@ public abstract class BleDevice {
         return registerInfo.getNickName();
     }
     public String getUuidString() {
-        return registerInfo.getUuidString();
+        return registerInfo.getUuidStr();
     }
     public String getImagePath() {
         return registerInfo.getImagePath();
@@ -261,6 +258,10 @@ public abstract class BleDevice {
         }
 
         ViseLog.e("BleDevice.open()");
+
+        IntentFilter bondIntent = new IntentFilter();
+        bondIntent.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+        context.registerReceiver(bondStateReceiver, bondIntent);
 
         setState(CONNECT_DISCONNECT);
         if(registerInfo.autoConnect()) {
@@ -369,9 +370,6 @@ public abstract class BleDevice {
         if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
             stopScan(true);
             Toast.makeText(context, "设备未绑定，无法连接，请先绑定设备。", Toast.LENGTH_LONG).show();
-            IntentFilter bondIntent = new IntentFilter();
-            bondIntent.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-            context.registerReceiver(bondStateReceiver, bondIntent);
             bleDeviceDetailInfo.getDevice().createBond();
         } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
             stopScan(false);

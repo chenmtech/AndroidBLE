@@ -54,6 +54,7 @@ public class BleGatt {
     private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Element和Callback Map
 
     // 回调Handler
+    // 除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此callbackHandler中执行
     private final Handler callbackHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -459,7 +460,7 @@ public class BleGatt {
      *
      * @return 返回是否刷新成功
      */
-    public synchronized boolean refreshDeviceCache() {
+    private synchronized boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
             if (bluetoothGatt != null) {
@@ -512,7 +513,7 @@ public class BleGatt {
      *
      * @param bleException 回调异常
      */
-    void connectFailure(BleException bleException) {
+    private void connectFailure(BleException bleException) {
         clear();
         if (connectCallback != null) {
             connectCallback.onConnectFailure(bleException);
@@ -525,7 +526,7 @@ public class BleGatt {
      *
      * @param bleException exception
      */
-    void readFailure(BleException bleException) {
+    private void readFailure(BleException bleException) {
         //callbackHandler.removeMessages(MSG_READ_DATA_TIMEOUT);
         if(readElementCallback.second != null)
             readElementCallback.second.onFailure(bleException);
@@ -537,7 +538,7 @@ public class BleGatt {
      *
      * @param bleException exception
      */
-    void writeFailure(BleException bleException) {
+    private void writeFailure(BleException bleException) {
         //callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
         if(writeElementCallback.second != null)
             writeElementCallback.second.onFailure(bleException);

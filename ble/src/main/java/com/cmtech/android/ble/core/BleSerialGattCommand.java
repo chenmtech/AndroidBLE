@@ -8,7 +8,7 @@ import com.vise.log.ViseLog;
 /**
  *
  * ClassName:      BleSerialGattCommand
- * Description:    表示串行Gatt命令，所谓串行是指当命令发出后，并不立即执行下一条命令。
+ * Description:    表示串行Gatt命令，所谓串行命令是指当命令发出后，并不立即执行下一条命令。
  *                 而是等待接收到蓝牙设备返回的响应并执行回调后，才会继续执行下一条命令
  * Author:         chenm
  * CreateDate:     2019-06-20 07:02
@@ -42,7 +42,6 @@ class BleSerialGattCommand extends BleGattCommand {
 
     private BleSerialGattCommand(BleGattCommand gattCommand) {
         super(gattCommand);
-
         dataCallback = new BleSerialCommandDataCallbackDecorator(dataCallback);
     }
 
@@ -64,11 +63,9 @@ class BleSerialGattCommand extends BleGattCommand {
     @Override
     synchronized boolean execute() throws InterruptedException{
         finish = super.execute();
-
         while(!finish) {
             wait();
         }
-
         return true;
     }
 
@@ -93,6 +90,7 @@ class BleSerialGattCommand extends BleGattCommand {
         if(bleCallback != null)
             bleCallback.onFailure(exception);
 
+        // 命令执行错误，立刻断开连接
         if(device != null) {
             device.startDisconnect();
         }

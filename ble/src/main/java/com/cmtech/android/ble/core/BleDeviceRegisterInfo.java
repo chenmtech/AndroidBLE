@@ -26,28 +26,30 @@ import java.util.Set;
 
 public class BleDeviceRegisterInfo implements Serializable{
     private final static long serialVersionUID = 1L;
-
-    // 下面五个参数用于登记设备基本信息
-    public static final String DEFAULT_DEVICE_NICKNAME = ""; // 缺省设备名
-    public static final String DEFAULT_DEVICE_IMAGEPATH = ""; // 缺省设备图标路径名
-    public static final boolean DEFAULT_DEVICE_AUTOCONNECT = true; // 设备打开时是否自动连接
+    public static final String DEFAULT_DEVICE_MAC_ADDRESS = ""; //缺省MAC地址
+    public static final String DEFAULT_DEVICE_UUID_STR = ""; //缺省UUID串
+    public static final String DEFAULT_DEVICE_NICK_NAME = ""; // 缺省设备名
+    public static final String DEFAULT_DEVICE_IMAGE_PATH = ""; // 缺省设备图标路径名
+    public static final boolean DEFAULT_DEVICE_AUTO_CONNECT = true; // 设备打开时是否自动连接
     public static final boolean DEFAULT_WARN_WHEN_BLE_ERROR = true; // 缺省的蓝牙错误是否报警
 
-    private String macAddress = ""; // 设备mac地址
-    private String nickName = DEFAULT_DEVICE_NICKNAME; // 设备昵称
-    private String uuidString = ""; // 设备广播Uuid16位字符串
-    private String imagePath = DEFAULT_DEVICE_IMAGEPATH; // 设备图标路径名
-    private boolean autoConnect = DEFAULT_DEVICE_AUTOCONNECT; // 设备打开后是否自动连接
+    private final String macAddress; // 设备mac地址
+    private final String uuidStr; // 设备广播Uuid16位字符串
+    private String nickName = DEFAULT_DEVICE_NICK_NAME; // 设备昵称
+    private String imagePath = DEFAULT_DEVICE_IMAGE_PATH; // 设备图标路径名
+    private boolean autoConnect = DEFAULT_DEVICE_AUTO_CONNECT; // 设备打开后是否自动连接
     private boolean warnWhenBleError = DEFAULT_WARN_WHEN_BLE_ERROR; // 重连失败后是否报警
 
-    public BleDeviceRegisterInfo() {
+    public BleDeviceRegisterInfo(String macAddress, String uuidStr) {
+        this.macAddress = macAddress;
+        this.uuidStr = uuidStr;
     }
 
-    public BleDeviceRegisterInfo(String macAddress, String nickName, String uuidString, String imagePath,
+    private BleDeviceRegisterInfo(String macAddress, String nickName, String uuidStr, String imagePath,
                                  boolean autoConnect, boolean warnWhenBleError) {
         this.macAddress = macAddress;
+        this.uuidStr = uuidStr;
         this.nickName = nickName;
-        this.uuidString = uuidString;
         this.imagePath = imagePath;
         this.autoConnect = autoConnect;
         this.warnWhenBleError = warnWhenBleError;
@@ -56,20 +58,14 @@ public class BleDeviceRegisterInfo implements Serializable{
     public String getMacAddress() {
         return macAddress;
     }
-    public void setMacAddress(String macAddress) {
-        this.macAddress = macAddress;
+    public String getUuidStr() {
+        return uuidStr;
     }
     public String getNickName() {
         return nickName;
     }
     public void setNickName(String nickName) {
         this.nickName = nickName;
-    }
-    public String getUuidString() {
-        return uuidString;
-    }
-    public void setUuidString(String uuidString) {
-        this.uuidString = uuidString;
     }
     public String getImagePath() {
         return imagePath;
@@ -89,8 +85,16 @@ public class BleDeviceRegisterInfo implements Serializable{
     public void setWarnWhenBleError(boolean warnWhenBleError) {
         this.warnWhenBleError = warnWhenBleError;
     }
+    public void update(BleDeviceRegisterInfo registerInfo) {
+        if(macAddress.equalsIgnoreCase(registerInfo.macAddress) && uuidStr.equalsIgnoreCase(registerInfo.uuidStr)) {
+            nickName = registerInfo.nickName;
+            imagePath = registerInfo.imagePath;
+            autoConnect = registerInfo.autoConnect;
+            warnWhenBleError = registerInfo.warnWhenBleError;
+        }
+    }
 
-    // 将设备注册信息保存到Pref
+    // 将注册信息保存到Pref
     public boolean saveToPref(SharedPreferences pref) {
         if(TextUtils.isEmpty(macAddress)) return false;
 
@@ -101,17 +105,16 @@ public class BleDeviceRegisterInfo implements Serializable{
             addressSet.add(macAddress);
             editor.putStringSet("addressSet", addressSet);
         }
-
         editor.putString(macAddress+"_macAddress", macAddress);
+        editor.putString(macAddress+"_uuidStr", uuidStr);
         editor.putString(macAddress+"_nickName", nickName);
-        editor.putString(macAddress+"_uuidString", uuidString);
         editor.putString(macAddress+"_imagePath", imagePath);
         editor.putBoolean(macAddress+"_autoConnect", autoConnect);
         editor.putBoolean(macAddress+"_warnWhenBleError", warnWhenBleError);
         return editor.commit();
     }
 
-    // 从Pref中删除设备注册信息
+    // 从Pref中删除注册信息
     public boolean deleteFromPref(SharedPreferences pref) {
         if(TextUtils.isEmpty(macAddress)) return false;
 
@@ -124,46 +127,45 @@ public class BleDeviceRegisterInfo implements Serializable{
         }
 
         editor.remove(macAddress+"_macAddress");
+        editor.remove(macAddress+"_uuidStr");
         editor.remove(macAddress+"_nickName");
-        editor.remove(macAddress+"_uuidString");
         editor.remove(macAddress+"_imagePath");
         editor.remove(macAddress+"_autoConnect");
         editor.remove(macAddress+"_warnWhenBleError");
         return editor.commit();
     }
 
-    // 从Pref创建所有的设备基本信息
-    public static List<BleDeviceRegisterInfo> createFromPref(SharedPreferences pref) {
+    // 从Pref创建所有的设备注册信息对象
+    public static List<BleDeviceRegisterInfo> createAllFromPref(SharedPreferences pref) {
         Set<String> addressSet = new HashSet<>();
         addressSet = pref.getStringSet("addressSet", addressSet);
         if(addressSet == null || addressSet.isEmpty()) {
             return null;
         }
-
         // 转为数组排序
         String[] addressArr = addressSet.toArray(new String[0]);
         Arrays.sort(addressArr);
-        List<BleDeviceRegisterInfo> infoList = new ArrayList<>();
+
+        List<BleDeviceRegisterInfo> registerInfoList = new ArrayList<>();
         for(String macAddress : addressArr) {
-            BleDeviceRegisterInfo basicInfo = createFromPref(pref, macAddress);
-            if(basicInfo != null)
-                infoList.add(basicInfo);
+            BleDeviceRegisterInfo registerInfo = createFromPref(pref, macAddress);
+            if(registerInfo != null)
+                registerInfoList.add(registerInfo);
         }
 
-        return infoList;
+        return registerInfoList;
     }
 
     // 由Pref获取设备基本信息
     private static BleDeviceRegisterInfo createFromPref(SharedPreferences pref, String macAddress) {
         if(TextUtils.isEmpty(macAddress)) return null;
 
-        String address = pref.getString(macAddress+"_macAddress", "");
-        if("".equals(address)) return null;
-
-        String nickName = pref.getString(macAddress+"_nickName", DEFAULT_DEVICE_NICKNAME);
-        String uuidString = pref.getString(macAddress+"_uuidString", "");
-        String imagePath = pref.getString(macAddress+"_imagePath", DEFAULT_DEVICE_IMAGEPATH);
-        boolean autoConnect = pref.getBoolean(macAddress+"_autoConnect", DEFAULT_DEVICE_AUTOCONNECT);
+        String address = pref.getString(macAddress+"_macAddress", DEFAULT_DEVICE_MAC_ADDRESS);
+        if(TextUtils.isEmpty(address)) return null;
+        String uuidString = pref.getString(macAddress+"_uuidStr", DEFAULT_DEVICE_UUID_STR);
+        String nickName = pref.getString(macAddress+"_nickName", DEFAULT_DEVICE_NICK_NAME);
+        String imagePath = pref.getString(macAddress+"_imagePath", DEFAULT_DEVICE_IMAGE_PATH);
+        boolean autoConnect = pref.getBoolean(macAddress+"_autoConnect", DEFAULT_DEVICE_AUTO_CONNECT);
         boolean warnWhenBleError = pref.getBoolean(macAddress+"_warnWhenBleError", DEFAULT_WARN_WHEN_BLE_ERROR);
         return new BleDeviceRegisterInfo(address, nickName, uuidString, imagePath, autoConnect, warnWhenBleError);
     }

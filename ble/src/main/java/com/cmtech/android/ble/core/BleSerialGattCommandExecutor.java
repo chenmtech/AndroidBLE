@@ -117,7 +117,7 @@ class BleSerialGattCommandExecutor {
 
     // 无需等待响应立刻执行完毕
     final void runInstantly(IBleDataCallback dataCallback) {
-        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, BleGattCmdType.GATT_CMD_INSTANTRUN,
+        BleSerialGattCommand command = BleSerialGattCommand.create(device, null, BleGattCmdType.GATT_CMD_INSTANT_RUN,
                 null, dataCallback, null);
 
         if(command != null)

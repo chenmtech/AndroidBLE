@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 public class BleDeviceType {
-    private final static List<BleDeviceType> SUPPORTED_DEVICE_TYPES = new ArrayList<>(); // 支持的设备类型数组
+    private static final List<BleDeviceType> SUPPORTED_DEVICE_TYPES = new ArrayList<>(); // 支持的设备类型数组
 
     private final String uuid; // 设备16位UUID字符串
     private final int defaultImageId; // 缺省图标ID
@@ -40,16 +40,13 @@ public class BleDeviceType {
     // 通过UUID获取对应的设备类型
     public static BleDeviceType getFromUuid(String uuid) {
         for(BleDeviceType type : SUPPORTED_DEVICE_TYPES) {
-            if(type.getUuid().equalsIgnoreCase(uuid)) {
+            if(type.uuid.equalsIgnoreCase(uuid)) {
                 return type;
             }
         }
         return null;
     }
 
-    public String getUuid() {
-        return uuid;
-    }
     public int getDefaultImageId() {
         return defaultImageId;
     }

@@ -21,7 +21,7 @@ class BleGattCommand{
     private final BleGattElement element; // 命令操作的element
     private final BleGattCmdType bleGattCmdType; // 命令类型
     IBleDataCallback dataCallback; // 数据操作回调
-    private final byte[] writtenData; // 待写数据。如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable值
+    private final byte[] writtenData; // 待写数据。如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable值；如果为其他操作，则无意义
     private final IBleDataCallback receiveCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
     private final String description; // 命令描述符
 
@@ -52,14 +52,13 @@ class BleGattCommand{
 
     /**
      * 执行命令。执行完一条命令不仅需要发送命令，还需要收到设备响应或者立即执行返回
-     * @return 是否已经执行完命令，true-执行完 false-等待对方响应
+     * @return 是否已经执行完命令，true-执行完 false-等待响应
      */
     boolean execute() throws InterruptedException{
-        if(bleGattCmdType == BleGattCmdType.GATT_CMD_INSTANTRUN) {
+        if(bleGattCmdType == BleGattCmdType.GATT_CMD_INSTANT_RUN) {
             if(dataCallback == null) {
                 throw new IllegalStateException("The dataCallback of instant commands is null. ");
             }
-
             dataCallback.onSuccess(null, null);
             return true;
         }
@@ -68,25 +67,20 @@ class BleGattCommand{
         }
 
         BleGatt bleGatt = device.getBleGatt();
-
         switch (bleGattCmdType) {
             case GATT_CMD_READ:
                 bleGatt.readData(element, dataCallback);
                 break;
-
             case GATT_CMD_WRITE:
                 bleGatt.writeData(element, dataCallback, writtenData);
                 break;
-
             case GATT_CMD_NOTIFY:
             case GATT_CMD_INDICATE:
                 bleGatt.enable(element, dataCallback, receiveCallback, (writtenData[0] == 1), (bleGattCmdType == BleGattCmdType.GATT_CMD_INDICATE));
                 break;
-
             default:
                 break;
         }
-
         return false;
     }
 
@@ -137,28 +131,27 @@ class BleGattCommand{
         }
 
         BleGattCommand build() {
-            if(bleGattCmdType == BleGattCmdType.GATT_CMD_INSTANTRUN) {
+            if(bleGattCmdType == BleGattCmdType.GATT_CMD_INSTANT_RUN) {
                 if(dataCallback == null) {
-                    throw new NullPointerException("The dataCallback of instant commands is null. ");
+                    return null;
                 }
-
                 return new BleGattCommand(null, null, bleGattCmdType, dataCallback,
                         null, null, "<" + bleGattCmdType + ">");
             }
             if(device == null || device.getBleGatt() == null || element == null) {
-                throw new NullPointerException("The device mirror or element of the non-instant commands is null.");
+                return null;
             }
             if (bleGattCmdType == BleGattCmdType.GATT_CMD_WRITE
                     || bleGattCmdType == BleGattCmdType.GATT_CMD_NOTIFY
                     || bleGattCmdType == BleGattCmdType.GATT_CMD_INDICATE) {
                 if (data == null || data.length == 0) {
-                    throw new NullPointerException("The data of the write, notify or indicate commands is null");
+                    return null;
                 }
             }
             if (bleGattCmdType == BleGattCmdType.GATT_CMD_NOTIFY
                     || bleGattCmdType == BleGattCmdType.GATT_CMD_INDICATE) {
                 if (data[0] == 1 && receiveCallback == null) {
-                    throw new NullPointerException("The receive callback of the 'enable' notify or indicate commands is null");
+                    return null;
                 }
             }
 
