@@ -57,7 +57,7 @@ public abstract class BleDevice {
 
     public final static int NO_BATTERY = -1; // 无电量信息
 
-    public interface OnBleDeviceUpdatedListener {
+    public interface OnBleDeviceListener {
         void onConnectStateUpdated(final BleDevice device); // 连接状态更新
         void onBleErrorNotified(final BleDevice device); // BLE错误通知
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
@@ -72,7 +72,7 @@ public abstract class BleDevice {
     private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
     private final ScanFilter scanFilter; // 扫描过滤器
     private int battery = NO_BATTERY; // 设备电池电量
-    private final List<OnBleDeviceUpdatedListener> stateListeners; // 设备状态监听器列表
+    private final List<OnBleDeviceListener> listeners; // 设备监听器列表
     private ExecutorService autoConnService; // 自动连接服务
     // 设备绑定状态广播接收器
     private final BroadcastReceiver bondStateReceiver = new BroadcastReceiver() {
@@ -150,16 +150,16 @@ public abstract class BleDevice {
 
 
     public BleDevice(Context context, BleDeviceRegisterInfo registerInfo) {
-        if(!(context instanceof OnBleDeviceUpdatedListener)) {
-            throw new IllegalArgumentException("The device context is not a instance of OnBleDeviceUpdatedListener.");
+        if(!(context instanceof OnBleDeviceListener)) {
+            throw new IllegalArgumentException("The device context is not a instance of OnBleDeviceListener.");
         }
 
         this.context = context;
         this.registerInfo = registerInfo;
         scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-        stateListeners = new LinkedList<>();
-        addListener((OnBleDeviceUpdatedListener)context);
+        listeners = new LinkedList<>();
+        addListener((OnBleDeviceListener)context);
     }
 
     public BleDeviceRegisterInfo getRegisterInfo() {
@@ -463,20 +463,20 @@ public abstract class BleDevice {
 
 
     // 添加设备状态监听器
-    public final void addListener(OnBleDeviceUpdatedListener listener) {
-        if(!stateListeners.contains(listener)) {
-            stateListeners.add(listener);
+    public final void addListener(OnBleDeviceListener listener) {
+        if(!listeners.contains(listener)) {
+            listeners.add(listener);
         }
     }
 
     // 删除设备状态监听器
-    public final void removeListener(OnBleDeviceUpdatedListener listener) {
-        stateListeners.remove(listener);
+    public final void removeListener(OnBleDeviceListener listener) {
+        listeners.remove(listener);
     }
 
     // 更新设备状态
     public final void updateState() {
-        for(OnBleDeviceUpdatedListener listener : stateListeners) {
+        for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
                 listener.onConnectStateUpdated(this);
             }
@@ -486,7 +486,7 @@ public abstract class BleDevice {
     // Ble错误，是否报警
     private void notifyBleError() {
         if(registerInfo.isWarnWhenBleError()) {
-            for(final OnBleDeviceUpdatedListener listener : stateListeners) {
+            for(final OnBleDeviceListener listener : listeners) {
                 if(listener != null) {
                     listener.onBleErrorNotified(BleDevice.this);
                 }
@@ -496,7 +496,7 @@ public abstract class BleDevice {
 
     // 更新电池电量
     private void updateBattery() {
-        for (final OnBleDeviceUpdatedListener listener : stateListeners) {
+        for (final OnBleDeviceListener listener : listeners) {
             if (listener != null) {
                 listener.onBatteryUpdated(this);
             }
