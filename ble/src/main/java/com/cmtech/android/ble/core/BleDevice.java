@@ -55,7 +55,7 @@ public abstract class BleDevice {
     private static final int MSG_START_CONNECT = 0; // 开始连接
     private static final int MSG_START_DISCONNECT = 1; // 开始断开
 
-    public final static int NO_BATTERY = -1; // 无电量信息
+    public static final int NO_BATTERY = -1; // 无电量信息
 
     public interface OnBleDeviceListener {
         void onConnectStateUpdated(final BleDevice device); // 连接状态更新
@@ -212,6 +212,9 @@ public abstract class BleDevice {
     public boolean isChangingState() {
         return state == DEVICE_SCANNING || state == DEVICE_CONNECTING || state == DEVICE_DISCONNECTING;
     }
+    public boolean canClosed() {
+        return (autoConnService == null || autoConnService.isTerminated());
+    }
     private void setState(BleDeviceState state) {
         if(this.state != state) {
             ViseLog.e("当前状态：" + state);
@@ -318,8 +321,8 @@ public abstract class BleDevice {
 
     // 关闭设备
     public void close() {
-        if(!isDisconnected()) {
-            throw new IllegalStateException("The device is not disconnected and can't be closed.");
+        if(!canClosed()) {
+            throw new IllegalStateException("The device can't be closed.");
         }
 
         ViseLog.e("BleDevice.close()");
