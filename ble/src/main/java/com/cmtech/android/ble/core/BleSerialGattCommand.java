@@ -92,7 +92,7 @@ class BleSerialGattCommand extends BleGattCommand {
 
         // 命令执行错误，立刻断开连接
         if(device != null) {
-            device.startDisconnect();
+            device.requestDisconnect();
         }
     }
 }

@@ -260,7 +260,7 @@ public abstract class BleDevice {
 
         setState(CONNECT_DISCONNECT);
         if(registerInfo.autoConnect()) {
-            startConnect();
+            requestConnect();
         }
     }
 
@@ -273,10 +273,10 @@ public abstract class BleDevice {
         ViseLog.e("BleDevice.switchState()");
 
         if(isDisconnected()) {
-            startConnect();
+            requestConnect();
         } else if(isConnected()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-            startDisconnect();
+            requestDisconnect();
         } else if(isScanning()) {
             stopScan(true);
         } else { // CONNECTING or DISCONNECTING
@@ -284,10 +284,10 @@ public abstract class BleDevice {
         }
     }
 
-    // 开始连接
-    private void startConnect() {
+    // 请求连接
+    private void requestConnect() {
         if(autoConnService == null || autoConnService.isTerminated()) {
-            ViseLog.e("启动自动连接服务");
+            ViseLog.e("BleDevice.requestConnect()");
 
             autoConnService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
                 @Override
@@ -308,9 +308,9 @@ public abstract class BleDevice {
         }
     }
 
-    // 开始断开
-    public void startDisconnect() {
-        ViseLog.e("BleDevice.startDisconnect()");
+    // 请求断开
+    public void requestDisconnect() {
+        ViseLog.e("BleDevice.requestDisconnect()");
 
         actionHandler.removeCallbacksAndMessages(null);
         actionHandler.sendEmptyMessage(MSG_START_DISCONNECT);
@@ -396,7 +396,7 @@ public abstract class BleDevice {
         gattCmdExecutor.start();
         setConnectState(CONNECT_SUCCESS);
         if(!executeAfterConnectSuccess()) {
-            startDisconnect();
+            requestDisconnect();
         }
     }
 
