@@ -63,7 +63,7 @@ public abstract class BleDevice {
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
     }
 
-    private final Context context;
+    protected final Context context;
     private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
     private BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
     private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
