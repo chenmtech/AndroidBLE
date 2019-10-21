@@ -22,8 +22,7 @@ import java.util.concurrent.ThreadFactory;
 
 class BleSerialGattCommandExecutor {
     private final BleDevice device; // 设备
-
-    private ExecutorService gattCmdService; // 命令执行Service
+    private ExecutorService gattCmdService; // gatt命令执行Service
 
     BleSerialGattCommandExecutor(BleDevice device) {
         if(device == null) {
@@ -68,7 +67,6 @@ class BleSerialGattCommandExecutor {
     final void read(BleGattElement element, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_READ,
                 null, dataCallback, null);
-
         if(command != null)
             sendCommand(command);
     }
@@ -77,7 +75,6 @@ class BleSerialGattCommandExecutor {
     final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_WRITE,
                 data, dataCallback, null);
-
         if(command != null)
             sendCommand(command);
     }
@@ -96,7 +93,6 @@ class BleSerialGattCommandExecutor {
             , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_NOTIFY,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
-
         if(command != null)
             sendCommand(command);
     }
@@ -110,7 +106,6 @@ class BleSerialGattCommandExecutor {
             , IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_INDICATE,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
-
         if(command != null)
             sendCommand(command);
     }
@@ -119,7 +114,6 @@ class BleSerialGattCommandExecutor {
     final void runInstantly(IBleDataCallback dataCallback) {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, null, BleGattCmdType.GATT_CMD_INSTANT_RUN,
                 null, dataCallback, null);
-
         if(command != null)
             sendCommand(command);
     }

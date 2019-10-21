@@ -7,8 +7,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -48,90 +46,88 @@ import static com.cmtech.android.ble.core.BleDeviceState.DEVICE_SCANNING;
   * UpdateDate:     2019-06-05 07:02
   * UpdateRemark:   更新说明
   * Version:        1.0
+  * UpdateUser:     chenm
+  * UpdateDate:     2019-10-21 07:02
+  * UpdateRemark:   优化代码，
+  * Version:        1.1
  */
 
 public abstract class BleDevice {
-    private static final int AUTO_CONNECT_INTERVAL_SECOND = 10; // 自动连接间隔秒数
-    private static final int MIN_RSSI_WHEN_CONNECT = -75; // 设备建立连接要求的最小RSSI
-    private static final int MSG_START_CONNECT = 0; // 开始连接
-    private static final int MSG_START_DISCONNECT = 1; // 开始断开
-
-    public static final int NO_BATTERY = -1; // 无电量信息
-
+    private static final int AUTO_CONNECT_INTERVAL = 10; // 自动连接间隔，单位：秒
+    private static final int MIN_RSSI_WHEN_CONNECTED = -75; // 被连接时要求的最小RSSI
+    private static final int MSG_REQUEST_CONNECT = 0; // 请求连接消息
+    private static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
+    public static final int INVALID_BATTERY = -1; // 无效电池电量
+    // 设备监听器接口
     public interface OnBleDeviceListener {
         void onConnectStateUpdated(final BleDevice device); // 连接状态更新
-        void onBleErrorNotified(final BleDevice device); // BLE错误通知
+        void onBleInnerErrorNotified(final BleDevice device); // BLE内部错误通知
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
     }
 
-    protected final Context context;
-    private volatile BleDeviceState state = DEVICE_CLOSED; // 设备状态
-    private BleDeviceState connectState = CONNECT_DISCONNECT; // 设备连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
-    private final BleDeviceRegisterInfo registerInfo; // 设备注册信息
-    private BleDeviceDetailInfo detailInfo;//设备详细信息，扫描到设备后赋值
-    private BleGatt bleGatt; // 设备Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
-    private final BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。设备连接成功后启动，设备连接失败或者断开时停止
-    private final ScanFilter scanFilter; // 扫描过滤器
-    private int battery = NO_BATTERY; // 设备电池电量
-    private final List<OnBleDeviceListener> listeners; // 设备监听器列表
+    protected final Context context; // 上下文
+    private final BleDeviceRegisterInfo registerInfo; // 注册信息
+    private final List<OnBleDeviceListener> listeners; // 监听器列表
+    private volatile BleDeviceState state = DEVICE_CLOSED; // 实时状态
+    private BleDeviceState connectState = CONNECT_DISCONNECT; // 连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
+    private int battery = INVALID_BATTERY; // 电池电量
+    private BleDeviceDetailInfo detailInfo;// 详细信息，扫描到设备后赋值
+    private BleGatt bleGatt; // Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
+    private BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。连接成功后启动，连接失败或者断开时停止
     private ExecutorService autoConnService; // 自动连接服务
-    // 设备绑定状态广播接收器
+    // 绑定状态广播接收器
     private final BroadcastReceiver bondStateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())) {
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 if(device.getBondState() == BluetoothDevice.BOND_BONDED && getMacAddress().equalsIgnoreCase(device.getAddress())) {
-                    Toast.makeText(context, "设备绑定成功。", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(context, getMacAddress() + "绑定成功。", Toast.LENGTH_SHORT).show();
                 }
             }
         }
     };
-
-    // 动作Handler
-    private final Handler actionHandler = new Handler(Looper.getMainLooper()) {
+    // 请求Handler
+    private final Handler requestHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == MSG_START_CONNECT) {
+            if (msg.what == MSG_REQUEST_CONNECT) {
                 connect();
-            } else if (msg.what == MSG_START_DISCONNECT) {
+            } else if (msg.what == MSG_REQUEST_DISCONNECT) {
                 disconnect();
             }
         }
     };
-
     // 扫描回调
     private final IBleScanCallback bleScanCallback = new IBleScanCallback() {
         @Override
         public void onDeviceFound(final BleDeviceDetailInfo bleDeviceDetailInfo) {
             ViseLog.e("The current rssi: " + bleDeviceDetailInfo.getRssi());
 
-            if(bleDeviceDetailInfo.getRssi() >= MIN_RSSI_WHEN_CONNECT)
+            if(bleDeviceDetailInfo.getRssi() >= MIN_RSSI_WHEN_CONNECTED)
                 processFoundDevice(bleDeviceDetailInfo);
         }
-
         @Override
         public void onScanFailed(final int errorCode) {
             ViseLog.e("Scan failed with errorCode: = " + errorCode);
 
             switch (errorCode) {
                 case SCAN_FAILED_ALREADY_STARTED:
-                    Toast.makeText(context, "扫描进行中，不能重复扫描。", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "正在扫描中，请等待。", Toast.LENGTH_LONG).show();
                     break;
                 case SCAN_FAILED_BLE_CLOSED:
                     stopScan(true);
-                    Toast.makeText(context, "蓝牙已关闭，无法扫描，请打开蓝牙", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "蓝牙已关闭，请允许打开蓝牙", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     context.startActivity(intent);
                     break;
                 case SCAN_FAILED_BLE_INNER_ERROR:
                     stopScan(true);
-                    notifyBleError();
+                    notifyBleInnerError();
                     break;
             }
         }
     };
-
     // 连接回调
     private final IBleConnectCallback connectCallback = new IBleConnectCallback() {
         // 连接成功
@@ -153,16 +149,9 @@ public abstract class BleDevice {
 
 
     public BleDevice(Context context, BleDeviceRegisterInfo registerInfo) {
-        if(!(context instanceof OnBleDeviceListener)) {
-            throw new IllegalArgumentException("The device context is not a instance of OnBleDeviceListener.");
-        }
-
         this.context = context;
         this.registerInfo = registerInfo;
-        scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
-        gattCmdExecutor = new BleSerialGattCommandExecutor(this);
         listeners = new LinkedList<>();
-        addListener((OnBleDeviceListener)context);
     }
 
     public BleDeviceRegisterInfo getRegisterInfo() {
@@ -183,13 +172,6 @@ public abstract class BleDevice {
     public String getImagePath() {
         return registerInfo.getImagePath();
     }
-    public Drawable getImageDrawable() {
-        if(getImagePath().equals("")) {
-            return null;
-        } else {
-            return new BitmapDrawable(context.getResources(), getImagePath());
-        }
-    }
     public BleGatt getBleGatt() {
         return bleGatt;
     }
@@ -208,15 +190,15 @@ public abstract class BleDevice {
     protected boolean isConnected() {
         return state == CONNECT_SUCCESS;
     }
-    public boolean isDisconnected() {
+    private boolean isDisconnected() {
         return state == CONNECT_FAILURE || state == CONNECT_DISCONNECT;
     }
-    // 正在改变状态中
-    public boolean isChangingState() {
+    // 是否在等待响应
+    public boolean isWaitingResponse() {
         return state == DEVICE_SCANNING || state == DEVICE_CONNECTING || state == DEVICE_DISCONNECTING;
     }
-    public boolean canClosed() {
-        return (autoConnService == null || autoConnService.isTerminated());
+    public boolean isStopped() {
+        return isDisconnected() && (autoConnService == null || autoConnService.isTerminated());
     }
     private void setState(BleDeviceState state) {
         if(this.state != state) {
@@ -238,6 +220,16 @@ public abstract class BleDevice {
             updateBattery();
         }
     }
+    // 添加监听器
+    public final void addListener(OnBleDeviceListener listener) {
+        if(!listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+    // 删除监听器
+    public final void removeListener(OnBleDeviceListener listener) {
+        listeners.remove(listener);
+    }
     // 设备是否包含gatt elements
     protected boolean containGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
@@ -246,10 +238,10 @@ public abstract class BleDevice {
         }
         return true;
     }
+    // 设备是否包含gatt element
     protected boolean containGattElement(BleGattElement element) {
         return !( element == null || element.retrieveGattObject(this) == null );
     }
-
 
 
     // 打开设备
@@ -263,6 +255,8 @@ public abstract class BleDevice {
         IntentFilter bondIntent = new IntentFilter();
         bondIntent.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
         context.registerReceiver(bondStateReceiver, bondIntent);
+
+        gattCmdExecutor = new BleSerialGattCommandExecutor(this);
 
         setState(CONNECT_DISCONNECT);
         if(registerInfo.autoConnect()) {
@@ -305,10 +299,10 @@ public abstract class BleDevice {
                 @Override
                 public void run() {
                     if(isDisconnected()) {
-                        actionHandler.sendEmptyMessage(MSG_START_CONNECT);
+                        requestHandler.sendEmptyMessage(MSG_REQUEST_CONNECT);
                     }
                 }
-            }, 0, AUTO_CONNECT_INTERVAL_SECOND, TimeUnit.SECONDS);
+            }, 0, AUTO_CONNECT_INTERVAL, TimeUnit.SECONDS);
         } else {
             Toast.makeText(context, "自动连接中，请稍等。", Toast.LENGTH_SHORT).show();
         }
@@ -318,29 +312,35 @@ public abstract class BleDevice {
     public void requestDisconnect() {
         ViseLog.e("BleDevice.requestDisconnect()");
 
-        actionHandler.removeCallbacksAndMessages(null);
-        actionHandler.sendEmptyMessage(MSG_START_DISCONNECT);
+        requestHandler.removeCallbacksAndMessages(null);
+        requestHandler.sendEmptyMessage(MSG_REQUEST_DISCONNECT);
     }
 
     // 关闭设备
     public void close() {
-        if(!canClosed()) {
+        if(!isStopped()) {
             throw new IllegalStateException("The device can't be closed.");
         }
 
         ViseLog.e("BleDevice.close()");
 
         ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-        actionHandler.removeCallbacksAndMessages(null);
+        requestHandler.removeCallbacksAndMessages(null);
         setState(BleDeviceState.DEVICE_CLOSED);
+
+        autoConnService = null;
+        gattCmdExecutor = null;
+        detailInfo = null;
+        bleGatt = null;
 
         context.unregisterReceiver(bondStateReceiver);
     }
 
     private void connect() {
         if(isDisconnected()) {
-            actionHandler.removeMessages(MSG_START_CONNECT);
+            requestHandler.removeMessages(MSG_REQUEST_CONNECT);
             setState(DEVICE_SCANNING);
+            ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
             BleScanner.startScan(scanFilter, bleScanCallback);
         }
     }
@@ -350,16 +350,15 @@ public abstract class BleDevice {
             setState(DEVICE_DISCONNECTING);
             bleGatt.disconnect();
         }
-        actionHandler.removeCallbacksAndMessages(null);
+        requestHandler.removeCallbacksAndMessages(null);
     }
 
     private void stopScan(boolean forever) {
         if(forever) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
         }
-
         BleScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
-        actionHandler.removeMessages(MSG_START_CONNECT);
+        requestHandler.removeMessages(MSG_REQUEST_CONNECT);
         setState(connectState);
     }
 
@@ -465,21 +464,6 @@ public abstract class BleDevice {
         gattCmdExecutor.runInstantly(callback);
     }
 
-
-
-
-    // 添加设备状态监听器
-    public final void addListener(OnBleDeviceListener listener) {
-        if(!listeners.contains(listener)) {
-            listeners.add(listener);
-        }
-    }
-
-    // 删除设备状态监听器
-    public final void removeListener(OnBleDeviceListener listener) {
-        listeners.remove(listener);
-    }
-
     // 更新设备状态
     public final void updateState() {
         for(OnBleDeviceListener listener : listeners) {
@@ -489,12 +473,12 @@ public abstract class BleDevice {
         }
     }
 
-    // Ble错误，是否报警
-    private void notifyBleError() {
+    // 通知Ble内部错误
+    private void notifyBleInnerError() {
         if(registerInfo.isWarnWhenBleError()) {
             for(final OnBleDeviceListener listener : listeners) {
                 if(listener != null) {
-                    listener.onBleErrorNotified(BleDevice.this);
+                    listener.onBleInnerErrorNotified(BleDevice.this);
                 }
             }
         }
