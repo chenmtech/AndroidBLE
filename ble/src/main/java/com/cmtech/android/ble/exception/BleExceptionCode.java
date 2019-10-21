@@ -10,5 +10,6 @@ public enum BleExceptionCode {
     CONNECT_ERR,    //连接异常
     GATT_ERR,   //GATT异常
     INITIATED_ERR,  //初始化异常
+    SCAN_ERR, // 扫描异常
     OTHER_ERR   //其他异常
 }

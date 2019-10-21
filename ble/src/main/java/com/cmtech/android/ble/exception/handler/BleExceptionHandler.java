@@ -5,6 +5,7 @@ import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
 import com.cmtech.android.ble.exception.InitiatedException;
 import com.cmtech.android.ble.exception.OtherException;
+import com.cmtech.android.ble.exception.ScanException;
 import com.cmtech.android.ble.exception.TimeoutException;
 
 /**
@@ -23,6 +24,8 @@ public abstract class BleExceptionHandler {
                 onTimeoutException((TimeoutException) exception);
             } else if (exception instanceof InitiatedException) {
                 onInitiatedException((InitiatedException) exception);
+            } else if (exception instanceof ScanException) {
+                onScanException((ScanException) exception);
             } else {
                 onOtherException((OtherException) exception);
             }
@@ -54,4 +57,6 @@ public abstract class BleExceptionHandler {
      * other exceptions
      */
     protected abstract void onOtherException(OtherException e);
+
+    protected abstract void onScanException(ScanException e);
 }

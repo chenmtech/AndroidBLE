@@ -58,9 +58,10 @@ public abstract class BleDevice {
     private static final int MSG_REQUEST_CONNECT = 0; // 请求连接消息
     private static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
     public static final int INVALID_BATTERY = -1; // 无效电池电量
+
     // 设备监听器接口
     public interface OnBleDeviceListener {
-        void onConnectStateUpdated(final BleDevice device); // 连接状态更新
+        void onDeviceStateUpdated(final BleDevice device); // 设备状态更新
         void onBleInnerErrorNotified(final BleDevice device); // BLE内部错误通知
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
     }
@@ -75,18 +76,7 @@ public abstract class BleDevice {
     private BleGatt bleGatt; // Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
     private BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。连接成功后启动，连接失败或者断开时停止
     private ExecutorService autoConnService; // 自动连接服务
-    // 绑定状态广播接收器
-    private final BroadcastReceiver bondStateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(BluetoothDevice.ACTION_BOND_STATE_CHANGED.equals(intent.getAction())) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                if(device.getBondState() == BluetoothDevice.BOND_BONDED && getMacAddress().equalsIgnoreCase(device.getAddress())) {
-                    Toast.makeText(context, getMacAddress() + "绑定成功。", Toast.LENGTH_SHORT).show();
-                }
-            }
-        }
-    };
+
     // 请求Handler
     private final Handler requestHandler = new Handler(Looper.getMainLooper()) {
         @Override
@@ -113,11 +103,11 @@ public abstract class BleDevice {
 
             switch (errorCode) {
                 case SCAN_FAILED_ALREADY_STARTED:
-                    Toast.makeText(context, "正在扫描中，请等待。", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "已在扫描中，请等待。", Toast.LENGTH_LONG).show();
                     break;
                 case SCAN_FAILED_BLE_CLOSED:
                     stopScan(true);
-                    Toast.makeText(context, "蓝牙已关闭，请允许打开蓝牙", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, "系统蓝牙已关闭，请允许打开蓝牙。", Toast.LENGTH_LONG).show();
                     Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                     context.startActivity(intent);
                     break;
@@ -252,10 +242,6 @@ public abstract class BleDevice {
 
         ViseLog.e("BleDevice.open()");
 
-        IntentFilter bondIntent = new IntentFilter();
-        bondIntent.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-        context.registerReceiver(bondStateReceiver, bondIntent);
-
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
 
         setState(CONNECT_DISCONNECT);
@@ -332,8 +318,6 @@ public abstract class BleDevice {
         gattCmdExecutor = null;
         detailInfo = null;
         bleGatt = null;
-
-        context.unregisterReceiver(bondStateReceiver);
     }
 
     private void connect() {
@@ -468,7 +452,7 @@ public abstract class BleDevice {
     public final void updateState() {
         for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onConnectStateUpdated(this);
+                listener.onDeviceStateUpdated(this);
             }
         }
     }
