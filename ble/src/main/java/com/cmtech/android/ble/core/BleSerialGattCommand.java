@@ -75,7 +75,6 @@ class BleSerialGattCommand extends BleGattCommand {
         } else {
             ViseLog.i("Command Success: " + this + " Return data: " + HexUtil.encodeHexStr(data));
         }
-
         if(bleCallback != null) {
             bleCallback.onSuccess(data, bleGattElement);
         }

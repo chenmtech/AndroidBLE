@@ -3,7 +3,7 @@ package com.cmtech.android.ble.core;
 /**
  *
  * ClassName:      BleGattCmdType
- * Description:    Gatt命令类型类
+ * Description:    Gatt命令类型
  * Author:         chenm
  * CreateDate:     2018-10-13 08:55
  * UpdateUser:     chenm

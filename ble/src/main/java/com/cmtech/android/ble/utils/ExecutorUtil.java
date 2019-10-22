@@ -13,7 +13,7 @@ public class ExecutorUtil {
 
             try {
                 while (!pool.awaitTermination(1, TimeUnit.SECONDS)) {
-                    ViseLog.e("The pool is not terminated. Wait again");
+                    ViseLog.e("The thread pool is not terminated. Wait again");
                 }
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -38,7 +38,7 @@ class BleSerialGattCommandExecutor {
             return;
         }
 
-        ViseLog.e("启动gattCmdExecutor");
+        ViseLog.e("Starting the gattCmdExecutor.");
 
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
@@ -53,7 +53,7 @@ class BleSerialGattCommandExecutor {
         if(isAlive()) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(gattCmdService);
 
-            ViseLog.e("停止gattCmdExecutor");
+            ViseLog.e("Stopping the gattCmdExecutor");
         }
     }
 
@@ -68,7 +68,7 @@ class BleSerialGattCommandExecutor {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_READ,
                 null, dataCallback, null);
         if(command != null)
-            sendCommand(command);
+            executeCommand(command);
     }
 
     // 写多字节
@@ -76,7 +76,7 @@ class BleSerialGattCommandExecutor {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_WRITE,
                 data, dataCallback, null);
         if(command != null)
-            sendCommand(command);
+            executeCommand(command);
     }
 
     // 写单字节
@@ -94,7 +94,7 @@ class BleSerialGattCommandExecutor {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_NOTIFY,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
         if(command != null)
-            sendCommand(command);
+            executeCommand(command);
     }
 
     // Indicate
@@ -107,7 +107,7 @@ class BleSerialGattCommandExecutor {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, element, BleGattCmdType.GATT_CMD_INDICATE,
                 (enable) ? new byte[]{0x01} : new byte[]{0x00}, dataCallback, receiveCallback);
         if(command != null)
-            sendCommand(command);
+            executeCommand(command);
     }
 
     // 无需等待响应立刻执行完毕
@@ -115,10 +115,10 @@ class BleSerialGattCommandExecutor {
         BleSerialGattCommand command = BleSerialGattCommand.create(device, null, BleGattCmdType.GATT_CMD_INSTANT_RUN,
                 null, dataCallback, null);
         if(command != null)
-            sendCommand(command);
+            executeCommand(command);
     }
 
-    private void sendCommand(final BleGattCommand command) {
+    private void executeCommand(final BleGattCommand command) {
         if(isAlive()) {
             gattCmdService.execute(new Runnable() {
                 @Override

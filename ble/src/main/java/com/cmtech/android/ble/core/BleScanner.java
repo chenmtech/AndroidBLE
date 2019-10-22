@@ -33,7 +33,7 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_I
 public class BleScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
     private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
-    private static int scanTimes = 0; // 发起扫描的次数
+    private static int scanTimes = 0; // 扫描次数
 
     // 开始扫描
     public static void startScan(ScanFilter scanFilter, final IBleScanCallback bleScanCallback) {

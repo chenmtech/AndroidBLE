@@ -53,8 +53,7 @@ public class BleGatt {
     private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback
     private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Element和Callback Map
 
-    // 回调Handler
-    // 除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此callbackHandler中执行
+    // 回调Handler，除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此callbackHandler中执行
     private final Handler callbackHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -341,7 +340,7 @@ public class BleGatt {
      */
     public synchronized boolean writeData(BleGattElement gattElement, IBleDataCallback dataCallback, byte[] data) {
         if (data == null || data.length > 20) {
-            ViseLog.e("this data is null or length beyond 20 byte.");
+            ViseLog.e("The data is null or length beyond 20 byte.");
             return false;
         }
         if(bluetoothGatt == null || dataCallback == null || gattElement == null) {

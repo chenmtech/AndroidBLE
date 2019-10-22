@@ -15,18 +15,18 @@ import com.cmtech.android.ble.R;
  */
 
 public class BleDeviceState {
-    private static final int DEVICE_CLOSED_CODE = 0x00; // 已关闭
-    private static final int DEVICE_SCANNING_CODE = 0x01; // 正在扫描
-    private static final int DEVICE_CONNECTING_CODE = 0x02; // 正在连接
-    private static final int DEVICE_DISCONNECTING_CODE = 0x03; // 正在断开
+    private static final int CLOSED_CODE = 0x00; // 已关闭
+    private static final int SCANNING_CODE = 0x01; // 正在扫描
+    private static final int CONNECTING_CODE = 0x02; // 正在连接
+    private static final int DISCONNECTING_CODE = 0x03; // 正在断开
     private static final int CONNECT_SUCCESS_CODE = 0x04; // 连接成功
     private static final int CONNECT_FAILURE_CODE = 0x05;// 连接失败
     private static final int CONNECT_DISCONNECT_CODE = 0x06; // 连接断开
 
-    public static final BleDeviceState DEVICE_CLOSED = new BleDeviceState(DEVICE_CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
-    public static final BleDeviceState DEVICE_SCANNING = new BleDeviceState(DEVICE_SCANNING_CODE, "正在扫描", R.mipmap.ic_scanning_32px);
-    public static final BleDeviceState DEVICE_CONNECTING = new BleDeviceState(DEVICE_CONNECTING_CODE, "正在连接", R.mipmap.ic_connecting_32px);
-    public static final BleDeviceState DEVICE_DISCONNECTING = new BleDeviceState(DEVICE_DISCONNECTING_CODE, "正在断开", R.mipmap.ic_connecting_32px);
+    public static final BleDeviceState CLOSED = new BleDeviceState(CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
+    public static final BleDeviceState SCANNING = new BleDeviceState(SCANNING_CODE, "正在扫描", R.mipmap.ic_scanning_32px);
+    public static final BleDeviceState CONNECTING = new BleDeviceState(CONNECTING_CODE, "正在连接", R.mipmap.ic_connecting_32px);
+    public static final BleDeviceState DISCONNECTING = new BleDeviceState(DISCONNECTING_CODE, "正在断开", R.mipmap.ic_connecting_32px);
     public static final BleDeviceState CONNECT_SUCCESS = new BleDeviceState(CONNECT_SUCCESS_CODE, "已连接", R.mipmap.ic_connected_32px);
     public static final BleDeviceState CONNECT_FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
     public static final BleDeviceState CONNECT_DISCONNECT = new BleDeviceState(CONNECT_DISCONNECT_CODE, "已断开", R.mipmap.ic_disconnect_32px);
