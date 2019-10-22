@@ -1,8 +1,9 @@
 <resources>
     <string name="app_name">baseble</string>
-    <string name="scan_fail_already_started">扫描错误：扫描已开始</string>
-    <string name="scan_fail_ble_closed">扫描错误：蓝牙已关闭</string>
-    <string name="invalid_operate_at_current_state">当前状态操作无效</string>
-    <string name="ready_connect_pls_wait">准备连接，请稍等</string>
+    <string name="scan_fail_already_started">扫描已开始</string>
+    <string name="scan_fail_ble_closed">蓝牙已关闭</string>
+    <string name="invalid_operate_at_current_state">操作无效</string>
+    <string name="ready_connect_pls_wait">正在准备连接</string>
     <string name="pls_bond_device">请绑定设备</string>
+    <string name="scan_fail_ble_inner_error">蓝牙内部错误</string>
 </resources>

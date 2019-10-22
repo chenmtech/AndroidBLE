@@ -1,12 +1,15 @@
 package com.cmtech.android.ble.core;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.cmtech.android.ble.R;
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleScanCallback;
@@ -54,17 +57,10 @@ public abstract class BleDevice {
     private static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
     public static final int INVALID_BATTERY = -1; // 无效电池电量
 
-    public static final int NOTIFY_BLE_INNER_ERROR = 0; // Ble内部错误通知
-    public static final int NOTIFY_BT_CLOSED_ERROR = 1; // 蓝牙关闭错误
-    public static final int NOTIFY_ALREADY_START_SCAN_ERROR = 2;
-    public static final int NOTIFY_INVALID_OPERATION = 3;
-    public static final int NOTIFY_READY_CONNECT = 4;
-    public static final int NOTIFY_BOND_DEVICE = 5;
-
     // 设备监听器接口
     public interface OnBleDeviceListener {
-        void onDeviceStateUpdated(final BleDevice device); // 设备状态更新
-        void onDeviceNotificationUpdated(int notify); // 设备通知更新
+        void onStateUpdated(final BleDevice device); // 设备状态更新
+        void onNotificationUpdated(final BleDevice device, int strId); // 设备通知更新
         void onBatteryUpdated(final BleDevice device); // 电池电量更新
     }
 
@@ -105,16 +101,19 @@ public abstract class BleDevice {
 
             switch (errorCode) {
                 case SCAN_FAILED_ALREADY_STARTED:
-                    sendNotification(NOTIFY_ALREADY_START_SCAN_ERROR);
+                    sendNotification(R.string.scan_fail_already_started);
                     break;
                 case SCAN_FAILED_BLE_CLOSED:
                     stopScan(true);
-                    sendNotification(NOTIFY_BT_CLOSED_ERROR);
+                    sendNotification(R.string.scan_fail_ble_closed);
+                    Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    context.startActivity(intent);
                     break;
                 case SCAN_FAILED_BLE_INNER_ERROR:
                     stopScan(true);
                     if(registerInfo.isWarnBleInnerError()) {
-                        sendNotification(NOTIFY_BLE_INNER_ERROR);
+                        sendNotification(R.string.scan_fail_ble_inner_error);
                     }
                     break;
             }
@@ -268,7 +267,7 @@ public abstract class BleDevice {
         } else if(isScanning()) {
             stopScan(true);
         } else { // CONNECTING or DISCONNECTING
-            sendNotification(NOTIFY_INVALID_OPERATION);
+            sendNotification(R.string.invalid_operate_at_current_state);
         }
     }
 
@@ -292,7 +291,7 @@ public abstract class BleDevice {
                 }
             }, 0, AUTO_CONNECT_INTERVAL, TimeUnit.SECONDS);
         } else {
-            sendNotification(NOTIFY_READY_CONNECT);
+            sendNotification(R.string.ready_connect_pls_wait);
         }
     }
 
@@ -355,7 +354,7 @@ public abstract class BleDevice {
         BluetoothDevice bluetoothDevice = bleDeviceDetailInfo.getDevice();
         if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
             stopScan(true);
-            sendNotification(NOTIFY_BOND_DEVICE);
+            sendNotification(R.string.pls_bond_device);
             bleDeviceDetailInfo.getDevice().createBond();
         } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
             stopScan(false);
@@ -454,7 +453,7 @@ public abstract class BleDevice {
     public final void updateState() {
         for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onDeviceStateUpdated(this);
+                listener.onStateUpdated(this);
             }
         }
     }
@@ -468,10 +467,10 @@ public abstract class BleDevice {
         }
     }
 
-    protected void sendNotification(int notify) {
+    protected void sendNotification(int strId) {
         for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onDeviceNotificationUpdated(notify);
+                listener.onNotificationUpdated(this, strId);
             }
         }
     }
