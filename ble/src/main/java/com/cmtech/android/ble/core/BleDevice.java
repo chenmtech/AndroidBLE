@@ -1,6 +1,5 @@
 package com.cmtech.android.ble.core;
 
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.le.ScanFilter;
 import android.content.Context;
 import android.os.Handler;
@@ -358,17 +357,10 @@ public abstract class BleDevice {
     private void processFoundDevice(final BleDeviceDetailInfo detailInfo) {
         ViseLog.e("Process found device: " + detailInfo);
 
-        BluetoothDevice bluetoothDevice = detailInfo.getDevice();
-        if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_NONE) {
-            stopScan(true);
-            sendExceptionMessage(MSG_BOND_DEVICE);
-            bluetoothDevice.createBond();
-        } else if(bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED) {
-            stopScan(false);
-            BleDevice.this.detailInfo = detailInfo;
-            if(context != null) {
-                connect();
-            }
+        stopScan(false);
+        BleDevice.this.detailInfo = detailInfo;
+        if(context != null) {
+            connect();
         }
     }
 
