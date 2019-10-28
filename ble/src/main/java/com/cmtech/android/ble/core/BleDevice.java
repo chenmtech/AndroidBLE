@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 
+import com.cmtech.android.ble.BleConfig;
 import com.cmtech.android.ble.R;
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
@@ -48,7 +49,6 @@ import static com.cmtech.android.ble.core.BleDeviceState.SCANNING;
  */
 
 public abstract class BleDevice {
-    private static final int AUTO_CONNECT_INTERVAL = 10; // 自动连接间隔，单位：秒
     private static final int MIN_RSSI_WHEN_CONNECTED = -75; // 被连接时要求的最小RSSI
     private static final int MSG_REQUEST_SCAN = 0; // 请求扫描消息
     private static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
@@ -58,7 +58,7 @@ public abstract class BleDevice {
     public static final int MSG_BT_CLOSED = R.string.scan_failed_bt_closed; // 蓝牙关闭错误
     public static final int MSG_SCAN_ALREADY_STARTED = R.string.scan_failed_already_started;
     public static final int MSG_INVALID_OPERATION = R.string.invalid_operation;
-    public static final int MSG_WAIT_WHILE = R.string.wait_a_while_pls;
+    public static final int MSG_WAIT_SCAN = R.string.wait_scan_pls;
     public static final int MSG_BOND_DEVICE = R.string.device_unbond;
 
     // 设备监听器接口
@@ -73,14 +73,14 @@ public abstract class BleDevice {
     private volatile BleDeviceState state = CLOSED; // 实时状态
     private BleDeviceState connectState = CONNECT_DISCONNECT; // 连接状态，只能是CONNECT_SUCCESS, CONNECT_FAILURE or CONNECT_DISCONNECT
     private int battery = INVALID_BATTERY; // 电池电量
-    private Context context; // 上下文，用于蓝牙连接。打开设备时赋值
+    private Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
     private BleDeviceDetailInfo detailInfo;// 详细信息，扫描到设备后赋值
     private BleGatt bleGatt; // Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
     private BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。连接成功后启动，连接失败或者断开时停止
-    private ExecutorService autoConnService; // 自动连接服务
+    private ExecutorService autoScanService; // 自动扫描服务
 
-    // 请求Handler
-    private final Handler requestHandler = new Handler(Looper.getMainLooper()) {
+    // 请求处理Handler
+    private final Handler handler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
             if (msg.what == MSG_REQUEST_SCAN) {
@@ -105,16 +105,16 @@ public abstract class BleDevice {
 
             switch (errorCode) {
                 case SCAN_FAILED_ALREADY_STARTED:
-                    sendExceptionMessage(MSG_SCAN_ALREADY_STARTED);
+                    notifyExceptionMessage(MSG_SCAN_ALREADY_STARTED);
                     break;
                 case SCAN_FAILED_BLE_CLOSED:
                     stopScan(true);
-                    sendExceptionMessage(MSG_BT_CLOSED);
+                    notifyExceptionMessage(MSG_BT_CLOSED);
                     break;
                 case SCAN_FAILED_BLE_INNER_ERROR:
                     stopScan(true);
                     if(registerInfo.isWarnBleInnerError()) {
-                        sendExceptionMessage(MSG_BLE_INNER_ERROR);
+                        notifyExceptionMessage(MSG_BLE_INNER_ERROR);
                     }
                     break;
             }
@@ -142,7 +142,7 @@ public abstract class BleDevice {
 
     public BleDevice(BleDeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
-            throw new IllegalArgumentException("The register info of BleDevice is null.");
+            throw new NullPointerException("The register info of BleDevice is null.");
         }
         this.registerInfo = registerInfo;
         listeners = new LinkedList<>();
@@ -191,7 +191,7 @@ public abstract class BleDevice {
         return state == SCANNING || state == CONNECTING || state == DISCONNECTING;
     }
     public boolean isStopped() {
-        return isDisconnected() && (autoConnService == null || autoConnService.isTerminated());
+        return isDisconnected() && ExecutorUtil.isDead(autoScanService);
     }
     private void setState(BleDeviceState state) {
         if(this.state != state) {
@@ -237,8 +237,13 @@ public abstract class BleDevice {
     // 打开设备
     public void open(Context context) {
         if(!isClosed()) {
-            throw new IllegalStateException("The state of BleDevice is wrong.");
+            ViseLog.e("The device is opened.");
+            return;
         }
+        if(context == null) {
+            throw new NullPointerException("The context is null.");
+        }
+
         ViseLog.e("BleDevice.open()");
         this.context = context;
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
@@ -250,9 +255,6 @@ public abstract class BleDevice {
 
     // 切换状态
     public void switchState() {
-        if(isClosed()) {
-            throw new IllegalStateException("The state of BleDevice is wrong.");
-        }
         ViseLog.e("BleDevice.switchState()");
         if(isDisconnected()) {
             requestScan();
@@ -260,71 +262,72 @@ public abstract class BleDevice {
             requestDisconnect(true);
         } else if(isScanning()) {
             stopScan(true);
-        } else { // CONNECTING or DISCONNECTING
-            sendExceptionMessage(MSG_INVALID_OPERATION);
+        } else { // 无效操作
+            notifyExceptionMessage(MSG_INVALID_OPERATION);
         }
     }
 
     // 请求扫描
     public void requestScan() {
         if(isDisconnected()) {
-            if (autoConnService == null || autoConnService.isTerminated()) {
+            if (ExecutorUtil.isDead(autoScanService)) {
                 ViseLog.e("BleDevice.requestScan()");
 
-                autoConnService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+                autoScanService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
                     @Override
                     public Thread newThread(Runnable runnable) {
-                        return new Thread(runnable, "MT_Auto_Connection");
+                        return new Thread(runnable, "MT_Auto_Scan");
                     }
                 });
-                ((ScheduledExecutorService) autoConnService).scheduleAtFixedRate(new Runnable() {
+                ((ScheduledExecutorService) autoScanService).scheduleAtFixedRate(new Runnable() {
                     @Override
                     public void run() {
                         if (isDisconnected()) {
-                            requestHandler.sendEmptyMessage(MSG_REQUEST_SCAN);
+                            handler.sendEmptyMessage(MSG_REQUEST_SCAN);
                         }
                     }
-                }, 0, AUTO_CONNECT_INTERVAL, TimeUnit.SECONDS);
+                }, 0, BleConfig.getInstance().getAutoScanInterval(), TimeUnit.SECONDS);
             } else {
-                sendExceptionMessage(MSG_WAIT_WHILE);
+                notifyExceptionMessage(MSG_WAIT_SCAN);
             }
         }
     }
 
     // 请求断开
-    public void requestDisconnect(boolean forever) {
+    public void requestDisconnect(boolean stopAutoScan) {
         ViseLog.e("BleDevice.requestDisconnect()");
 
-        if(forever) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+        if(stopAutoScan) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
         }
-        requestHandler.removeCallbacksAndMessages(null);
-        requestHandler.sendEmptyMessage(MSG_REQUEST_DISCONNECT);
+        handler.removeCallbacksAndMessages(null);
+        handler.sendEmptyMessage(MSG_REQUEST_DISCONNECT);
     }
 
     // 停止扫描
-    public void stopScan(boolean forever) {
-        if (forever) {
-            ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
+    public void stopScan(boolean stopAutoScan) {
+        if (stopAutoScan) {
+            ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
         }
         BleScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
-        requestHandler.removeMessages(MSG_REQUEST_SCAN);
+        handler.removeMessages(MSG_REQUEST_SCAN);
         setState(connectState);
     }
 
     // 关闭设备
     public void close() {
         if(!isStopped()) {
-            throw new IllegalStateException("The device can't be closed.");
+            ViseLog.e("The device can't be closed currently.");
+            return;
         }
 
         ViseLog.e("BleDevice.close()");
 
-        ExecutorUtil.shutdownNowAndAwaitTerminate(autoConnService);
-        requestHandler.removeCallbacksAndMessages(null);
+        ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
+        handler.removeCallbacksAndMessages(null);
         setState(BleDeviceState.CLOSED);
 
-        autoConnService = null;
+        autoScanService = null;
         gattCmdExecutor = null;
         detailInfo = null;
         bleGatt = null;
@@ -333,10 +336,10 @@ public abstract class BleDevice {
 
     private void scan() {
         if(isDisconnected()) {
-            requestHandler.removeMessages(MSG_REQUEST_SCAN);
-            setState(SCANNING);
+            handler.removeMessages(MSG_REQUEST_SCAN);
             ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(getMacAddress()).build();
             BleScanner.startScan(scanFilter, bleScanCallback);
+            setState(SCANNING);
         }
     }
 
@@ -350,7 +353,7 @@ public abstract class BleDevice {
             setState(DISCONNECTING);
             bleGatt.disconnect();
         }
-        requestHandler.removeCallbacksAndMessages(null);
+        handler.removeCallbacksAndMessages(null);
     }
 
     // 处理找到的设备
@@ -467,8 +470,8 @@ public abstract class BleDevice {
         }
     }
 
-    // 发送异常消息
-    protected void sendExceptionMessage(int msgId) {
+    // 通知异常消息
+    protected void notifyExceptionMessage(int msgId) {
         for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
                 listener.onExceptionMsgNotified(this, msgId);

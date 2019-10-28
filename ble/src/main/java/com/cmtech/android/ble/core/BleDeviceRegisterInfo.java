@@ -44,7 +44,7 @@ public class BleDeviceRegisterInfo implements Serializable{
     private final String macAddress; // 设备mac地址
     private final String uuidStr; // 设备广播Uuid16位字符串
     private String nickName = DEFAULT_DEVICE_NICK_NAME; // 设备昵称
-    private String imagePath = DEFAULT_DEVICE_IMAGE_PATH; // 设备图标路径名
+    private String imagePath = DEFAULT_DEVICE_IMAGE_PATH; // 设备图标完整路径
     private boolean autoConnect = DEFAULT_DEVICE_AUTO_CONNECT; // 设备打开后是否自动连接
     private boolean warnBleInnerError = DEFAULT_WARN_BLE_INNER_ERROR; // 蓝牙内部错误是否报警
 

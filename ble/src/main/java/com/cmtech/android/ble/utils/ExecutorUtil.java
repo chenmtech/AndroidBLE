@@ -22,4 +22,8 @@ public class ExecutorUtil {
             }
         }
     }
+
+    public static boolean isDead(ExecutorService pool) {
+        return pool == null || pool.isTerminated();
+    }
 }
