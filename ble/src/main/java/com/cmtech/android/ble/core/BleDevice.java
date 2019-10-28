@@ -104,14 +104,14 @@ public abstract class BleDevice {
             ViseLog.e("Scan failed with errorCode: = " + errorCode);
 
             switch (errorCode) {
-                case SCAN_FAILED_ALREADY_STARTED:
+                case CODE_ALREADY_STARTED:
                     notifyExceptionMessage(MSG_SCAN_ALREADY_STARTED);
                     break;
-                case SCAN_FAILED_BLE_CLOSED:
+                case CODE_BLE_CLOSED:
                     stopScan(true);
                     notifyExceptionMessage(MSG_BT_CLOSED);
                     break;
-                case SCAN_FAILED_BLE_INNER_ERROR:
+                case CODE_BLE_INNER_ERROR:
                     stopScan(true);
                     if(registerInfo.isWarnBleInnerError()) {
                         notifyExceptionMessage(MSG_BLE_INNER_ERROR);

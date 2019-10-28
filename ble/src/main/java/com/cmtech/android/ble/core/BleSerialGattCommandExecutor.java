@@ -16,7 +16,7 @@ import java.util.concurrent.ThreadFactory;
  * CreateDate:     2018-12-20 07:02
  * UpdateUser:     chenm
  * UpdateDate:     2019-06-20 07:02
- * UpdateRemark:   采用Executor框架实现
+ * UpdateRemark:   采用Executor实现
  * Version:        1.0
  */
 
@@ -43,7 +43,7 @@ class BleSerialGattCommandExecutor {
         gattCmdService = Executors.newSingleThreadExecutor(new ThreadFactory() {
             @Override
             public Thread newThread(Runnable runnable) {
-                return new Thread(runnable, "MT_GATT_CMD");
+                return new Thread(runnable, "MT_Gatt_Cmd_Service");
             }
         });
     }

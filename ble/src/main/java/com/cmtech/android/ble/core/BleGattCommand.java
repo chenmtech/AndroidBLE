@@ -17,13 +17,13 @@ import com.cmtech.android.ble.utils.HexUtil;
  */
 
 class BleGattCommand{
-    final BleDevice device; // 执行命令的设备
+    private final BleDevice device; // 执行命令的设备
     private final BleGattElement element; // 命令操作的element
     private final BleGattCmdType bleGattCmdType; // 命令类型
     protected IBleDataCallback dataCallback; // 数据操作回调
     private final byte[] writtenData; // 待写数据。如果是写操作，存放要写的数据；如果是notify或indicate操作，存放enable值；如果为其他操作，则无意义
     private final IBleDataCallback receiveCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
-    private final String description; // 命令描述符
+    private final String description; // 命令描述字符串
 
     private BleGattCommand(BleDevice device, BleGattElement element, BleGattCmdType bleGattCmdType,
                            IBleDataCallback dataCallback,
@@ -48,6 +48,10 @@ class BleGattCommand{
         this.writtenData = gattCommand.writtenData;
         this.receiveCallback = gattCommand.receiveCallback;
         this.description = gattCommand.description;
+    }
+
+    public BleDevice getDevice() {
+        return device;
     }
 
     /**

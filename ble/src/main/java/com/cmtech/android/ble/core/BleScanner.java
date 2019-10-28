@@ -15,8 +15,8 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
-import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_CLOSED;
-import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_INNER_ERROR;
+import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_CLOSED;
+import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_INNER_ERROR;
 
 /**
  *
@@ -32,24 +32,24 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.SCAN_FAILED_BLE_I
 
 public class BleScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
-    private static volatile boolean bleInnerError = false; // 蓝牙内部错误，比如由于频繁扫描引起的错误
-    private static int scanTimes = 0; // 扫描次数
+    private static volatile boolean bleInnerError = false; // 是否发生蓝牙内部错误，比如由于频繁扫描引起的错误
+    private static int scanTimes = 0; // 累计扫描次数
 
     // 开始扫描
     public static void startScan(ScanFilter scanFilter, final IBleScanCallback bleScanCallback) {
         if(bleScanCallback == null) {
-            throw new IllegalArgumentException("IBleScanCallback is null");
+            throw new NullPointerException("The IBleScanCallback is null");
         }
 
         BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
         synchronized (BleScanner.class) {
             if (BleScanner.isBleDisabled()) {
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_CLOSED);
+                bleScanCallback.onScanFailed(CODE_BLE_CLOSED);
                 return;
             }
             if (bleInnerError) {
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
+                bleScanCallback.onScanFailed(CODE_BLE_INNER_ERROR);
                 return;
             }
 
@@ -65,7 +65,7 @@ public class BleScanner {
                 scanCallback = new ScanCallbackAdapter(bleScanCallback);
                 callbackList.add(scanCallback);
             } else {
-                bleScanCallback.onScanFailed(IBleScanCallback.SCAN_FAILED_ALREADY_STARTED);
+                bleScanCallback.onScanFailed(IBleScanCallback.CODE_ALREADY_STARTED);
                 return;
             }
         }
@@ -80,7 +80,7 @@ public class BleScanner {
     // 停止扫描
     public static void stopScan(IBleScanCallback bleScanCallback) {
         if(bleScanCallback == null) {
-            throw new IllegalArgumentException("IBleScanCallback is null.");
+            throw new NullPointerException("The IBleScanCallback is null.");
         }
 
         BluetoothLeScanner scanner;
@@ -118,7 +118,7 @@ public class BleScanner {
     }
 
     // 重置扫描次数
-    public static void clearScanTimes() {
+    public static void resetScanTimes() {
         scanTimes = 0;
     }
 
@@ -149,14 +149,14 @@ public class BleScanner {
 
             bleInnerError = true;
             if(bleScanCallback != null)
-                bleScanCallback.onScanFailed(SCAN_FAILED_BLE_INNER_ERROR);
+                bleScanCallback.onScanFailed(CODE_BLE_INNER_ERROR);
         }
 
         @Override
         public void onBatchScanResults(List<ScanResult> results) {
             super.onBatchScanResults(results);
 
-            ViseLog.e("Batch scan result");
+            ViseLog.e("Batch scan result. Cannot be here.");
         }
     }
 

@@ -47,13 +47,13 @@ public class BleGatt {
     private static final int MSG_READ_DATA_TIMEOUT = 3; // 读数据超时
 
     private BluetoothGatt bluetoothGatt; //底层蓝牙GATT
-    private IBleRssiCallback rssiCallback; //获取信号值回调
+    private IBleRssiCallback rssiCallback; //获取rssi信号值回调
     private IBleConnectCallback connectCallback;//连接回调
-    private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Element和Callback
-    private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback
+    private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Element和Callback对
+    private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback对
     private volatile Map<UUID, Pair<BleGattElement, IBleDataCallback>> notifyElementCallbackMap = new HashMap<>(); // Notify或Indicate操作的Element和Callback Map
 
-    // 回调Handler，除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此callbackHandler中执行
+    // 回调Handler，除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此Handler中执行
     private final Handler callbackHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
