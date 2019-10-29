@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">baseble</string>
+    <string name="scan_failed_already_started">scan already started</string>
+    <string name="scan_failed_bt_closed">bluetooth closed</string>
+    <string name="scan_failed_ble_inner_error">BLE inner error occurred</string>
+    <string name="invalid_operation">invalid operation</string>
+    <string name="wait_scan_pls">please wait for scanning</string>
+    <string name="device_unbond">device unbond</string>
+</resources>

@@ -249,7 +249,7 @@ public abstract class BleDevice {
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
         setState(CONNECT_DISCONNECT);
         if(registerInfo.autoConnect()) {
-            requestScan();
+            callAutoScan();
         }
     }
 
@@ -257,9 +257,9 @@ public abstract class BleDevice {
     public void switchState() {
         ViseLog.e("BleDevice.switchState()");
         if(isDisconnected()) {
-            requestScan();
+            callAutoScan();
         } else if(isConnected()) {
-            requestDisconnect(true);
+            callDisconnect(true);
         } else if(isScanning()) {
             stopScan(true);
         } else { // 无效操作
@@ -267,11 +267,11 @@ public abstract class BleDevice {
         }
     }
 
-    // 请求扫描
-    public void requestScan() {
+    // 请求自动扫描
+    public void callAutoScan() {
         if(isDisconnected()) {
             if (ExecutorUtil.isDead(autoScanService)) {
-                ViseLog.e("BleDevice.requestScan()");
+                ViseLog.e("BleDevice.callAutoScan()");
 
                 autoScanService = Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
                     @Override
@@ -294,8 +294,8 @@ public abstract class BleDevice {
     }
 
     // 请求断开
-    public void requestDisconnect(boolean stopAutoScan) {
-        ViseLog.e("BleDevice.requestDisconnect()");
+    public void callDisconnect(boolean stopAutoScan) {
+        ViseLog.e("BleDevice.callDisconnect()");
 
         if(stopAutoScan) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
@@ -389,7 +389,7 @@ public abstract class BleDevice {
         gattCmdExecutor.start();
         setConnectState(CONNECT_SUCCESS);
         if(!executeAfterConnectSuccess()) {
-            requestDisconnect(false);
+            callDisconnect(false);
         }
     }
 
