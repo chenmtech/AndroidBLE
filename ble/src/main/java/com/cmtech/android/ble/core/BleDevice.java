@@ -200,6 +200,14 @@ public abstract class BleDevice {
             updateState();
         }
     }
+    // 更新设备状态
+    public final void updateState() {
+        for(OnBleDeviceListener listener : listeners) {
+            if(listener != null) {
+                listener.onStateUpdated(this);
+            }
+        }
+    }
     private void setConnectState(BleDeviceState connectState) {
         this.connectState = connectState;
         setState(connectState);
@@ -268,7 +276,7 @@ public abstract class BleDevice {
     }
 
     // 请求自动扫描
-    public void callAutoScan() {
+    private void callAutoScan() {
         if(isDisconnected()) {
             if (ExecutorUtil.isDead(autoScanService)) {
                 ViseLog.e("BleDevice.callAutoScan()");
@@ -305,7 +313,7 @@ public abstract class BleDevice {
     }
 
     // 停止扫描
-    public void stopScan(boolean stopAutoScan) {
+    private void stopScan(boolean stopAutoScan) {
         if (stopAutoScan) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
         }
@@ -332,6 +340,12 @@ public abstract class BleDevice {
         detailInfo = null;
         bleGatt = null;
         context = null;
+    }
+
+    public void clear() {
+        if(bleGatt != null) {
+            bleGatt.clear();
+        }
     }
 
     private void scan() {
@@ -452,15 +466,6 @@ public abstract class BleDevice {
         gattCmdExecutor.runInstantly(callback);
     }
 
-    // 更新设备状态
-    public final void updateState() {
-        for(OnBleDeviceListener listener : listeners) {
-            if(listener != null) {
-                listener.onStateUpdated(this);
-            }
-        }
-    }
-
     // 更新电池电量
     private void updateBattery() {
         for (final OnBleDeviceListener listener : listeners) {
@@ -471,7 +476,7 @@ public abstract class BleDevice {
     }
 
     // 通知异常消息
-    protected void notifyExceptionMessage(int msgId) {
+    private void notifyExceptionMessage(int msgId) {
         for(OnBleDeviceListener listener : listeners) {
             if(listener != null) {
                 listener.onExceptionMsgNotified(this, msgId);
