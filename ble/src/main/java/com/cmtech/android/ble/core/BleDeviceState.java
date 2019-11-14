@@ -27,9 +27,9 @@ public class BleDeviceState {
     public static final BleDeviceState SCANNING = new BleDeviceState(SCANNING_CODE, "正在扫描", R.mipmap.ic_scanning_32px);
     public static final BleDeviceState CONNECTING = new BleDeviceState(CONNECTING_CODE, "正在连接", R.mipmap.ic_connecting_32px);
     public static final BleDeviceState DISCONNECTING = new BleDeviceState(DISCONNECTING_CODE, "正在断开", R.mipmap.ic_connecting_32px);
-    public static final BleDeviceState CONNECT_SUCCESS = new BleDeviceState(CONNECT_SUCCESS_CODE, "已连接", R.mipmap.ic_connected_32px);
-    public static final BleDeviceState CONNECT_FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
-    public static final BleDeviceState CONNECT_DISCONNECT = new BleDeviceState(CONNECT_DISCONNECT_CODE, "已断开", R.mipmap.ic_disconnect_32px);
+    public static final BleDeviceState CONNECT = new BleDeviceState(CONNECT_SUCCESS_CODE, "已连接", R.mipmap.ic_connected_32px);
+    public static final BleDeviceState FAILURE = new BleDeviceState(CONNECT_FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
+    public static final BleDeviceState DISCONNECT = new BleDeviceState(CONNECT_DISCONNECT_CODE, "已断开", R.mipmap.ic_disconnect_32px);
 
     private final int code; // 状态码
     private String description; // 状态描述
