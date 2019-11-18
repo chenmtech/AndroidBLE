@@ -26,13 +26,13 @@ public abstract class AbstractDevice {
         void onBatteryUpdated(final AbstractDevice device); // 电池电量更新
     }
 
-    protected final BleDeviceRegisterInfo registerInfo; // 注册信息
+    protected final DeviceRegisterInfo registerInfo; // 注册信息
     protected volatile BleDeviceState state = CLOSED; // 实时状态
     private final List<OnBleDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
 
 
-    public AbstractDevice(BleDeviceRegisterInfo registerInfo) {
+    public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
             throw new NullPointerException("The register info of BleDevice is null.");
         }
@@ -40,17 +40,17 @@ public abstract class AbstractDevice {
         listeners = new LinkedList<>();
     }
 
-    public BleDeviceRegisterInfo getRegisterInfo() {
+    public DeviceRegisterInfo getRegisterInfo() {
         return registerInfo;
     }
-    public void updateRegisterInfo(BleDeviceRegisterInfo registerInfo) {
+    public void updateRegisterInfo(DeviceRegisterInfo registerInfo) {
         this.registerInfo.update(registerInfo);
     }
     public String getAddress() {
         return registerInfo.getMacAddress();
     }
     public String getName() {
-        return registerInfo.getNickName();
+        return registerInfo.getName();
     }
     public String getUuidString() {
         return registerInfo.getUuidStr();
@@ -138,8 +138,8 @@ public abstract class AbstractDevice {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BleDevice that = (BleDevice) o;
-        BleDeviceRegisterInfo thisInfo = getRegisterInfo();
-        BleDeviceRegisterInfo thatInfo = that.getRegisterInfo();
+        DeviceRegisterInfo thisInfo = getRegisterInfo();
+        DeviceRegisterInfo thatInfo = that.getRegisterInfo();
         return Objects.equals(thisInfo, thatInfo);
     }
 

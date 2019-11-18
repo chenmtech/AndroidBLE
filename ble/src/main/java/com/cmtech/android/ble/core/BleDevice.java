@@ -129,7 +129,7 @@ public abstract class BleDevice extends AbstractDevice{
     };
 
 
-    public BleDevice(BleDeviceRegisterInfo registerInfo) {
+    public BleDevice(DeviceRegisterInfo registerInfo) {
         super(registerInfo);
     }
 
