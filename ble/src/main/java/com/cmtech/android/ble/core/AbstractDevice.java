@@ -16,14 +16,7 @@ public abstract class AbstractDevice implements IDevice{
     protected volatile BleDeviceState state = CLOSED; // 实时状态
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
-
-    public interface MyCallback {
-        boolean executeAfterConnectSuccess();
-        void executeAfterConnectFailure();
-        void executeAfterDisconnect();
-    }
-
-    protected MyCallback myCallback;
+    protected IConnectCallback callback;
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
@@ -33,9 +26,8 @@ public abstract class AbstractDevice implements IDevice{
         listeners = new LinkedList<>();
     }
 
-    @Override
-    public void setCallback(MyCallback myCallback) {
-        this.myCallback = myCallback;
+    public void setCallback(IConnectCallback callback) {
+        this.callback = callback;
     }
 
     @Override
@@ -106,6 +98,14 @@ public abstract class AbstractDevice implements IDevice{
             updateBattery();
         }
     }
+    // 更新电池电量
+    private void updateBattery() {
+        for (final OnDeviceListener listener : listeners) {
+            if (listener != null) {
+                listener.onBatteryUpdated(this);
+            }
+        }
+    }
     @Override
     public final void addListener(OnDeviceListener listener) {
         if(!listeners.contains(listener)) {
@@ -117,14 +117,6 @@ public abstract class AbstractDevice implements IDevice{
         listeners.remove(listener);
     }
 
-    // 更新电池电量
-    private void updateBattery() {
-        for (final OnDeviceListener listener : listeners) {
-            if (listener != null) {
-                listener.onBatteryUpdated(this);
-            }
-        }
-    }
 
     // 通知异常消息
     protected void notifyExceptionMessage(int msgId) {

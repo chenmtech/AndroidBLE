@@ -47,8 +47,8 @@ import static com.cmtech.android.ble.core.BleDeviceState.SCANNING;
 
 public class BleDevice extends AbstractDevice{
     private static final int MIN_RSSI_WHEN_CONNECTED = -75; // 被连接时要求的最小RSSI
-    protected static final int MSG_REQUEST_SCAN = 0; // 请求扫描消息
-    protected static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
+    private static final int MSG_REQUEST_SCAN = 0; // 请求扫描消息
+    private static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
 
     public static final int MSG_BLE_INNER_ERROR = R.string.scan_failed_ble_inner_error; // Ble内部错误通知
     public static final int MSG_BT_CLOSED = R.string.scan_failed_bt_closed; // 蓝牙关闭错误
@@ -139,10 +139,6 @@ public class BleDevice extends AbstractDevice{
     private void setConnectState(BleDeviceState connectState) {
         this.connectState = connectState;
         setState(connectState);
-    }
-
-    public boolean isStopped() {
-        return isDisconnected() && ExecutorUtil.isDead(autoScanService);
     }
 
     // 设备是否包含gatt elements
@@ -269,6 +265,20 @@ public class BleDevice extends AbstractDevice{
         }
     }
 
+    @Override
+    public boolean isStopped() {
+        return isDisconnected() && ExecutorUtil.isDead(autoScanService);
+    }
+
+    @Override
+    public void disconnect() {
+        if(bleGatt != null) {
+            setState(DISCONNECTING);
+            bleGatt.disconnect();
+        }
+        handler.removeCallbacksAndMessages(null);
+    }
+
     private void scan() {
         if(isDisconnected()) {
             handler.removeMessages(MSG_REQUEST_SCAN);
@@ -281,14 +291,6 @@ public class BleDevice extends AbstractDevice{
     private void connect() {
         new BleGatt().connect(context, detailInfo.getDevice(), connectCallback);
         setState(CONNECTING);
-    }
-
-    public void disconnect() {
-        if(bleGatt != null) {
-            setState(DISCONNECTING);
-            bleGatt.disconnect();
-        }
-        handler.removeCallbacksAndMessages(null);
     }
 
     // 处理找到的设备
@@ -322,8 +324,10 @@ public class BleDevice extends AbstractDevice{
         this.bleGatt = bleGatt;
         gattCmdExecutor.start();
         setConnectState(CONNECT);
-        if(!myCallback.executeAfterConnectSuccess()) {
-            callDisconnect(false);
+        if(callback != null) {
+            if (!callback.onConnectSuccess()) {
+                callDisconnect(false);
+            }
         }
     }
 
@@ -335,7 +339,8 @@ public class BleDevice extends AbstractDevice{
             gattCmdExecutor.stop();
             bleGatt = null;
             setConnectState(FAILURE);
-            myCallback.executeAfterConnectFailure();
+            if(callback != null)
+                callback.onConnectFailure();
         }
     }
 
@@ -347,7 +352,8 @@ public class BleDevice extends AbstractDevice{
             gattCmdExecutor.stop();
             bleGatt = null;
             setConnectState(DISCONNECT);
-            myCallback.executeAfterDisconnect();
+            if(callback != null)
+                callback.onDisconnect();
         }
     }
 
