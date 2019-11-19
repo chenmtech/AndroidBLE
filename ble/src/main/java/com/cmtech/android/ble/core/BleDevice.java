@@ -128,7 +128,6 @@ public class BleDevice extends AbstractDevice{
         }
     };
 
-
     public BleDevice(DeviceRegisterInfo registerInfo) {
         super(registerInfo);
     }
@@ -323,7 +322,7 @@ public class BleDevice extends AbstractDevice{
         this.bleGatt = bleGatt;
         gattCmdExecutor.start();
         setConnectState(CONNECT);
-        if(!executeAfterConnectSuccess()) {
+        if(!myCallback.executeAfterConnectSuccess()) {
             callDisconnect(false);
         }
     }
@@ -336,7 +335,7 @@ public class BleDevice extends AbstractDevice{
             gattCmdExecutor.stop();
             bleGatt = null;
             setConnectState(FAILURE);
-            executeAfterConnectFailure();
+            myCallback.executeAfterConnectFailure();
         }
     }
 
@@ -348,7 +347,7 @@ public class BleDevice extends AbstractDevice{
             gattCmdExecutor.stop();
             bleGatt = null;
             setConnectState(DISCONNECT);
-            executeAfterDisconnect();
+            myCallback.executeAfterDisconnect();
         }
     }
 

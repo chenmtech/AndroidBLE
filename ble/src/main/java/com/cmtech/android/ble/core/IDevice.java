@@ -40,7 +40,9 @@ public interface IDevice {
     void close(); // 关闭设备
     void clear(); // 清除设备
 
+    void setCallback(AbstractDevice.MyCallback myCallback);
+/*
     boolean executeAfterConnectSuccess(); // 连接成功后执行的操作
     void executeAfterConnectFailure(); // 连接错误后执行的操作
-    void executeAfterDisconnect(); // 断开连接后执行的操作
+    void executeAfterDisconnect(); // 断开连接后执行的操作*/
 }

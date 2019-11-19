@@ -4,7 +4,6 @@ import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Objects;
 
 import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
 import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
@@ -18,12 +17,25 @@ public abstract class AbstractDevice implements IDevice{
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
 
+    public interface MyCallback {
+        boolean executeAfterConnectSuccess();
+        void executeAfterConnectFailure();
+        void executeAfterDisconnect();
+    }
+
+    protected MyCallback myCallback;
+
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
             throw new NullPointerException("The register info of BleDevice is null.");
         }
         this.registerInfo = registerInfo;
         listeners = new LinkedList<>();
+    }
+
+    @Override
+    public void setCallback(MyCallback myCallback) {
+        this.myCallback = myCallback;
     }
 
     @Override
@@ -124,28 +136,13 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
-    public boolean executeAfterConnectSuccess() {
-        return false;
-    }
-
-    @Override
-    public void executeAfterConnectFailure() {
-
-    }
-
-    @Override
-    public void executeAfterDisconnect() {
-
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BleDevice that = (BleDevice) o;
         DeviceRegisterInfo thisInfo = getRegisterInfo();
         DeviceRegisterInfo thatInfo = that.getRegisterInfo();
-        return Objects.equals(thisInfo, thatInfo);
+        return thisInfo.equals(thatInfo);
     }
 
     @Override
