@@ -35,7 +35,6 @@ public interface IDevice {
     void open(Context context); // 打开设备
     void switchState(); // 切换状态
     void callDisconnect(boolean stopAutoScan); // 请求断开
-    void disconnect();
     boolean isStopped(); // 是否停止
     void close(); // 关闭设备
     void clear(); // 清除设备
