@@ -18,7 +18,6 @@ public abstract class AbstractDevice implements IDevice{
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
 
-
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
             throw new NullPointerException("The register info of BleDevice is null.");
@@ -122,6 +121,21 @@ public abstract class AbstractDevice implements IDevice{
                 listener.onExceptionMsgNotified(this, msgId);
             }
         }
+    }
+
+    @Override
+    public boolean executeAfterConnectSuccess() {
+        return false;
+    }
+
+    @Override
+    public void executeAfterConnectFailure() {
+
+    }
+
+    @Override
+    public void executeAfterDisconnect() {
+
     }
 
     @Override
