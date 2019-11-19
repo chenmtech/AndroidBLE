@@ -45,7 +45,7 @@ import static com.cmtech.android.ble.core.BleDeviceState.SCANNING;
   * Version:        1.1
  */
 
-public class BleDevice extends AbstractDevice{
+public abstract class BleDevice extends AbstractDevice{
     private static final int MIN_RSSI_WHEN_CONNECTED = -75; // 被连接时要求的最小RSSI
     protected static final int MSG_REQUEST_SCAN = 0; // 请求扫描消息
     protected static final int MSG_REQUEST_DISCONNECT = 1; // 请求断开消息
@@ -147,7 +147,7 @@ public class BleDevice extends AbstractDevice{
     }
 
     // 设备是否包含gatt elements
-    public boolean containGattElements(BleGattElement[] elements) {
+    protected boolean containGattElements(BleGattElement[] elements) {
         for(BleGattElement element : elements) {
             if( element == null || element.retrieveGattObject(this) == null )
                 return false;
@@ -155,7 +155,7 @@ public class BleDevice extends AbstractDevice{
         return true;
     }
     // 设备是否包含gatt element
-    public boolean containGattElement(BleGattElement element) {
+    protected boolean containGattElement(BleGattElement element) {
         return !( element == null || element.retrieveGattObject(this) == null );
     }
 
@@ -284,7 +284,7 @@ public class BleDevice extends AbstractDevice{
         setState(CONNECTING);
     }
 
-    public void disconnect() {
+    protected void disconnect() {
         if(bleGatt != null) {
             setState(DISCONNECTING);
             bleGatt.disconnect();
@@ -352,31 +352,31 @@ public class BleDevice extends AbstractDevice{
         }
     }
 
-    public boolean isGattExecutorAlive() {
+    protected boolean isGattExecutorAlive() {
         return gattCmdExecutor.isAlive();
     }
 
-    public final void read(BleGattElement element, IBleDataCallback dataCallback) {
+    protected final void read(BleGattElement element, IBleDataCallback dataCallback) {
         gattCmdExecutor.read(element, dataCallback);
     }
 
-    public final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
+    protected final void write(BleGattElement element, byte[] data, IBleDataCallback dataCallback) {
         gattCmdExecutor.write(element, data, dataCallback);
     }
 
-    public final void write(BleGattElement element, byte data, IBleDataCallback dataCallback) {
+    protected final void write(BleGattElement element, byte data, IBleDataCallback dataCallback) {
         gattCmdExecutor.write(element, data, dataCallback);
     }
 
-    public final void notify(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+    protected final void notify(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
         gattCmdExecutor.notify(element, enable, receiveCallback);
     }
 
-    public final void indicate(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
+    protected final void indicate(BleGattElement element, boolean enable, IBleDataCallback receiveCallback) {
         gattCmdExecutor.indicate(element, enable, receiveCallback);
     }
 
-    public final void runInstantly(IBleDataCallback callback) {
+    protected final void runInstantly(IBleDataCallback callback) {
         gattCmdExecutor.runInstantly(callback);
     }
 }
