@@ -26,10 +26,9 @@ public abstract class AbstractDevice implements IDevice{
         listeners = new LinkedList<>();
     }
 
-    public void setCallback(IConnectCallback callback) {
+    public final void setCallback(IConnectCallback callback) {
         this.callback = callback;
     }
-
     @Override
     public DeviceRegisterInfo getRegisterInfo() {
         return registerInfo;
