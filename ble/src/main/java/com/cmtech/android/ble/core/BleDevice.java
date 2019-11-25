@@ -279,6 +279,11 @@ public class BleDevice extends AbstractDevice{
         handler.removeCallbacksAndMessages(null);
     }
 
+    @Override
+    public boolean isLocal() {
+        return true;
+    }
+
     private void scan() {
         if(isDisconnected()) {
             handler.removeMessages(MSG_REQUEST_SCAN);

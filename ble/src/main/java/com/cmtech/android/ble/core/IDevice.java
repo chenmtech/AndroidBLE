@@ -45,6 +45,8 @@ public interface IDevice {
     boolean isStopped(); // 是否停止
     void close(); // 关闭设备
     void clear(); // 清除设备
+
+    boolean isLocal();
 /*
     boolean onConnectSuccess(); // 连接成功后执行的操作
     void onConnectFailure(); // 连接错误后执行的操作
