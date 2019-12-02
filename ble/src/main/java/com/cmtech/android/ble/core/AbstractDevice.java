@@ -9,7 +9,7 @@ public abstract class AbstractDevice implements IDevice{
     protected final DeviceRegisterInfo registerInfo; // 注册信息
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
-    protected IDeviceConnector connector;
+    protected IDeviceConnector connector; // 设备连接器
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
@@ -51,16 +51,6 @@ public abstract class AbstractDevice implements IDevice{
     public boolean warnBleInnerError() {
         return registerInfo.warnBleInnerError();
     }
-    @Override
-    public BleDeviceState getState() {
-        return connector.getState();
-    }
-
-    @Override
-    public void setState(BleDeviceState state) {
-        connector.setState(state);
-    }
-
     // 更新设备状态
     @Override
     public void updateState() {
@@ -99,8 +89,6 @@ public abstract class AbstractDevice implements IDevice{
     public final void removeListener(OnDeviceListener listener) {
         listeners.remove(listener);
     }
-
-
     // 通知异常消息
     @Override
     public void notifyExceptionMessage(int msgId) {
@@ -110,37 +98,38 @@ public abstract class AbstractDevice implements IDevice{
             }
         }
     }
-
+    @Override
+    public BleDeviceState getState() {
+        return connector.getState();
+    }
+    @Override
+    public void setState(BleDeviceState state) {
+        connector.setState(state);
+    }
     @Override
     public void open(Context context) {
         connector.open(context);
     }
-
     @Override
     public void switchState() {
         connector.switchState();
     }
-
     @Override
     public void forceDisconnect(boolean forever) {
         connector.forceDisconnect(forever);
     }
-
     @Override
     public void close() {
         connector.close();
     }
-
     @Override
     public void clear() {
         connector.clear();
     }
-
     @Override
     public boolean isDisconnectedForever() {
         return connector.isDisconnectedForever();
     }
-
     @Override
     public boolean isConnected() {
         return connector.isConnected();
@@ -149,12 +138,10 @@ public abstract class AbstractDevice implements IDevice{
     public boolean isDisconnected() {
         return connector.isDisconnected();
     }
-
     @Override
     public boolean isLocal() {
         return connector.isLocal();
     }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -164,7 +151,6 @@ public abstract class AbstractDevice implements IDevice{
         DeviceRegisterInfo thatInfo = that.getRegisterInfo();
         return thisInfo.equals(thatInfo);
     }
-
     @Override
     public int hashCode() {
         return (getRegisterInfo() != null) ? getRegisterInfo().hashCode() : 0;
