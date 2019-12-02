@@ -103,7 +103,7 @@ public class BleDeviceConnector implements IDeviceConnector{
                     break;
                 case CODE_BLE_INNER_ERROR:
                     stopScan(true);
-                    if(device.getRegisterInfo().isWarnBleInnerError()) {
+                    if(device.getRegisterInfo().warnBleInnerError()) {
                         device.notifyExceptionMessage(MSG_BLE_INNER_ERROR);
                     }
                     break;

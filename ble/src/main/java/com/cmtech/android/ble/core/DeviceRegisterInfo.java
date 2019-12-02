@@ -87,7 +87,7 @@ public class DeviceRegisterInfo implements Serializable{
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
-    public boolean isWarnBleInnerError() {
+    public boolean warnBleInnerError() {
         return warnBleInnerError;
     }
     public void setWarnBleInnerError(boolean warnBleInnerError) {

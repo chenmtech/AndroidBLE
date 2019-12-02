@@ -31,7 +31,7 @@ public abstract class AbstractDevice implements IDevice{
         this.registerInfo.update(registerInfo);
     }
     @Override
-    public String getAddress() {
+    public final String getAddress() {
         return registerInfo.getMacAddress();
     }
     @Override
@@ -50,7 +50,10 @@ public abstract class AbstractDevice implements IDevice{
     public boolean autoConnect() {
         return registerInfo.autoConnect();
     }
-
+    @Override
+    public boolean warnBleInnerError() {
+        return registerInfo.warnBleInnerError();
+    }
     @Override
     public BleDeviceState getState() {
         return connector.getState();

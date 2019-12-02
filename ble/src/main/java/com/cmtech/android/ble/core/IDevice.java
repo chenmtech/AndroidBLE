@@ -20,6 +20,7 @@ public interface IDevice extends IDeviceConnector{
     String getUuidString();
     String getImagePath();
     boolean autoConnect();
+    boolean warnBleInnerError();
     void updateState();
     int getBattery();
     void setBattery(final int battery);
