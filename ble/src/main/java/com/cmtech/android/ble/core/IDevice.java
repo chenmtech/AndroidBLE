@@ -19,15 +19,13 @@ public interface IDevice extends IDeviceConnector{
     String getName();
     String getUuidString();
     String getImagePath();
-    BleDeviceState getState();
-    void setState(BleDeviceState state);
+    boolean autoConnect();
     void updateState();
     int getBattery();
     void setBattery(final int battery);
     void addListener(OnDeviceListener listener);
     void removeListener(OnDeviceListener listener);
-
     boolean onConnectSuccess(); // 连接成功后执行的操作
-    void onConnectFailure(); // 连接错误后执行的操作
+    void onConnectFailure(); // 连接失败后执行的操作
     void onDisconnect(); // 断开连接后执行的操作
 }

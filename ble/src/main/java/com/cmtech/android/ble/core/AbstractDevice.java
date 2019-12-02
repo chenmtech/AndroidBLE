@@ -2,16 +2,11 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
-import com.vise.log.ViseLog;
-
 import java.util.LinkedList;
 import java.util.List;
 
-import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
-
 public abstract class AbstractDevice implements IDevice{
     protected final DeviceRegisterInfo registerInfo; // 注册信息
-    protected volatile BleDeviceState state = CLOSED; // 实时状态
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
     protected IDeviceConnector connector;
@@ -52,18 +47,20 @@ public abstract class AbstractDevice implements IDevice{
         return registerInfo.getImagePath();
     }
     @Override
+    public boolean autoConnect() {
+        return registerInfo.autoConnect();
+    }
+
+    @Override
     public BleDeviceState getState() {
-        return state;
+        return connector.getState();
     }
 
     @Override
     public void setState(BleDeviceState state) {
-        if(this.state != state) {
-            ViseLog.e("The state of device " + getAddress() + " is " + state);
-            this.state = state;
-            updateState();
-        }
+        connector.setState(state);
     }
+
     // 更新设备状态
     @Override
     public void updateState() {
@@ -124,8 +121,8 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
-    public void callDisconnect(boolean stopAutoScan) {
-        connector.callDisconnect(stopAutoScan);
+    public void forceDisconnect(boolean forever) {
+        connector.forceDisconnect(forever);
     }
 
     @Override
@@ -139,15 +136,14 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
-    public boolean isStopped() {
-        return connector.isStopped();
+    public boolean isDisconnectedForever() {
+        return connector.isDisconnectedForever();
     }
 
     @Override
     public boolean isConnected() {
         return connector.isConnected();
     }
-
     @Override
     public boolean isDisconnected() {
         return connector.isDisconnected();

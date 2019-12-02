@@ -59,6 +59,7 @@ public class BleDeviceConnector implements IDeviceConnector{
 
 
     private final AbstractDevice device;
+    private volatile BleDeviceState state = CLOSED; // 实时状态
     private BleDeviceState connectState = DISCONNECT; // 连接状态，只能是CONNECT_SUCCESS, FAILURE or DISCONNECT
     private Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
     private BleDeviceDetailInfo detailInfo;// 详细信息，扫描到设备后赋值
@@ -132,15 +133,30 @@ public class BleDeviceConnector implements IDeviceConnector{
 
     public BleDeviceConnector(AbstractDevice device) {
         this.device = device;
+        this.device.setDeviceConnector(this);
     }
 
     public BleGatt getBleGatt() {
         return bleGatt;
     }
 
+    @Override
+    public BleDeviceState getState() {
+        return state;
+    }
+
+    @Override
+    public void setState(BleDeviceState state) {
+        if(this.state != state) {
+            ViseLog.e("The state of device " + device.getAddress() + " is " + state);
+            this.state = state;
+            device.updateState();
+        }
+    }
+
     private void setConnectState(BleDeviceState connectState) {
         this.connectState = connectState;
-        device.setState(connectState);
+        setState(connectState);
     }
 
     // 设备是否包含gatt elements
@@ -159,7 +175,7 @@ public class BleDeviceConnector implements IDeviceConnector{
     // 打开设备
     @Override
     public void open(Context context) {
-        if(device.getState() != CLOSED) {
+        if(state != CLOSED) {
             ViseLog.e("The device is opened.");
             return;
         }
@@ -170,8 +186,8 @@ public class BleDeviceConnector implements IDeviceConnector{
         ViseLog.e("BleDeviceConnector.open()");
         this.context = context;
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-        device.setState(DISCONNECT);
-        if(device.getRegisterInfo().autoConnect()) {
+        setState(DISCONNECT);
+        if(device.autoConnect()) {
             callAutoScan();
         }
     }
@@ -179,11 +195,11 @@ public class BleDeviceConnector implements IDeviceConnector{
     // 切换状态
     @Override
     public void switchState() {
-        ViseLog.e("BleDeviceConnector.switchState()");
+        ViseLog.e("BleDeviceConnector.switchState(): " + state);
         if(isDisconnected()) {
             callAutoScan();
         } else if(isConnected()) {
-            callDisconnect(true);
+            forceDisconnect(true);
         } else if(isScanning()) {
             stopScan(true);
         } else { // 无效操作
@@ -191,8 +207,8 @@ public class BleDeviceConnector implements IDeviceConnector{
         }
     }
 
-    public boolean isScanning() {
-        return device.getState() == SCANNING;
+    private boolean isScanning() {
+        return state == SCANNING;
     }
 
     // 请求自动扫描
@@ -221,12 +237,12 @@ public class BleDeviceConnector implements IDeviceConnector{
         }
     }
 
-    // 请求断开
+    // 强制断开
     @Override
-    public void callDisconnect(boolean stopAutoScan) {
-        ViseLog.e("BleDeviceConnector.callDisconnect()");
+    public void forceDisconnect(boolean forever) {
+        ViseLog.e("BleDeviceConnector.forceDisconnect()");
 
-        if(stopAutoScan) {
+        if(forever) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
         }
         handler.removeCallbacksAndMessages(null);
@@ -240,13 +256,13 @@ public class BleDeviceConnector implements IDeviceConnector{
         }
         BleScanner.stopScan(bleScanCallback); // 设备处于扫描时，停止扫描
         handler.removeMessages(MSG_REQUEST_SCAN);
-        device.setState(connectState);
+        setState(connectState);
     }
 
     // 关闭设备
     @Override
     public void close() {
-        if(!isStopped()) {
+        if(!isDisconnectedForever()) {
             ViseLog.e("The device can't be closed currently.");
             return;
         }
@@ -255,7 +271,7 @@ public class BleDeviceConnector implements IDeviceConnector{
 
         ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
         handler.removeCallbacksAndMessages(null);
-        device.setState(BleDeviceState.CLOSED);
+        setState(BleDeviceState.CLOSED);
 
         autoScanService = null;
         gattCmdExecutor = null;
@@ -272,22 +288,22 @@ public class BleDeviceConnector implements IDeviceConnector{
     }
 
     @Override
-    public boolean isStopped() {
+    public boolean isDisconnectedForever() {
         return isDisconnected() && ExecutorUtil.isDead(autoScanService);
     }
 
     @Override
     public boolean isConnected() {
-        return device.getState() == CONNECT;
+        return state == CONNECT;
     }
     @Override
     public boolean isDisconnected() {
-        return device.getState() == FAILURE || device.getState() == DISCONNECT;
+        return state == FAILURE || state == DISCONNECT;
     }
 
     public void disconnect() {
         if(bleGatt != null) {
-            device.setState(DISCONNECTING);
+            setState(DISCONNECTING);
             bleGatt.disconnect();
         }
         handler.removeCallbacksAndMessages(null);
@@ -303,13 +319,13 @@ public class BleDeviceConnector implements IDeviceConnector{
             handler.removeMessages(MSG_REQUEST_SCAN);
             ScanFilter scanFilter = new ScanFilter.Builder().setDeviceAddress(device.getAddress()).build();
             BleScanner.startScan(scanFilter, bleScanCallback);
-            device.setState(SCANNING);
+            setState(SCANNING);
         }
     }
 
     private void connect() {
         new BleGatt().connect(context, detailInfo.getDevice(), connectCallback);
-        device.setState(CONNECTING);
+        setState(CONNECTING);
     }
 
     // 处理找到的设备
@@ -330,7 +346,7 @@ public class BleDeviceConnector implements IDeviceConnector{
             ViseLog.e("Connect Success Again!!!");
             return;
         }
-        if(device.getState() == CLOSED) { // 设备已经关闭了，强行清除
+        if(state == CLOSED) { // 设备已经关闭了，强行清除
             clear();
             return;
         }
@@ -345,13 +361,13 @@ public class BleDeviceConnector implements IDeviceConnector{
         setConnectState(CONNECT);
 
         if (!device.onConnectSuccess()) {
-            callDisconnect(false);
+            forceDisconnect(false);
         }
     }
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
-        if(device.getState() != FAILURE) {
+        if(state != FAILURE) {
             ViseLog.e("Process connect failure: " + bleException );
 
             gattCmdExecutor.stop();
@@ -363,7 +379,7 @@ public class BleDeviceConnector implements IDeviceConnector{
 
     // 处理连接断开
     private void processDisconnect() {
-        if(device.getState() != DISCONNECT) {
+        if(state != DISCONNECT) {
             ViseLog.e("Process disconnect.");
 
             gattCmdExecutor.stop();
