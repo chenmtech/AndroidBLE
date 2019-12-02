@@ -133,7 +133,6 @@ public class BleDeviceConnector implements IDeviceConnector{
 
     public BleDeviceConnector(IDevice device) {
         this.device = device;
-        device.setDeviceConnector(this);
     }
 
     public BleGatt getBleGatt() {

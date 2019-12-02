@@ -30,5 +30,4 @@ public interface IDevice extends IDeviceConnector{
     void onConnectFailure(); // 连接失败后执行的操作
     void onDisconnect(); // 断开连接后执行的操作
     void notifyExceptionMessage(int msgId);
-    void setDeviceConnector(IDeviceConnector connector);
 }

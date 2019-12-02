@@ -20,10 +20,6 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
-    public final void setDeviceConnector(IDeviceConnector connector) {
-        this.connector = connector;
-    }
-    @Override
     public DeviceRegisterInfo getRegisterInfo() {
         return registerInfo;
     }
