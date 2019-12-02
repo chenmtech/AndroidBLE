@@ -1,33 +1,31 @@
 package com.cmtech.android.ble.core;
 
+import android.content.Context;
+
 import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
-import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
-import static com.cmtech.android.ble.core.BleDeviceState.SCANNING;
 
 public abstract class AbstractDevice implements IDevice{
     protected final DeviceRegisterInfo registerInfo; // 注册信息
     protected volatile BleDeviceState state = CLOSED; // 实时状态
     private final List<OnDeviceListener> listeners; // 监听器列表
     private int battery = INVALID_BATTERY; // 电池电量
-    protected IConnectCallback callback;
+    protected IDeviceConnector connector;
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
-            throw new NullPointerException("The register info of BleDevice is null.");
+            throw new NullPointerException("The register info is null.");
         }
         this.registerInfo = registerInfo;
         listeners = new LinkedList<>();
     }
 
-    public final void setCallback(IConnectCallback callback) {
-        this.callback = callback;
+    public final void setDeviceConnector(IDeviceConnector connector) {
+        this.connector = connector;
     }
     @Override
     public DeviceRegisterInfo getRegisterInfo() {
@@ -57,18 +55,7 @@ public abstract class AbstractDevice implements IDevice{
     public BleDeviceState getState() {
         return state;
     }
-    @Override
-    public boolean isScanning() {
-        return state == SCANNING;
-    }
-    @Override
-    public boolean isConnected() {
-        return state == CONNECT;
-    }
-    @Override
-    public boolean isDisconnected() {
-        return state == FAILURE || state == DISCONNECT;
-    }
+
     @Override
     public void setState(BleDeviceState state) {
         if(this.state != state) {
@@ -118,7 +105,7 @@ public abstract class AbstractDevice implements IDevice{
 
 
     // 通知异常消息
-    protected void notifyExceptionMessage(int msgId) {
+    public void notifyExceptionMessage(int msgId) {
         for(OnDeviceListener listener : listeners) {
             if(listener != null) {
                 listener.onExceptionMsgNotified(this, msgId);
@@ -127,10 +114,55 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
+    public void open(Context context) {
+        connector.open(context);
+    }
+
+    @Override
+    public void switchState() {
+        connector.switchState();
+    }
+
+    @Override
+    public void callDisconnect(boolean stopAutoScan) {
+        connector.callDisconnect(stopAutoScan);
+    }
+
+    @Override
+    public void close() {
+        connector.close();
+    }
+
+    @Override
+    public void clear() {
+        connector.clear();
+    }
+
+    @Override
+    public boolean isStopped() {
+        return connector.isStopped();
+    }
+
+    @Override
+    public boolean isConnected() {
+        return connector.isConnected();
+    }
+
+    @Override
+    public boolean isDisconnected() {
+        return connector.isDisconnected();
+    }
+
+    @Override
+    public boolean isLocal() {
+        return connector.isLocal();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BleDevice that = (BleDevice) o;
+        AbstractDevice that = (AbstractDevice) o;
         DeviceRegisterInfo thisInfo = getRegisterInfo();
         DeviceRegisterInfo thatInfo = that.getRegisterInfo();
         return thisInfo.equals(thatInfo);

@@ -45,7 +45,7 @@ class BleSerialGattCommand extends BleGattCommand {
         dataCallback = new BleSerialCommandDataCallbackDecorator(dataCallback);
     }
 
-    static BleSerialGattCommand create(BleDevice device, BleGattElement element, BleGattCmdType bleGattCmdType, byte[] data,
+    static BleSerialGattCommand create(BleDeviceConnector device, BleGattElement element, BleGattCmdType bleGattCmdType, byte[] data,
                                        IBleDataCallback dataCallback, IBleDataCallback receiveCallback) {
         if(device.getBleGatt() == null) return null;
 

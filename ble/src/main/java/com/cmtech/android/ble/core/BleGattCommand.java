@@ -17,7 +17,7 @@ import com.cmtech.android.ble.utils.HexUtil;
  */
 
 class BleGattCommand{
-    private final BleDevice device; // 执行命令的设备
+    private final BleDeviceConnector device; // 执行命令的设备
     private final BleGattElement element; // 命令操作的element
     private final BleGattCmdType bleGattCmdType; // 命令类型
     protected IBleDataCallback dataCallback; // 数据操作回调
@@ -25,7 +25,7 @@ class BleGattCommand{
     private final IBleDataCallback receiveCallback; // 如果是notify或indicate操作，存放notify或indicate的回调
     private final String description; // 命令描述字符串
 
-    private BleGattCommand(BleDevice device, BleGattElement element, BleGattCmdType bleGattCmdType,
+    private BleGattCommand(BleDeviceConnector device, BleGattElement element, BleGattCmdType bleGattCmdType,
                            IBleDataCallback dataCallback,
                            byte[] writtenData, IBleDataCallback receiveCallback, String description) {
         this.device = device;
@@ -50,7 +50,7 @@ class BleGattCommand{
         this.description = gattCommand.description;
     }
 
-    public BleDevice getDevice() {
+    public BleDeviceConnector getDevice() {
         return device;
     }
 
@@ -94,7 +94,7 @@ class BleGattCommand{
     }
 
     static class Builder {
-        private BleDevice device;
+        private BleDeviceConnector device;
         private BleGattElement element;
         private BleGattCmdType bleGattCmdType;
         private byte[] data;
@@ -104,7 +104,7 @@ class BleGattCommand{
         Builder() {
         }
 
-        Builder setDevice(BleDevice device) {
+        Builder setDevice(BleDeviceConnector device) {
             this.device = device;
             return this;
         }

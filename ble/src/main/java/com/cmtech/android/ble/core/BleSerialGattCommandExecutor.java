@@ -21,12 +21,12 @@ import java.util.concurrent.ThreadFactory;
  */
 
 class BleSerialGattCommandExecutor {
-    private final BleDevice device; // 设备
+    private final BleDeviceConnector device; // 设备
     private ExecutorService gattCmdService; // gatt命令执行Service
 
-    BleSerialGattCommandExecutor(BleDevice device) {
+    BleSerialGattCommandExecutor(BleDeviceConnector device) {
         if(device == null) {
-            throw new IllegalArgumentException("BleDevice is null");
+            throw new IllegalArgumentException("BleDeviceConnector is null");
         }
 
         this.device = device;
