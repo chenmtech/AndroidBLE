@@ -58,7 +58,7 @@ public class BleDeviceConnector implements IDeviceConnector{
     public static final int MSG_BOND_DEVICE = R.string.device_unbond;
 
 
-    private final AbstractDevice device;
+    private final IDevice device;
     private volatile BleDeviceState state = CLOSED; // 实时状态
     private BleDeviceState connectState = DISCONNECT; // 连接状态，只能是CONNECT_SUCCESS, FAILURE or DISCONNECT
     private Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
@@ -131,9 +131,9 @@ public class BleDeviceConnector implements IDeviceConnector{
         }
     };
 
-    public BleDeviceConnector(AbstractDevice device) {
+    public BleDeviceConnector(IDevice device) {
         this.device = device;
-        this.device.setDeviceConnector(this);
+        device.setDeviceConnector(this);
     }
 
     public BleGatt getBleGatt() {

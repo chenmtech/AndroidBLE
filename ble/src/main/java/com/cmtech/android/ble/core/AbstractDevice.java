@@ -19,6 +19,7 @@ public abstract class AbstractDevice implements IDevice{
         listeners = new LinkedList<>();
     }
 
+    @Override
     public final void setDeviceConnector(IDeviceConnector connector) {
         this.connector = connector;
     }
@@ -105,6 +106,7 @@ public abstract class AbstractDevice implements IDevice{
 
 
     // 通知异常消息
+    @Override
     public void notifyExceptionMessage(int msgId) {
         for(OnDeviceListener listener : listeners) {
             if(listener != null) {
