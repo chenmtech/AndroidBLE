@@ -13,5 +13,4 @@ public interface IDeviceConnector {
     boolean isConnected(); // 是否已连接
     boolean isDisconnected(); // 是否已断开
     boolean isDisconnectedForever(); // 是否永远断开
-    boolean isLocal(); // 是否本地连接
 }

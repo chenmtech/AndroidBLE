@@ -8,16 +8,21 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractDevice implements IDevice{
-    protected final DeviceRegisterInfo registerInfo; // 注册信息
+    private final DeviceRegisterInfo registerInfo; // 注册信息
     private final List<OnDeviceListener> listeners; // 监听器列表
+    protected final IDeviceConnector connector; // 设备连接器
     private int battery = INVALID_BATTERY; // 电池电量
-    protected IDeviceConnector connector; // 设备连接器
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
             throw new NullPointerException("The register info is null.");
         }
         this.registerInfo = registerInfo;
+        if(registerInfo.isLocal()) {
+            connector = new BleDeviceConnector(this);
+        } else {
+            connector = new WebDeviceConnector(this);
+        }
         listeners = new LinkedList<>();
     }
 
@@ -28,6 +33,10 @@ public abstract class AbstractDevice implements IDevice{
     @Override
     public void updateRegisterInfo(DeviceRegisterInfo registerInfo) {
         this.registerInfo.update(registerInfo);
+    }
+    @Override
+    public boolean isLocal() {
+        return registerInfo.isLocal();
     }
     @Override
     public final String getAddress() {
@@ -50,8 +59,8 @@ public abstract class AbstractDevice implements IDevice{
         return registerInfo.autoConnect();
     }
     @Override
-    public boolean warnBleInnerError() {
-        return registerInfo.warnBleInnerError();
+    public boolean isWarnWhenBleInnerError() {
+        return registerInfo.isWarnWhenBleInnerError();
     }
     // 更新设备状态
     @Override
@@ -91,12 +100,11 @@ public abstract class AbstractDevice implements IDevice{
     public final void removeListener(OnDeviceListener listener) {
         listeners.remove(listener);
     }
-    // 通知异常消息
     @Override
-    public void notifyException(BleException ex) {
+    public void handleException(BleException ex) {
         for(OnDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onExceptionNotified(this, ex);
+                listener.onExceptionHandled(this, ex);
             }
         }
     }
@@ -139,10 +147,6 @@ public abstract class AbstractDevice implements IDevice{
     @Override
     public boolean isDisconnected() {
         return connector.isDisconnected();
-    }
-    @Override
-    public boolean isLocal() {
-        return connector.isLocal();
     }
     @Override
     public boolean equals(Object o) {
