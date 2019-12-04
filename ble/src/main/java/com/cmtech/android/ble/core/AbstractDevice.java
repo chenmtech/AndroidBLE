@@ -2,6 +2,8 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
+import com.cmtech.android.ble.exception.BleException;
+
 import java.util.LinkedList;
 import java.util.List;
 
@@ -91,10 +93,10 @@ public abstract class AbstractDevice implements IDevice{
     }
     // 通知异常消息
     @Override
-    public void notifyExceptionMessage(int msgId) {
+    public void notifyException(BleException ex) {
         for(OnDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onExceptionMsgNotified(this, msgId);
+                listener.onExceptionNotified(this, ex);
             }
         }
     }

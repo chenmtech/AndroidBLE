@@ -1,15 +1,18 @@
 package com.cmtech.android.ble.core;
 
+import android.support.v4.content.ContextCompat;
+
 import com.cmtech.android.ble.R;
+import com.cmtech.android.ble.exception.BleException;
+import com.cmtech.android.ble.exception.OtherException;
 
 public interface IDevice extends IDeviceConnector{
     int INVALID_BATTERY = -1; // 无效电池电量
-    int MSG_INVALID_OPERATION = R.string.invalid_operation;
 
     // 设备监听器接口
     interface OnDeviceListener {
         void onStateUpdated(final IDevice device); // 设备状态更新
-        void onExceptionMsgNotified(final IDevice device, int msgId); // 异常消息通知
+        void onExceptionNotified(final IDevice device, BleException ex); // 异常消息通知
         void onBatteryUpdated(final IDevice device); // 电池电量更新
     }
 
@@ -29,5 +32,5 @@ public interface IDevice extends IDeviceConnector{
     boolean onConnectSuccess(); // 连接成功后执行的操作
     void onConnectFailure(); // 连接失败后执行的操作
     void onDisconnect(); // 断开连接后执行的操作
-    void notifyExceptionMessage(int msgId);
+    void notifyException(BleException ex); // 通知异常
 }

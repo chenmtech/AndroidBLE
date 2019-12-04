@@ -5,13 +5,10 @@ import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
 import com.cmtech.android.ble.exception.InitiatedException;
 import com.cmtech.android.ble.exception.OtherException;
+import com.cmtech.android.ble.exception.ScanException;
 import com.cmtech.android.ble.exception.TimeoutException;
 
-/**
- * @Description: 异常处理
- * @author: <a href="http://www.xiaoyaoyou1212.com">DAWI</a>
- * @date: 16/8/14 10:35.
- */
+
 public abstract class BleExceptionHandler {
     public BleExceptionHandler handleException(BleException exception) {
         if (exception != null) {
@@ -23,6 +20,8 @@ public abstract class BleExceptionHandler {
                 onTimeoutException((TimeoutException) exception);
             } else if (exception instanceof InitiatedException) {
                 onInitiatedException((InitiatedException) exception);
+            } else if (exception instanceof ScanException) {
+                onScanException((ScanException) exception);
             } else {
                 onOtherException((OtherException) exception);
             }
@@ -49,6 +48,11 @@ public abstract class BleExceptionHandler {
      * operation inititiated error
      */
     protected abstract void onInitiatedException(InitiatedException e);
+
+    /**
+     * operation scan error
+     */
+    protected abstract void onScanException(ScanException e);
 
     /**
      * other exceptions

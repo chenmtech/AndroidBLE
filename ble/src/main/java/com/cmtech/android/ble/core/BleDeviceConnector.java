@@ -12,6 +12,8 @@ import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.callback.IBleScanCallback;
 import com.cmtech.android.ble.exception.BleException;
+import com.cmtech.android.ble.exception.OtherException;
+import com.cmtech.android.ble.exception.ScanException;
 import com.cmtech.android.ble.utils.ExecutorUtil;
 import com.vise.log.ViseLog;
 
@@ -28,7 +30,6 @@ import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
 import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
 import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECTING;
 import static com.cmtech.android.ble.core.BleDeviceState.SCANNING;
-import static com.cmtech.android.ble.core.IDevice.MSG_INVALID_OPERATION;
 
 /**
   *
@@ -53,9 +54,6 @@ public class BleDeviceConnector implements IDeviceConnector{
 
     public static final int MSG_BLE_INNER_ERROR = R.string.scan_failed_ble_inner_error; // Ble内部错误通知
     public static final int MSG_BT_CLOSED = R.string.scan_failed_bt_closed; // 蓝牙关闭错误
-    public static final int MSG_SCAN_ALREADY_STARTED = R.string.scan_failed_already_started;
-    public static final int MSG_WAIT_SCAN = R.string.wait_scan_pls;
-    public static final int MSG_BOND_DEVICE = R.string.device_unbond;
 
 
     private final IDevice device; // 设备
@@ -95,16 +93,16 @@ public class BleDeviceConnector implements IDeviceConnector{
 
             switch (errorCode) {
                 case CODE_ALREADY_STARTED:
-                    device.notifyExceptionMessage(MSG_SCAN_ALREADY_STARTED);
+                    device.notifyException(new ScanException(ScanException.SCAN_ERR_ALREADY_STARTED, context.getString(R.string.scan_failed_already_started)));
                     break;
                 case CODE_BLE_CLOSED:
                     stopScan(true);
-                    device.notifyExceptionMessage(MSG_BT_CLOSED);
+                    device.notifyException(new ScanException(ScanException.SCAN_ERR_BT_CLOSED, context.getString(R.string.scan_failed_bt_closed)));
                     break;
                 case CODE_BLE_INNER_ERROR:
                     stopScan(true);
                     if(device.warnBleInnerError()) {
-                        device.notifyExceptionMessage(MSG_BLE_INNER_ERROR);
+                        device.notifyException(new ScanException(ScanException.SCAN_ERR_BLE_INNER_ERROR, context.getString(R.string.scan_failed_ble_inner_error)));
                     }
                     break;
             }
@@ -202,7 +200,7 @@ public class BleDeviceConnector implements IDeviceConnector{
         } else if(isScanning()) {
             stopScan(true);
         } else { // 无效操作
-            device.notifyExceptionMessage(MSG_INVALID_OPERATION);
+            device.notifyException(new OtherException(context.getString(R.string.invalid_operation)));
         }
     }
 
@@ -231,7 +229,7 @@ public class BleDeviceConnector implements IDeviceConnector{
                     }
                 }, 0, BleConfig.getInstance().getAutoScanInterval(), TimeUnit.SECONDS);
             } else {
-                device.notifyExceptionMessage(MSG_WAIT_SCAN);
+                device.notifyException(new ScanException(ScanException.SCAN_ERR_WAIT_PLEASE, context.getString(R.string.wait_scan_pls)));
             }
         }
     }

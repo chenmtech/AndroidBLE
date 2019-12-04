@@ -4,6 +4,6 @@
     <string name="scan_failed_bt_closed">蓝牙已关闭</string>
     <string name="scan_failed_ble_inner_error">蓝牙内部错误</string>
     <string name="invalid_operation">无效操作</string>
-    <string name="wait_scan_pls">请等待扫描</string>
+    <string name="wait_scan_pls">准备扫描，请等待</string>
     <string name="device_unbond">设备未绑定</string>
 </resources>
