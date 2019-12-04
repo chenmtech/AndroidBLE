@@ -192,11 +192,11 @@ public class DeviceRegisterInfo implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DeviceRegisterInfo that = (DeviceRegisterInfo) o;
-        return macAddress.equalsIgnoreCase(that.macAddress);
+        return macAddress.equalsIgnoreCase(that.macAddress) && isLocal == that.isLocal;
     }
 
     @Override
     public int hashCode() {
-        return macAddress.hashCode();
+        return macAddress.hashCode() + (isLocal ? 0 : 1);
     }
 }
