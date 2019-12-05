@@ -9,9 +9,9 @@ import java.util.List;
 
 public abstract class AbstractDevice implements IDevice{
     private final DeviceRegisterInfo registerInfo; // 注册信息
-    private final List<OnDeviceListener> listeners; // 监听器列表
     protected final IDeviceConnector connector; // 设备连接器
-    private int battery = INVALID_BATTERY; // 电池电量
+    private final List<OnDeviceListener> listeners; // 监听器列表
+    private int battery; // 电池电量
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
@@ -24,6 +24,7 @@ public abstract class AbstractDevice implements IDevice{
             connector = new WebDeviceConnector(this);
         }
         listeners = new LinkedList<>();
+        battery = INVALID_BATTERY;
     }
 
     @Override
@@ -151,14 +152,12 @@ public abstract class AbstractDevice implements IDevice{
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof AbstractDevice)) return false;
         AbstractDevice that = (AbstractDevice) o;
-        DeviceRegisterInfo thisInfo = getRegisterInfo();
-        DeviceRegisterInfo thatInfo = that.getRegisterInfo();
-        return thisInfo.equals(thatInfo);
+        return registerInfo.equals(that.registerInfo);
     }
     @Override
     public int hashCode() {
-        return (getRegisterInfo() != null) ? getRegisterInfo().hashCode() : 0;
+        return (registerInfo != null) ? registerInfo.hashCode() : 0;
     }
 }

@@ -9,15 +9,12 @@ import com.vise.log.ViseLog;
 import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
 import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
 import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
 
-public class WebDeviceConnector implements IDeviceConnector {
-    private final IDevice device; // 设备
-    private volatile BleDeviceState state = CLOSED; // 实时状态
+public class WebDeviceConnector extends AbstractDeviceConnector {
     private Context context;
 
     public WebDeviceConnector(IDevice device) {
-        this.device = device;
+        super(device);
     }
 
     @Override
@@ -81,30 +78,6 @@ public class WebDeviceConnector implements IDeviceConnector {
     @Override
     public void clear() {
 
-    }
-
-    @Override
-    public BleDeviceState getState() {
-        return state;
-    }
-
-    @Override
-    public void setState(BleDeviceState state) {
-        if (this.state != state) {
-            ViseLog.e("The state of device " + device.getAddress() + " is " + state);
-            this.state = state;
-            device.updateState();
-        }
-    }
-
-    @Override
-    public boolean isConnected() {
-        return state == CONNECT;
-    }
-
-    @Override
-    public boolean isDisconnected() {
-        return state == FAILURE || state == DISCONNECT;
     }
 
 }
