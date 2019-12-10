@@ -20,6 +20,7 @@ import com.cmtech.android.ble.exception.ConnectException;
 import com.cmtech.android.ble.exception.GattException;
 import com.cmtech.android.ble.exception.TimeoutException;
 import com.cmtech.android.ble.utils.HexUtil;
+import com.cmtech.android.ble.utils.UuidUtil;
 import com.vise.log.ViseLog;
 
 import java.lang.reflect.Method;
@@ -28,6 +29,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
+import static com.cmtech.android.ble.BleConfig.CCC_UUID;
 
 /**
  *
@@ -359,6 +361,7 @@ public class BleGatt {
                 success = bluetoothGatt.writeDescriptor(descriptor);
             } else {
                 characteristic.setValue(data);
+                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
                 success = bluetoothGatt.writeCharacteristic(characteristic);
             }
         }
