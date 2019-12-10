@@ -16,13 +16,12 @@ import java.io.Serializable;
  */
 
 public abstract class DeviceRegisterInfo implements Serializable {
-    private final static long serialVersionUID = 1L;
-    public static final String DEFAULT_DEVICE_MAC_ADDRESS = ""; //缺省MAC地址
-    public static final String DEFAULT_DEVICE_UUID_STR = ""; //缺省UUID串
+    private static final long serialVersionUID = 1L;
     public static final String DEFAULT_DEVICE_NAME = ""; // 缺省设备名
     public static final String DEFAULT_DEVICE_IMAGE_PATH = ""; // 缺省设备图标路径名
     public static final boolean DEFAULT_DEVICE_AUTO_CONNECT = true; // 设备打开时是否自动连接
     public static final boolean DEFAULT_WARN_WHEN_BLE_INNER_ERROR = true; // 缺省的蓝牙内部错误是否报警
+
     protected final String macAddress; // 设备mac地址
     protected final String uuidStr; // 设备广播Uuid16位字符串
     protected String name = DEFAULT_DEVICE_NAME; // 设备昵称
@@ -35,8 +34,8 @@ public abstract class DeviceRegisterInfo implements Serializable {
         this.uuidStr = uuidStr;
     }
 
-    protected DeviceRegisterInfo(String macAddress, String name, String uuidStr, String imagePath,
-                               boolean autoConnect, boolean warnWhenBleInnerError) {
+    protected DeviceRegisterInfo(String macAddress, String uuidStr, String name, String imagePath,
+                                 boolean autoConnect, boolean warnWhenBleInnerError) {
         this.macAddress = macAddress;
         this.uuidStr = uuidStr;
         this.name = name;
@@ -46,43 +45,33 @@ public abstract class DeviceRegisterInfo implements Serializable {
     }
 
     public abstract boolean isLocal();
-
     public String getMacAddress() {
         return macAddress;
     }
-
     public String getUuidStr() {
         return uuidStr;
     }
-
     public String getName() {
         return name;
     }
-
     public void setName(String name) {
         this.name = name;
     }
-
     public String getImagePath() {
         return imagePath;
     }
-
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
-
     public boolean autoConnect() {
         return autoConnect;
     }
-
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
-
     public boolean isWarnWhenBleInnerError() {
         return warnWhenBleInnerError;
     }
-
     public void setWarnWhenBleInnerError(boolean warnWhenBleInnerError) {
         this.warnWhenBleInnerError = warnWhenBleInnerError;
     }

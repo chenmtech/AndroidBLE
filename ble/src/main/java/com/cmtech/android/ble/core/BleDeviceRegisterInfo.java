@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Set;
 
 public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
+    private static final String DEFAULT_DEVICE_MAC_ADDRESS = ""; //缺省MAC地址
+    private static final String DEFAULT_DEVICE_UUID_STR = ""; //缺省UUID串
     private static final String ADDRESSSET = "addressset";
     private static final String MACADDRESS = "_macaddress";
     private static final String UUIDSTR = "_uuidstr";
@@ -22,9 +24,9 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
         super(macAddress, uuidStr);
     }
 
-    private BleDeviceRegisterInfo(String macAddress, String name, String uuidStr, String imagePath,
+    private BleDeviceRegisterInfo(String macAddress, String uuidStr, String name, String imagePath,
                                boolean autoConnect, boolean warnWhenBleInnerError) {
-        super(macAddress, name, uuidStr, imagePath, autoConnect, warnWhenBleInnerError);
+        super(macAddress, uuidStr, name, imagePath, autoConnect, warnWhenBleInnerError);
     }
 
     // 从Pref读取所有的设备注册信息
@@ -56,7 +58,7 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
         String imagePath = pref.getString(macAddress + IMAGEPATH, DEFAULT_DEVICE_IMAGE_PATH);
         boolean autoConnect = pref.getBoolean(macAddress + AUTOCONNECT, DEFAULT_DEVICE_AUTO_CONNECT);
         boolean warnWhenBleError = pref.getBoolean(macAddress + WARNBLEINNERERROR, DEFAULT_WARN_WHEN_BLE_INNER_ERROR);
-        return new BleDeviceRegisterInfo(address, nickName, uuidString, imagePath, autoConnect, warnWhenBleError);
+        return new BleDeviceRegisterInfo(address, uuidString, nickName, imagePath, autoConnect, warnWhenBleError);
     }
 
     // 将注册信息保存到Pref

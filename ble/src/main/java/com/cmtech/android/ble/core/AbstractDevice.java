@@ -44,12 +44,15 @@ public abstract class AbstractDevice implements IDevice{
         return registerInfo.getMacAddress();
     }
     @Override
+    public String getUuidString() {
+        return registerInfo.getUuidStr();
+    }
+    @Override
     public String getName() {
         return registerInfo.getName();
     }
-    @Override
-    public String getUuidString() {
-        return registerInfo.getUuidStr();
+    public void setName(String name) {
+        registerInfo.setName(name);
     }
     @Override
     public String getImagePath() {
