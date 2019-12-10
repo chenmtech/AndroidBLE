@@ -135,7 +135,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 设备是否包含gatt elements
     public boolean containGattElements(BleGattElement[] elements) {
         for (BleGattElement element : elements) {
-            if (element == null || element.retrieveGattObject(this) == null)
+            if (element == null || element.transformToGattObject(this) == null)
                 return false;
         }
         return true;
@@ -143,7 +143,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
 
     // 设备是否包含gatt element
     public boolean containGattElement(BleGattElement element) {
-        return !(element == null || element.retrieveGattObject(this) == null);
+        return !(element == null || element.transformToGattObject(this) == null);
     }
 
     // 打开设备

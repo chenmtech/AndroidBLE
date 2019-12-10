@@ -57,12 +57,12 @@ public class BleGattElement {
         return descriptorUuid;
     }
 
-    // 从设备中搜寻该element对应的Gatt Object
-    Object retrieveGattObject(BleDeviceConnector device) {
-        return (device == null) ? null : retrieveGattObject(device.getBleGatt().getBluetoothGatt());
+    // 将element转换为对应的Gatt Object
+    Object transformToGattObject(BleDeviceConnector device) {
+        return (device == null) ? null : transformToGattObject(device.getBleGatt().getBluetoothGatt());
     }
 
-    private Object retrieveGattObject(BluetoothGatt gatt) {
+    private Object transformToGattObject(BluetoothGatt gatt) {
         if(gatt == null) return null;
 
         BluetoothGattService service;
@@ -83,8 +83,8 @@ public class BleGattElement {
 
     // 获取该element的characteristic
     BluetoothGattCharacteristic getCharacteristic(BluetoothGatt gatt) {
-        BluetoothGattService service;
-        if( (service = gatt.getService(serviceUuid)) != null) {
+        BluetoothGattService service = gatt.getService(serviceUuid);
+        if(service != null) {
             return service.getCharacteristic(characteristicUuid);
         }
         return null;
@@ -92,9 +92,10 @@ public class BleGattElement {
 
     // 获取该element的descriptor
     BluetoothGattDescriptor getDescriptor(BluetoothGatt gatt) {
-        Object element = retrieveGattObject(gatt);
-        if(element instanceof BluetoothGattDescriptor)
-            return (BluetoothGattDescriptor)element;
+        BluetoothGattCharacteristic characteristic = getCharacteristic(gatt);
+        if(characteristic != null) {
+            return characteristic.getDescriptor(descriptorUuid);
+        }
         return null;
     }
 
