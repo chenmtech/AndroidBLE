@@ -19,7 +19,7 @@ import com.vise.log.ViseLog;
  */
 
 class BleSerialGattCommand extends BleGattCommand {
-    private boolean finish = true; // 标记命令是否执行完毕
+    private volatile boolean finish = true; // 标记命令是否执行完毕
 
     // IBleCallback的装饰类，在一般的回调响应任务完成后，执行串行命令所需动作
     private class BleSerialCommandDataCallbackDecorator implements IBleDataCallback {
@@ -56,6 +56,8 @@ class BleSerialGattCommand extends BleGattCommand {
                 .setData(data)
                 .setDataCallback(dataCallback)
                 .setReceiveCallback(receiveCallback).build();
+
+        if(command == null) ViseLog.e("Gatt Command is error.");
 
         return new BleSerialGattCommand(command);
     }
