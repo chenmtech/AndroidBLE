@@ -306,7 +306,7 @@ public class BleGatt {
     }
 
     /**
-     * 读取数据
+     * 读取数据FORTIFY: FD_SET: file descriptor >= FD_SETSIZE
      */
     public synchronized boolean readData(BleGattElement gattElement, IBleDataCallback dataCallback) {
         if (bluetoothGatt == null || dataCallback == null || gattElement == null) {
@@ -359,7 +359,7 @@ public class BleGatt {
                 success = bluetoothGatt.writeDescriptor(descriptor);
             } else {
                 characteristic.setValue(data);
-                characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+                //characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
                 success = bluetoothGatt.writeCharacteristic(characteristic);
             }
         }
