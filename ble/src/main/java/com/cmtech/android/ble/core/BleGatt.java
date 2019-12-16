@@ -306,7 +306,7 @@ public class BleGatt {
     }
 
     /**
-     * 读取数据FORTIFY: FD_SET: file descriptor >= FD_SETSIZE
+     * 读取数据
      */
     public synchronized boolean readData(BleGattElement gattElement, IBleDataCallback dataCallback) {
         if (bluetoothGatt == null || dataCallback == null || gattElement == null) {
