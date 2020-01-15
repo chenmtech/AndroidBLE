@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.cmtech.android.ble.utils.UuidUtil;
+import com.vise.log.ViseLog;
 
 import java.util.UUID;
 
@@ -29,14 +30,14 @@ public class BleGattElement {
     private final String description; // element的描述
 
     // 用短的UUID字符串构建Element
-    public BleGattElement(String serviceString, String characteristicString, String descriptorString, String baseUuidString, String description) {
+    /*public BleGattElement(String serviceString, String characteristicString, String descriptorString, String baseUuidString, String description) {
         this(UuidUtil.stringToUuid(serviceString, baseUuidString),
              UuidUtil.stringToUuid(characteristicString, baseUuidString),
              UuidUtil.stringToUuid(descriptorString, baseUuidString), description);
-    }
+    }*/
 
     // 用UUID构建Element
-    private BleGattElement(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, String description) {
+    public BleGattElement(UUID serviceUuid, UUID characteristicUuid, UUID descriptorUuid, String description) {
         this.serviceUuid = serviceUuid;
         this.characteristicUuid = characteristicUuid;
         this.descriptorUuid = descriptorUuid;

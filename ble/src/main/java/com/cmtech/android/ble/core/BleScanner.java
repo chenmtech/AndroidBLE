@@ -31,7 +31,7 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_INNER_ER
  */
 
 public class BleScanner {
-    private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有BLE扫描回调
+    private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有扫描的回调
     private static volatile boolean bleInnerError = false; // 是否发生蓝牙内部错误，比如由于频繁扫描引起的错误
     private static int scanTimes = 0; // 累计扫描次数
 
@@ -41,7 +41,6 @@ public class BleScanner {
             throw new NullPointerException("The IBleScanCallback is null");
         }
 
-        BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
         synchronized (BleScanner.class) {
             if (BleScanner.isBleDisabled()) {
@@ -53,7 +52,6 @@ public class BleScanner {
                 return;
             }
 
-            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
             for (ScanCallbackAdapter callback : callbackList) {
                 if (callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
@@ -69,7 +67,8 @@ public class BleScanner {
                 return;
             }
         }
-
+        BluetoothLeScanner scanner;
+        scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
         if(scanFilter == null) {
             scanner.startScan(scanCallback);
         } else {
@@ -87,13 +86,11 @@ public class BleScanner {
             throw new NullPointerException("The IBleScanCallback is null.");
         }
 
-        BluetoothLeScanner scanner;
         ScanCallbackAdapter scanCallback = null;
         synchronized (BleScanner.class) {
             if(isBleDisabled()) {
                 return;
             }
-            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
             for(ScanCallbackAdapter callback : callbackList) {
                 if(callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
@@ -104,8 +101,11 @@ public class BleScanner {
                 callbackList.remove(scanCallback);
             }
         }
-        if(scanCallback != null)
+        if(scanCallback != null) {
+            BluetoothLeScanner scanner;
+            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
             scanner.stopScan(scanCallback);
+        }
 
         ViseLog.e("Scan stopped");
     }

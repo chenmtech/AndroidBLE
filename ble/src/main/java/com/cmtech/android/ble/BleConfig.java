@@ -2,8 +2,6 @@ package com.cmtech.android.ble;
 
 
 public class BleConfig {
-    public static final String CCC_UUID = "00002902-0000-1000-8000-00805f9b34fb"; // client characteristic config UUID
-    public static final String BT_STANDARD_BASE_UUID = "0000XXXX-0000-1000-8000-00805F9B34FB"; // 蓝牙标准基础UUID
     private static final int DEFAULT_CONNECT_TIMEOUT = 30000; // 缺省连接超时时间
     private static final int DEFAULT_DATA_OPERATE_TIMEOUT = 3000; // 缺省数据操作超时时间
     private static final int MIN_AUTO_SCAN_INTERVAL = 10; // 最小自动扫描间隔，单位：秒
