@@ -70,8 +70,12 @@ public class BleScanner {
             }
         }
 
-        ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
-        scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+        if(scanFilter == null) {
+            scanner.startScan(scanCallback);
+        } else {
+            ScanSettings.Builder settingsBuilder = new ScanSettings.Builder().setScanMode(SCAN_MODE_LOW_LATENCY);
+            scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
+        }
         scanTimes++;
 
         ViseLog.e("Start scanning, scanTimes = " + scanTimes);
