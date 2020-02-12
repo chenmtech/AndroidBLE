@@ -171,11 +171,11 @@ public class BleGatt {
         public void onCharacteristicWrite(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
             ViseLog.i("onCharacteristicWrite  status: " + status + ", data:" + HexUtil.encodeHexStr(characteristic.getValue()) +
                     "  ,thread: " + Thread.currentThread());
+
             callbackHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-
                     if (status == GATT_SUCCESS) {
                         if (writeElementCallback.second != null && writeElementCallback.first.getCharacteristicUUID().equals(characteristic.getUuid()))
                             writeElementCallback.second.onSuccess(characteristic.getValue(), writeElementCallback.first);
@@ -348,7 +348,7 @@ public class BleGatt {
         }
 
         callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
+        //callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
 
         boolean success = false;
         BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
@@ -383,15 +383,15 @@ public class BleGatt {
         }
 
         callbackHandler.removeMessages(MSG_WRITE_DATA_TIMEOUT);
-        callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
+        //callbackHandler.sendEmptyMessageDelayed(MSG_WRITE_DATA_TIMEOUT, BleConfig.getInstance().getDataOperateTimeout());
 
-        boolean success = false;
+
         BluetoothGattCharacteristic characteristic = gattElement.getCharacteristic(bluetoothGatt);
         BluetoothGattDescriptor descriptor = gattElement.getDescriptor(bluetoothGatt);
         if (characteristic == null || descriptor == null) {
             return false;
         }
-        success = bluetoothGatt.setCharacteristicNotification(characteristic, enable);
+        boolean success = bluetoothGatt.setCharacteristicNotification(characteristic, enable);
         if (success) {
             if (isIndication) {
                 if (enable) {
