@@ -300,7 +300,7 @@ public class BleGatt {
         }
 
         this.connectCallback = connectCallback;
-        callbackHandler.removeMessages(MSG_CONNECT_TIMEOUT);
+        callbackHandler.removeCallbacksAndMessages(null);
         callbackHandler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
         device.connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
     }
@@ -528,7 +528,7 @@ public class BleGatt {
      */
     private void readFailure(BleException bleException) {
         //callbackHandler.removeMessages(MSG_READ_DATA_TIMEOUT);
-        if (readElementCallback.second != null)
+        if (readElementCallback != null && readElementCallback.second != null)
             readElementCallback.second.onFailure(bleException);
         ViseLog.i("readFailure " + bleException);
     }
