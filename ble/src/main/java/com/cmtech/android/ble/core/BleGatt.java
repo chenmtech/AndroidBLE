@@ -300,7 +300,7 @@ public class BleGatt {
         }
 
         this.connectCallback = connectCallback;
-        callbackHandler.removeCallbacksAndMessages(null);
+        callbackHandler.removeMessages(MSG_CONNECT_TIMEOUT);
         callbackHandler.sendEmptyMessageDelayed(MSG_CONNECT_TIMEOUT, BleConfig.getInstance().getConnectTimeout());
         device.connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
     }
