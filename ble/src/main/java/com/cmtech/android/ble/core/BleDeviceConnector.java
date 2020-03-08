@@ -214,7 +214,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 强制断开
     @Override
     public void forceDisconnect(boolean forever) {
-        ViseLog.e("BleDeviceConnector.forceDisconnect()");
+        ViseLog.e("BleDeviceConnector.forceDisconnect(): forever-" + forever);
 
         if (forever) {
             ExecutorUtil.shutdownNowAndAwaitTerminate(autoScanService);
