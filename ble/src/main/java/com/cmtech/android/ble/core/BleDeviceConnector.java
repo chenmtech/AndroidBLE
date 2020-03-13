@@ -79,12 +79,13 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 打开设备
     @Override
     public void open(Context context) {
+        if (context == null) {
+            throw new NullPointerException("The context is null.");
+        }
+
         if (state != CLOSED) {
             ViseLog.e("The device is opened.");
             return;
-        }
-        if (context == null) {
-            throw new NullPointerException("The context is null.");
         }
 
         ViseLog.e("BleDeviceConnector.open()");

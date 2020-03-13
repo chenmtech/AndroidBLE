@@ -2,14 +2,10 @@ package com.cmtech.android.ble;
 
 
 public class BleConfig {
-    private static final int DEFAULT_CONNECT_TIMEOUT = 30000; // 缺省连接超时时间
-    private static final int DEFAULT_DATA_OPERATE_TIMEOUT = 3000; // 缺省数据操作超时时间
-    private static final int MIN_AUTO_SCAN_INTERVAL = 10; // 最小自动扫描间隔，单位：秒
+    private static final int MIN_CONNECT_INTERVAL = 6000; // min connection interval, unit: millisecond
 
     private static BleConfig instance;
-    private int connectTimeout = DEFAULT_CONNECT_TIMEOUT; //连接超时时间（毫秒）
-    private int dataOperateTimeout = DEFAULT_DATA_OPERATE_TIMEOUT; //数据操作超时时间（毫秒）
-    private int autoScanInterval = MIN_AUTO_SCAN_INTERVAL; // 自动扫描时间间隔，单位：秒
+    private int connectInterval = MIN_CONNECT_INTERVAL; // 自动扫描时间间隔，单位：秒
 
     private BleConfig() {
     }
@@ -25,29 +21,11 @@ public class BleConfig {
         return instance;
     }
 
-    public int getConnectTimeout() {
-        return connectTimeout;
+    public int getConnectInterval() {
+        return connectInterval;
     }
 
-    public BleConfig setConnectTimeout(int connectTimeout) {
-        this.connectTimeout = connectTimeout;
-        return this;
-    }
-
-    public int getDataOperateTimeout() {
-        return dataOperateTimeout;
-    }
-
-    public BleConfig setDataOperateTimeout(int dataOperateTimeout) {
-        this.dataOperateTimeout = dataOperateTimeout;
-        return this;
-    }
-
-    public int getAutoScanInterval() {
-        return autoScanInterval;
-    }
-
-    public void setAutoScanInterval(int autoScanInterval) {
-        this.autoScanInterval = (autoScanInterval < MIN_AUTO_SCAN_INTERVAL) ? MIN_AUTO_SCAN_INTERVAL : autoScanInterval;
+    public void setConnectInterval(int connectInterval) {
+        this.connectInterval = (connectInterval < MIN_CONNECT_INTERVAL) ? MIN_CONNECT_INTERVAL : connectInterval;
     }
 }
