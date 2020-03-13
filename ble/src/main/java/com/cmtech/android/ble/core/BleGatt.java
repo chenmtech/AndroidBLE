@@ -12,6 +12,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Pair;
 
+import com.cmtech.android.ble.BleConfig;
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.exception.ConnectException;
@@ -140,7 +141,7 @@ public class BleGatt {
                                 public void run() {
                                     connect();
                                 }
-                            }, 6000);
+                            }, BleConfig.getInstance().getConnectInterval());
                         }
                     }
                 }
@@ -180,7 +181,7 @@ public class BleGatt {
                                 public void run() {
                                     connect();
                                 }
-                            }, 6000);
+                            }, BleConfig.getInstance().getConnectInterval());
                         }
                     }
                 }
