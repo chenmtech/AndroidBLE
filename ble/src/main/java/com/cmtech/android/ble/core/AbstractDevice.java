@@ -129,8 +129,8 @@ public abstract class AbstractDevice implements IDevice{
         connector.switchState();
     }
     @Override
-    public void forceDisconnect(boolean forever) {
-        connector.forceDisconnect(forever);
+    public void disconnect(boolean forever) {
+        connector.disconnect(forever);
     }
     @Override
     public void close() {
@@ -139,10 +139,6 @@ public abstract class AbstractDevice implements IDevice{
     @Override
     public void clear() {
         connector.clear();
-    }
-    @Override
-    public boolean isDisconnectedForever() {
-        return connector.isDisconnectedForever();
     }
     @Override
     public boolean isConnected() {

@@ -38,7 +38,7 @@ public class WebDeviceConnector extends AbstractDeviceConnector {
     private void connect() {
         setState(CONNECT);
         if (!device.onConnectSuccess())
-            forceDisconnect(true);
+            disconnect(true);
     }
 
     @Override
@@ -47,29 +47,19 @@ public class WebDeviceConnector extends AbstractDeviceConnector {
         if (isDisconnected()) {
             connect();
         } else if (isConnected()) {
-            forceDisconnect(true);
+            disconnect(true);
         } else { // 无效操作
             device.handleException(new OtherException(context.getString(R.string.invalid_operation)));
         }
     }
 
     @Override
-    public void forceDisconnect(boolean forever) {
+    public void disconnect(boolean forever) {
         setState(DISCONNECT);
     }
 
     @Override
-    public boolean isDisconnectedForever() {
-        return isDisconnected();
-    }
-
-    @Override
     public void close() {
-        if (!isDisconnectedForever()) {
-            ViseLog.e("The device can't be closed currently.");
-            return;
-        }
-
         ViseLog.e("WebDeviceConnector.close()");
 
         setState(BleDeviceState.CLOSED);
