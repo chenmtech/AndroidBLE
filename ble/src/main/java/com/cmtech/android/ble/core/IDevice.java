@@ -2,31 +2,31 @@ package com.cmtech.android.ble.core;
 
 import com.cmtech.android.ble.exception.BleException;
 
-public interface IDevice extends IDeviceConnector {
-    int INVALID_BATTERY = -1; // 无效电池电量
+public interface IDevice extends IConnector {
+    int INVALID_BATTERY = -1; // invalid battery level
     DeviceRegisterInfo getRegisterInfo();
     void updateRegisterInfo(DeviceRegisterInfo registerInfo);
-    boolean isLocal();
+    boolean isLocal(); // is local device
     String getAddress();
     String getName();
+    void setName(String name);
     String getUuidString();
     String getImagePath();
-    boolean autoConnect();
-    boolean isWarnWhenBleInnerError();
-    void updateState();
+    boolean isAutoConnect();
     int getBattery();
     void setBattery(final int battery);
+    void updateState();
     void addListener(OnDeviceListener listener);
     void removeListener(OnDeviceListener listener);
-    boolean onConnectSuccess(); // 连接成功后执行的操作
-    void onConnectFailure(); // 连接失败后执行的操作
-    void onDisconnect(); // 断开连接后执行的操作
-    void handleException(BleException ex); // 处理异常
+    void handleException(BleException ex); // handle exception
+    boolean onConnectSuccess(); // operate when connection success
+    void onConnectFailure(); // operate when connection failure
+    void onDisconnect(); // operate when disconnection
 
-    // 设备监听器接口
+    // device listener interface
     interface OnDeviceListener {
-        void onStateUpdated(final IDevice device); // 设备状态更新
-        void onExceptionHandled(final IDevice device, BleException ex); // 异常处理
-        void onBatteryUpdated(final IDevice device); // 电量更新
+        void onStateUpdated(final IDevice device); // state updated
+        void onExceptionNotified(final IDevice device, BleException ex); // exception notified
+        void onBatteryUpdated(final IDevice device); // battery level updated
     }
 }

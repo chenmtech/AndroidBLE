@@ -9,33 +9,36 @@ import com.vise.log.ViseLog;
 import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
 import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
 import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
+import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
 
-public class WebDeviceConnector extends AbstractDeviceConnector {
+public class WebConnector extends AbstractConnector {
     private Context context;
 
-    public WebDeviceConnector(IDevice device) {
+    public WebConnector(IDevice device) {
         super(device);
     }
 
     @Override
     public void open(Context context) {
+        if (context == null) {
+            throw new IllegalArgumentException("The context is null.");
+        }
+
         if (state != CLOSED) {
             ViseLog.e("The device is opened.");
             return;
         }
-        if (context == null) {
-            throw new NullPointerException("The context is null.");
-        }
 
-        ViseLog.e("WebDeviceConnector.open()");
+        ViseLog.e("WebConnector.open()");
         this.context = context;
         setState(DISCONNECT);
-        if (device.autoConnect()) {
+        if (device.isAutoConnect()) {
             connect();
         }
     }
 
-    private void connect() {
+    @Override
+    public void connect() {
         setState(CONNECT);
         if (!device.onConnectSuccess())
             disconnect(true);
@@ -43,10 +46,10 @@ public class WebDeviceConnector extends AbstractDeviceConnector {
 
     @Override
     public void switchState() {
-        ViseLog.e("WebDeviceConnector.switchState()");
-        if (isDisconnected()) {
+        ViseLog.e("WebConnector.switchState()");
+        if (state == FAILURE || state == DISCONNECT) {
             connect();
-        } else if (isConnected()) {
+        } else if (state == CONNECT) {
             disconnect(true);
         } else { // 无效操作
             device.handleException(new OtherException(context.getString(R.string.invalid_operation)));
@@ -60,14 +63,9 @@ public class WebDeviceConnector extends AbstractDeviceConnector {
 
     @Override
     public void close() {
-        ViseLog.e("WebDeviceConnector.close()");
+        ViseLog.e("WebConnector.close()");
 
         setState(BleDeviceState.CLOSED);
-    }
-
-    @Override
-    public void clear() {
-
     }
 
 }

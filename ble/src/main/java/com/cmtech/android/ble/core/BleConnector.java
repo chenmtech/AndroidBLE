@@ -10,11 +10,12 @@ import com.cmtech.android.ble.exception.OtherException;
 import com.vise.log.ViseLog;
 
 import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
+import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
 import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
 import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
 
 /**
- * ClassName:      BleDeviceConnector
+ * ClassName:      BleConnector
  * Description:    低功耗蓝牙设备类
  * Author:         chenm
  * CreateDate:     2018-02-19 07:02
@@ -28,7 +29,7 @@ import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
  * Version:        1.1
  */
 
-public class BleDeviceConnector extends AbstractDeviceConnector {
+public class BleConnector extends AbstractConnector {
     private Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
     private BleGatt bleGatt; // Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
     private BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。连接成功后启动，连接失败或者断开时停止
@@ -54,7 +55,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
         }
     };
 
-    public BleDeviceConnector(IDevice device) {
+    public BleConnector(IDevice device) {
         super(device);
     }
 
@@ -88,11 +89,11 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
             return;
         }
 
-        ViseLog.e("BleDeviceConnector.open()");
+        ViseLog.e("BleConnector.open()");
         this.context = context;
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
         setState(DISCONNECT);
-        if (device.autoConnect()) {
+        if (device.isAutoConnect()) {
             connect();
         }
     }
@@ -100,10 +101,10 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 切换状态
     @Override
     public void switchState() {
-        ViseLog.e("BleDeviceConnector.switchState()");
-        if (isDisconnected()) {
+        ViseLog.e("BleConnector.switchState()");
+        if (state == FAILURE || state == DISCONNECT) {
             connect();
-        } else if (isConnected()) {
+        } else if (state == CONNECT) {
             disconnect(true);
         } else { // 无效操作
             device.handleException(new OtherException(context.getString(R.string.invalid_operation)));
@@ -113,7 +114,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 强制断开
     @Override
     public void disconnect(boolean forever) {
-        ViseLog.e("BleDeviceConnector.disconnect(): " + (forever ? "forever" : ""));
+        ViseLog.e("BleConnector.disconnect(): " + (forever ? "forever" : ""));
         if (bleGatt != null) {
             bleGatt.disconnect(forever);
         }
@@ -122,7 +123,7 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     // 关闭设备
     @Override
     public void close() {
-        ViseLog.e("BleDeviceConnector.close()");
+        ViseLog.e("BleConnector.close()");
         if(bleGatt != null)
             bleGatt.clear();
         setState(BleDeviceState.CLOSED);
@@ -133,25 +134,19 @@ public class BleDeviceConnector extends AbstractDeviceConnector {
     }
 
     @Override
-    public void clear() {
-        if (bleGatt != null) {
-            bleGatt.clear();
-        }
-    }
-
-    private void connect() {
+    public void connect() {
         new BleGatt(context, device, connectCallback).connect();
     }
 
     // 处理连接成功
     private void processConnectSuccess(BleGatt bleGatt) {
         // 防止重复连接成功
-        if (isConnected()) {
+        if (state == CONNECT) {
             ViseLog.e("Connect Success Again!!!");
             return;
         }
         if (state == CLOSED) { // 设备已经关闭了，强行清除
-            clear();
+            bleGatt.clear();
             return;
         }
 

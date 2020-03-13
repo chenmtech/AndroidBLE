@@ -63,7 +63,7 @@ public abstract class DeviceRegisterInfo implements Serializable {
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
-    public boolean autoConnect() {
+    public boolean isAutoConnect() {
         return autoConnect;
     }
     public void setAutoConnect(boolean autoConnect) {

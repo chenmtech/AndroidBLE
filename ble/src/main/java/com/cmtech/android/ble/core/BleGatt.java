@@ -331,7 +331,7 @@ public class BleGatt {
         this.connectCallback = connectCallback;
     }
 
-    // connect device
+    // connect
     public void connect() {
         try{
             connLock.lock();
@@ -348,8 +348,8 @@ public class BleGatt {
 
     }
 
-    // disconnect device actively
-    void disconnect(boolean forever) {
+    // disconnect
+    public void disconnect(boolean forever) {
         try{
             connLock.lock();
             connTimer.cancel();

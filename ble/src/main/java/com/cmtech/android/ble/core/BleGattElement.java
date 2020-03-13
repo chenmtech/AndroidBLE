@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import com.cmtech.android.ble.utils.UuidUtil;
-import com.vise.log.ViseLog;
 
 import java.util.UUID;
 
@@ -59,7 +58,7 @@ public class BleGattElement {
     }
 
     // 将element转换为对应的Gatt Object
-    Object transformToGattObject(BleDeviceConnector device) {
+    Object transformToGattObject(BleConnector device) {
         return (device == null) ? null : transformToGattObject(device.getBleGatt().getBluetoothGatt());
     }
 

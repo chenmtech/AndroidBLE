@@ -8,10 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractDevice implements IDevice{
-    private final DeviceRegisterInfo registerInfo; // 注册信息
-    protected final IDeviceConnector connector; // 设备连接器
-    private final List<OnDeviceListener> listeners; // 监听器列表
-    private int battery; // 电池电量
+    private final DeviceRegisterInfo registerInfo; // register information
+    private int battery; // battery level
+    private final List<OnDeviceListener> listeners; // listeners
+    protected final IConnector connector; // connector
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
@@ -19,9 +19,9 @@ public abstract class AbstractDevice implements IDevice{
         }
         this.registerInfo = registerInfo;
         if(registerInfo.isLocal()) {
-            connector = new BleDeviceConnector(this);
+            connector = new BleConnector(this);
         } else {
-            connector = new WebDeviceConnector(this);
+            connector = new WebConnector(this);
         }
         listeners = new LinkedList<>();
         battery = INVALID_BATTERY;
@@ -51,6 +51,7 @@ public abstract class AbstractDevice implements IDevice{
     public String getName() {
         return registerInfo.getName();
     }
+    @Override
     public void setName(String name) {
         registerInfo.setName(name);
     }
@@ -59,21 +60,8 @@ public abstract class AbstractDevice implements IDevice{
         return registerInfo.getImagePath();
     }
     @Override
-    public boolean autoConnect() {
-        return registerInfo.autoConnect();
-    }
-    @Override
-    public boolean isWarnWhenBleInnerError() {
-        return registerInfo.isWarnWhenBleInnerError();
-    }
-    // 更新设备状态
-    @Override
-    public void updateState() {
-        for(OnDeviceListener listener : listeners) {
-            if(listener != null) {
-                listener.onStateUpdated(this);
-            }
-        }
+    public boolean isAutoConnect() {
+        return registerInfo.isAutoConnect();
     }
     @Override
     public int getBattery() {
@@ -83,14 +71,10 @@ public abstract class AbstractDevice implements IDevice{
     public void setBattery(final int battery) {
         if(this.battery != battery) {
             this.battery = battery;
-            updateBattery();
-        }
-    }
-    // 更新电池电量
-    private void updateBattery() {
-        for (final OnDeviceListener listener : listeners) {
-            if (listener != null) {
-                listener.onBatteryUpdated(this);
+            for (final OnDeviceListener listener : listeners) {
+                if (listener != null) {
+                    listener.onBatteryUpdated(this);
+                }
             }
         }
     }
@@ -104,29 +88,31 @@ public abstract class AbstractDevice implements IDevice{
     public final void removeListener(OnDeviceListener listener) {
         listeners.remove(listener);
     }
+    // 更新设备状态
     @Override
-    public void handleException(BleException ex) {
+    public void updateState() {
         for(OnDeviceListener listener : listeners) {
             if(listener != null) {
-                listener.onExceptionHandled(this, ex);
+                listener.onStateUpdated(this);
             }
         }
     }
     @Override
-    public BleDeviceState getState() {
-        return connector.getState();
+    public void handleException(BleException ex) {
+        for(OnDeviceListener listener : listeners) {
+            if(listener != null) {
+                listener.onExceptionNotified(this, ex);
+            }
+        }
     }
-    @Override
-    public void setState(BleDeviceState state) {
-        connector.setState(state);
-    }
+
     @Override
     public void open(Context context) {
         connector.open(context);
     }
     @Override
-    public void switchState() {
-        connector.switchState();
+    public void connect() {
+        connector.connect();
     }
     @Override
     public void disconnect(boolean forever) {
@@ -137,17 +123,18 @@ public abstract class AbstractDevice implements IDevice{
         connector.close();
     }
     @Override
-    public void clear() {
-        connector.clear();
+    public BleDeviceState getState() {
+        return connector.getState();
     }
     @Override
-    public boolean isConnected() {
-        return connector.isConnected();
+    public void setState(BleDeviceState state) {
+        connector.setState(state);
     }
     @Override
-    public boolean isDisconnected() {
-        return connector.isDisconnected();
+    public void switchState() {
+        connector.switchState();
     }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
