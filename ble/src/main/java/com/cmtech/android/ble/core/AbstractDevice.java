@@ -8,9 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 public abstract class AbstractDevice implements IDevice{
-    private final DeviceRegisterInfo registerInfo; // register information
+    private final DeviceRegisterInfo registerInfo; // device register information
     private int battery; // battery level
-    private final List<OnDeviceListener> listeners; // listeners
+    private final List<OnDeviceListener> listeners; // device listeners
     protected final IConnector connector; // connector
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
