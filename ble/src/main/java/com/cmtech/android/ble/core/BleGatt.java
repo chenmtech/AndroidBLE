@@ -114,16 +114,15 @@ public class BleGatt {
                         bluetoothGatt = gatt;
                         gatt.discoverServices();
                     } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-                        //more disconnection wrong
-                        if (bluetoothGatt != null && bluetoothGatt != gatt) {
-                            gatt.close();
-                            return;
-                        }
-
                         if (bluetoothGatt != null) {
+                            bluetoothGatt.disconnect();
                             bluetoothGatt.close();
                             bluetoothGatt = null;
                         }
+
+                        //more disconnection wrong
+                        gatt.disconnect();
+                        gatt.close();
 
                         if (status == GATT_SUCCESS) {
                             connectCallback.onDisconnect();
@@ -170,6 +169,7 @@ public class BleGatt {
                             bluetoothGatt.close();
                             bluetoothGatt = null;
                         }
+
                         connectCallback.onConnectFailure(new ConnectException(gatt, status));
                         device.setState(FAILURE);
 
