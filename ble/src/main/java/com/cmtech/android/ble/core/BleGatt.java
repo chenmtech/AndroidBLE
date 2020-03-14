@@ -30,11 +30,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static android.bluetooth.BluetoothGatt.GATT_SUCCESS;
-import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.CONNECTING;
-import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECTING;
-import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
+import static com.cmtech.android.ble.core.DeviceState.CONNECT;
+import static com.cmtech.android.ble.core.DeviceState.CONNECTING;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECTING;
+import static com.cmtech.android.ble.core.DeviceState.FAILURE;
 
 /**
  * ClassName:      BleGatt
