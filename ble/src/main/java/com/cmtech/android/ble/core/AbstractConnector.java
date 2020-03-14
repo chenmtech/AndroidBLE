@@ -1,11 +1,11 @@
 package com.cmtech.android.ble.core;
 
+import android.content.Context;
+
 import com.vise.log.ViseLog;
 
-import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
-import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
+import static com.cmtech.android.ble.core.DeviceState.CLOSED;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
 
 /**
  * ProjectName:    BtDeviceApp
@@ -21,7 +21,7 @@ import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
  */
 public abstract class AbstractConnector implements IConnector {
     protected final IDevice device; // device
-    protected volatile BleDeviceState state = CLOSED; // state
+    protected Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
 
     public AbstractConnector(IDevice device) {
         if(device == null) {
@@ -30,17 +30,25 @@ public abstract class AbstractConnector implements IConnector {
         this.device = device;
     }
 
+    // 打开设备
     @Override
-    public BleDeviceState getState() {
-        return state;
+    public void open(Context context) {
+        if (device.getState() != CLOSED) {
+            ViseLog.e("The device is opened.");
+            return;
+        }
+
+        ViseLog.e("Connector.open()");
+        this.context = context;
+        device.setState(DISCONNECT);
+        if (device.isAutoConnect()) {
+            connect();
+        }
     }
 
     @Override
-    public void setState(BleDeviceState state) {
-        if (this.state != state) {
-            ViseLog.e(device.getAddress() + ": " + state);
-            this.state = state;
-            device.updateState();
-        }
+    public void close() {
+        device.setState(DeviceState.CLOSED);
+        context = null;
     }
 }

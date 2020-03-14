@@ -2,13 +2,23 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
+import com.cmtech.android.ble.R;
 import com.cmtech.android.ble.exception.BleException;
+import com.cmtech.android.ble.exception.OtherException;
+import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.cmtech.android.ble.core.DeviceState.CLOSED;
+import static com.cmtech.android.ble.core.DeviceState.CONNECT;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
+import static com.cmtech.android.ble.core.DeviceState.FAILURE;
+
 public abstract class AbstractDevice implements IDevice{
+    private Context context; // context
     private final DeviceRegisterInfo registerInfo; // device register information
+    protected volatile DeviceState state = CLOSED; // state
     private int battery; // battery level
     private final List<OnDeviceListener> listeners; // device listeners
     protected final IConnector connector; // connector
@@ -88,26 +98,30 @@ public abstract class AbstractDevice implements IDevice{
     public final void removeListener(OnDeviceListener listener) {
         listeners.remove(listener);
     }
-    // 更新设备状态
     @Override
-    public void updateState() {
-        for(OnDeviceListener listener : listeners) {
-            if(listener != null) {
-                listener.onStateUpdated(this);
-            }
-        }
+    public DeviceState getState() {
+        return state;
     }
     @Override
-    public void handleException(BleException ex) {
-        for(OnDeviceListener listener : listeners) {
-            if(listener != null) {
-                listener.onExceptionNotified(this, ex);
+    public void setState(DeviceState state) {
+        if (this.state != state) {
+            ViseLog.e(getAddress() + ": " + state);
+            this.state = state;
+            for(OnDeviceListener listener : listeners) {
+                if(listener != null) {
+                    listener.onStateUpdated(this);
+                }
             }
         }
     }
 
     @Override
     public void open(Context context) {
+        if (context == null) {
+            throw new NullPointerException("The context is null.");
+        }
+
+        this.context = context;
         connector.open(context);
     }
     @Override
@@ -122,17 +136,28 @@ public abstract class AbstractDevice implements IDevice{
     public void close() {
         connector.close();
     }
-    @Override
-    public BleDeviceState getState() {
-        return connector.getState();
-    }
-    @Override
-    public void setState(BleDeviceState state) {
-        connector.setState(state);
-    }
+
+    // 切换状态
     @Override
     public void switchState() {
-        connector.switchState();
+        ViseLog.e("Device.switchState()");
+        if (state == FAILURE || state == DISCONNECT) {
+            connect();
+        } else if (state == CONNECT) {
+            disconnect(true);
+        } else { // 无效操作
+            if(context != null)
+                handleException(new OtherException(context.getString(R.string.invalid_operation)));
+        }
+    }
+
+    @Override
+    public void handleException(BleException ex) {
+        for(OnDeviceListener listener : listeners) {
+            if(listener != null) {
+                listener.onExceptionNotified(this, ex);
+            }
+        }
     }
 
     @Override

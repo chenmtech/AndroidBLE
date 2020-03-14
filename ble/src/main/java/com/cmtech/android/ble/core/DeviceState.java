@@ -4,7 +4,7 @@ import com.cmtech.android.ble.R;
 
 /**
   *
-  * ClassName:      BleDeviceState
+  * ClassName:      DeviceState
   * Description:    device state
   * Author:         chenm
   * CreateDate:     2018/4/21 下午4:47
@@ -14,7 +14,7 @@ import com.cmtech.android.ble.R;
   * Version:        1.0
  */
 
-public class BleDeviceState {
+public class DeviceState {
     private static final int CLOSED_CODE = 0x00; // closed
     private static final int CONNECT_CODE = 0x01; // connected
     private static final int FAILURE_CODE = 0x02;// connect failure
@@ -22,18 +22,18 @@ public class BleDeviceState {
     private static final int CONNECTING_CODE = 0x04; // connecting
     private static final int DISCONNECTING_CODE = 0x05; // disconnecting
 
-    public static final BleDeviceState CLOSED = new BleDeviceState(CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
-    public static final BleDeviceState CONNECT = new BleDeviceState(CONNECT_CODE, "已连接", R.mipmap.ic_connected_32px);
-    public static final BleDeviceState FAILURE = new BleDeviceState(FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
-    public static final BleDeviceState DISCONNECT = new BleDeviceState(DISCONNECT_CODE, "未连接", R.mipmap.ic_disconnect_32px);
-    public static final BleDeviceState CONNECTING = new BleDeviceState(CONNECTING_CODE, "连接中", R.mipmap.ic_connecting_32px);
-    public static final BleDeviceState DISCONNECTING = new BleDeviceState(DISCONNECTING_CODE, "断开中", R.mipmap.ic_connecting_32px);
+    public static final DeviceState CLOSED = new DeviceState(CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
+    public static final DeviceState CONNECT = new DeviceState(CONNECT_CODE, "已连接", R.mipmap.ic_connected_32px);
+    public static final DeviceState FAILURE = new DeviceState(FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
+    public static final DeviceState DISCONNECT = new DeviceState(DISCONNECT_CODE, "未连接", R.mipmap.ic_disconnect_32px);
+    public static final DeviceState CONNECTING = new DeviceState(CONNECTING_CODE, "连接中", R.mipmap.ic_connecting_32px);
+    public static final DeviceState DISCONNECTING = new DeviceState(DISCONNECTING_CODE, "断开中", R.mipmap.ic_connecting_32px);
 
     private final int code; // code
     private String description; // state description
     private int icon; // state icon
 
-    private BleDeviceState(int code, String description, int icon) {
+    private DeviceState(int code, String description, int icon) {
         this.code = code;
         this.description = description;
         this.icon = icon;

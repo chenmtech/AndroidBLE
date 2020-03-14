@@ -2,17 +2,15 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
-import com.cmtech.android.ble.R;
 import com.cmtech.android.ble.callback.IBleConnectCallback;
 import com.cmtech.android.ble.callback.IBleDataCallback;
 import com.cmtech.android.ble.exception.BleException;
-import com.cmtech.android.ble.exception.OtherException;
 import com.vise.log.ViseLog;
 
-import static com.cmtech.android.ble.core.BleDeviceState.CLOSED;
-import static com.cmtech.android.ble.core.BleDeviceState.CONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
+import static com.cmtech.android.ble.core.DeviceState.CLOSED;
+import static com.cmtech.android.ble.core.DeviceState.CONNECT;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
+import static com.cmtech.android.ble.core.DeviceState.FAILURE;
 
 /**
  * ClassName:      BleConnector
@@ -30,7 +28,6 @@ import static com.cmtech.android.ble.core.BleDeviceState.FAILURE;
  */
 
 public class BleConnector extends AbstractConnector {
-    private Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
     private BleGatt bleGatt; // Gatt，连接成功后赋值，完成连接状态改变处理以及数据通信功能
     private BleSerialGattCommandExecutor gattCmdExecutor; // Gatt命令执行器，在内部的一个单线程池中执行。连接成功后启动，连接失败或者断开时停止
 
@@ -77,38 +74,15 @@ public class BleConnector extends AbstractConnector {
         return !(element == null || element.transformToGattObject(this) == null);
     }
 
-    // 打开设备
     @Override
     public void open(Context context) {
-        if (context == null) {
-            throw new NullPointerException("The context is null.");
-        }
-
-        if (state != CLOSED) {
-            ViseLog.e("The device is opened.");
-            return;
-        }
-
-        ViseLog.e("BleConnector.open()");
-        this.context = context;
+        super.open(context);
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
-        setState(DISCONNECT);
-        if (device.isAutoConnect()) {
-            connect();
-        }
     }
 
-    // 切换状态
     @Override
-    public void switchState() {
-        ViseLog.e("BleConnector.switchState()");
-        if (state == FAILURE || state == DISCONNECT) {
-            connect();
-        } else if (state == CONNECT) {
-            disconnect(true);
-        } else { // 无效操作
-            device.handleException(new OtherException(context.getString(R.string.invalid_operation)));
-        }
+    public void connect() {
+        new BleGatt(context, device, connectCallback).connect();
     }
 
     // 强制断开
@@ -126,26 +100,22 @@ public class BleConnector extends AbstractConnector {
         ViseLog.e("BleConnector.close()");
         if(bleGatt != null)
             bleGatt.clear();
-        setState(BleDeviceState.CLOSED);
 
         gattCmdExecutor = null;
         bleGatt = null;
-        context = null;
+
+        super.close();
     }
 
-    @Override
-    public void connect() {
-        new BleGatt(context, device, connectCallback).connect();
-    }
 
     // 处理连接成功
     private void processConnectSuccess(BleGatt bleGatt) {
         // 防止重复连接成功
-        if (state == CONNECT) {
+        if (device.getState() == CONNECT) {
             ViseLog.e("Connect Success Again!!!");
             return;
         }
-        if (state == CLOSED) { // 设备已经关闭了，强行清除
+        if (device.getState() == CLOSED) { // 设备已经关闭了，强行清除
             bleGatt.clear();
             return;
         }
@@ -162,7 +132,7 @@ public class BleConnector extends AbstractConnector {
 
     // 处理连接错误
     private void processConnectFailure(final BleException bleException) {
-        if (state != FAILURE) {
+        if (device.getState() != FAILURE) {
             ViseLog.e("Process connect failure: " + bleException);
 
             gattCmdExecutor.stop();
@@ -173,7 +143,7 @@ public class BleConnector extends AbstractConnector {
 
     // 处理连接断开
     private void processDisconnect() {
-        if (state != DISCONNECT) {
+        if (device.getState() != DISCONNECT) {
             ViseLog.e("Process disconnect.");
 
             gattCmdExecutor.stop();
