@@ -12,9 +12,7 @@ import java.util.List;
 
 import static com.cmtech.android.ble.core.DeviceState.CLOSED;
 import static com.cmtech.android.ble.core.DeviceState.CONNECT;
-import static com.cmtech.android.ble.core.DeviceState.CONNECTING;
 import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.DeviceState.DISCONNECTING;
 import static com.cmtech.android.ble.core.DeviceState.FAILURE;
 
 public abstract class AbstractDevice implements IDevice{
@@ -72,6 +70,10 @@ public abstract class AbstractDevice implements IDevice{
         return registerInfo.getImagePath();
     }
     @Override
+    public boolean isAutoConnect() {
+        return registerInfo.isAutoConnect();
+    }
+    @Override
     public int getBattery() {
         return battery;
     }
@@ -119,38 +121,21 @@ public abstract class AbstractDevice implements IDevice{
             throw new NullPointerException("The context is null.");
         }
 
-        if (state != CLOSED) {
-            ViseLog.e("The device is opened.");
-            return;
-        }
-
-        ViseLog.e("Device.open()");
         this.context = context;
-
         connector.open(context);
-
-        if (registerInfo.isAutoConnect()) {
-            connect();
-        } else {
-            setState(DISCONNECT);
-        }
-    }
-    @Override
-    public void close() {
-        connector.close();
-        setState(DeviceState.CLOSED);
     }
     @Override
     public void connect() {
-        setState(CONNECTING);
         connector.connect();
     }
     @Override
     public void disconnect(boolean forever) {
-        setState(DISCONNECTING);
         connector.disconnect(forever);
     }
-
+    @Override
+    public void close() {
+        connector.close();
+    }
 
     // 切换状态
     @Override
@@ -173,22 +158,6 @@ public abstract class AbstractDevice implements IDevice{
                 listener.onExceptionNotified(this, ex);
             }
         }
-    }
-
-    @Override
-    public boolean onConnectSuccess() {
-        setState(CONNECT);
-        return true;
-    }
-
-    @Override
-    public void onConnectFailure() {
-        setState(FAILURE);
-    }
-
-    @Override
-    public void onDisconnect() {
-        setState(DISCONNECT);
     }
 
     @Override

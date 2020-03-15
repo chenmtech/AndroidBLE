@@ -15,12 +15,12 @@ import com.cmtech.android.ble.R;
  */
 
 public class DeviceState {
-    private static final int CLOSED_CODE = 0x00; // closed code
-    private static final int CONNECT_CODE = 0x01; // connected code
-    private static final int FAILURE_CODE = 0x02;// connect failure code
-    private static final int DISCONNECT_CODE = 0x03; // disconnect code
-    private static final int CONNECTING_CODE = 0x04; // connecting code
-    private static final int DISCONNECTING_CODE = 0x05; // disconnecting code
+    private static final int CLOSED_CODE = 0x00; // closed
+    private static final int CONNECT_CODE = 0x01; // connected
+    private static final int FAILURE_CODE = 0x02;// connect failure
+    private static final int DISCONNECT_CODE = 0x03; // disconnect
+    private static final int CONNECTING_CODE = 0x04; // connecting
+    private static final int DISCONNECTING_CODE = 0x05; // disconnecting
 
     public static final DeviceState CLOSED = new DeviceState(CLOSED_CODE, "已关闭", R.mipmap.ic_disconnect_32px);
     public static final DeviceState CONNECT = new DeviceState(CONNECT_CODE, "已连接", R.mipmap.ic_connected_32px);

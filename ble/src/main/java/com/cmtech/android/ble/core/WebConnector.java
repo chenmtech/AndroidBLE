@@ -4,6 +4,9 @@ import android.content.Context;
 
 import com.vise.log.ViseLog;
 
+import static com.cmtech.android.ble.core.DeviceState.CONNECT;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
+
 public class WebConnector extends AbstractConnector {
     public WebConnector(IDevice device) {
         super(device);
@@ -15,20 +18,21 @@ public class WebConnector extends AbstractConnector {
     }
 
     @Override
-    public void close() {
-        ViseLog.e("WebConnector.close()");
-        super.close();
-    }
-
-    @Override
     public void connect() {
+        device.setState(CONNECT);
         if (!device.onConnectSuccess())
             disconnect(true);
     }
 
     @Override
     public void disconnect(boolean forever) {
+        device.setState(DISCONNECT);
+    }
 
+    @Override
+    public void close() {
+        ViseLog.e("WebConnector.close()");
+        super.close();
     }
 
 }
