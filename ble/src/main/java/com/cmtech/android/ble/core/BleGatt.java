@@ -44,7 +44,7 @@ public class BleGatt {
 
     private BluetoothGatt bluetoothGatt; //底层蓝牙GATT
     private final Context context;
-    private final String bleAddress; // ble device address
+    private final String bleAddress; // ble connCallback address
     private final IBleConnectCallback connectCallback;//连接回调
     private volatile Pair<BleGattElement, IBleDataCallback> readElementCallback = null; // 读操作的Element和Callback对
     private volatile Pair<BleGattElement, IBleDataCallback> writeElementCallback = null; // 写操作的Element和Callback对

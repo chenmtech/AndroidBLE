@@ -36,24 +36,57 @@ public class BleConnector extends AbstractConnector {
         // connection success
         @Override
         public void onConnectSuccess(final BleGatt bleGatt) {
-            processConnectSuccess(bleGatt);
+            // 防止重复连接成功
+            if (state != CONNECT) {
+                if (state == CLOSED) { // 设备已经关闭了，强行清除
+                    bleGatt.close();
+                    return;
+                }
+
+                ViseLog.e("Connect success: " + bleGatt);
+
+                BleConnector.this.bleGatt = bleGatt;
+                gattCmdExecutor.start();
+
+                if (!connCallback.onConnectSuccess()) {
+                    disconnect(false);
+                } else {
+                    setState(CONNECT);
+                }
+            }
         }
 
         // connection failure
         @Override
         public void onConnectFailure(final BleException exception) {
-            processConnectFailure(exception);
+            if (state != FAILURE) {
+                ViseLog.e("Connect failure: " + exception);
+
+                bleGatt = null;
+                gattCmdExecutor.stop();
+                setState(FAILURE);
+                reconnect();
+                connCallback.onConnectFailure();
+            }
         }
 
         // disconnection
         @Override
         public void onDisconnect() {
-            processDisconnect();
+            if (state != DISCONNECT) {
+                ViseLog.e("Disconnect.");
+
+                bleGatt = null;
+                gattCmdExecutor.stop();
+                setState(DISCONNECT);
+                reconnect();
+                connCallback.onDisconnect();
+            }
         }
     };
 
-    public BleConnector(IDevice device) {
-        super(device);
+    public BleConnector(String address, IConnectorCallback connectorCallback) {
+        super(address, connectorCallback);
     }
 
     public BleGatt getBleGatt() {
@@ -75,26 +108,13 @@ public class BleConnector extends AbstractConnector {
     }
 
     @Override
-    public void open(Context context) {
-        super.open(context);
-        gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+    public boolean open(Context context) {
+        boolean success = super.open(context);
+        if(success)
+            gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+        return success;
     }
 
-    @Override
-    public void connect() {
-        new BleGatt(context, device.getAddress(), connectCallback).connect();
-    }
-
-    // 强制断开
-    @Override
-    public void disconnect(boolean forever) {
-        ViseLog.e("BleConnector.disconnect(): " + (forever ? "forever" : ""));
-        if (bleGatt != null) {
-            bleGatt.disconnect(forever);
-        }
-    }
-
-    // 关闭设备
     @Override
     public void close() {
         ViseLog.e("BleConnector.close()");
@@ -107,46 +127,19 @@ public class BleConnector extends AbstractConnector {
         super.close();
     }
 
-
-    // 处理连接成功
-    private void processConnectSuccess(BleGatt bleGatt) {
-        // 防止重复连接成功
-        if (device.getState() != CONNECT) {
-            if (device.getState() == CLOSED) { // 设备已经关闭了，强行清除
-                bleGatt.close();
-                return;
-            }
-
-            ViseLog.e("Connect success: " + bleGatt);
-
-            this.bleGatt = bleGatt;
-            gattCmdExecutor.start();
-
-            if (!device.onConnectSuccess()) {
-                disconnect(false);
-            }
-        }
+    @Override
+    public void connect() {
+        super.connect();
+        new BleGatt(context, address, connectCallback).connect();
     }
 
-    // 处理连接错误
-    private void processConnectFailure(final BleException bleException) {
-        if (device.getState() != FAILURE) {
-            ViseLog.e("Connect failure: " + bleException);
-
-            bleGatt = null;
-            gattCmdExecutor.stop();
-            device.onConnectFailure();
-        }
-    }
-
-    // 处理连接断开
-    private void processDisconnect() {
-        if (device.getState() != DISCONNECT) {
-            ViseLog.e("Disconnect.");
-
-            bleGatt = null;
-            gattCmdExecutor.stop();
-            device.onDisconnect();
+    // 强制断开
+    @Override
+    public void disconnect(boolean forever) {
+        ViseLog.e("BleConnector.disconnect(): " + (forever ? "forever" : ""));
+        super.disconnect(forever);
+        if (bleGatt != null) {
+            bleGatt.disconnect(forever);
         }
     }
 

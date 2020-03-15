@@ -5,7 +5,7 @@ import com.cmtech.android.ble.R;
 /**
   *
   * ClassName:      DeviceState
-  * Description:    device state
+  * Description:    connCallback state
   * Author:         chenm
   * CreateDate:     2018/4/21 下午4:47
   * UpdateUser:     chenm

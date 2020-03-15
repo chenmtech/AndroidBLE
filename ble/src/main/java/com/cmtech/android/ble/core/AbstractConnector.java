@@ -2,10 +2,16 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
+import com.cmtech.android.ble.BleConfig;
 import com.vise.log.ViseLog;
 
+import java.util.Timer;
+import java.util.TimerTask;
+
 import static com.cmtech.android.ble.core.DeviceState.CLOSED;
+import static com.cmtech.android.ble.core.DeviceState.CONNECTING;
 import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
+import static com.cmtech.android.ble.core.DeviceState.DISCONNECTING;
 
 /**
  * ProjectName:    BtDeviceApp
@@ -20,24 +26,85 @@ import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
  * Version:        1.0
  */
 public abstract class AbstractConnector implements IConnector {
-    protected final IDevice device; // device
-    protected Context context; // 上下文，用于启动蓝牙连接。当调用open()打开设备时赋值
+    protected final String address; // address
+    protected final IConnectorCallback connCallback; // connCallback
+    protected Context context; // context, set in open function
+    protected volatile DeviceState state = CLOSED; // state
+    private Timer reconnTimer = new Timer(); // reconnection timer
+    private boolean canReconn = false; // Can be reconnected?
+    private final long reconnTime; // reconnection times
 
-    public AbstractConnector(IDevice device) {
-        if(device == null) {
-            throw new NullPointerException("The device is null");
+    public AbstractConnector(String address, IConnectorCallback connCallback) {
+        this(address, connCallback, BleConfig.getInstance().getConnectInterval());
+    }
+
+    public AbstractConnector(String address, IConnectorCallback connCallback, long reconnTime) {
+        if(connCallback == null) {
+            throw new NullPointerException("The connCallback is null");
         }
-        this.device = device;
+        this.address = address;
+        this.connCallback = connCallback;
+        this.reconnTime = reconnTime;
     }
 
     // 打开设备
     @Override
-    public void open(Context context) {
+    public boolean open(Context context) {
+        if (state != CLOSED) {
+            return false;
+        }
+
+        ViseLog.e("Connector.open()");
         this.context = context;
+        setState(DISCONNECT);
+        return true;
     }
 
     @Override
     public void close() {
         context = null;
+        setState(CLOSED);
+        reconnTimer.cancel();
+        canReconn = false;
+    }
+
+    @Override
+    public void connect() {
+        setState(CONNECTING);
+        reconnTimer.cancel();
+        canReconn = true;
+    }
+
+    @Override
+    public void disconnect(boolean forever) {
+        setState(DISCONNECTING);
+        reconnTimer.cancel();
+        this.canReconn = !forever;
+    }
+
+    @Override
+    public DeviceState getState() {
+        return state;
+    }
+
+    protected void setState(DeviceState state) {
+        if (this.state != state) {
+            ViseLog.e(address + ": " + state);
+            this.state = state;
+            connCallback.onConnectorStateUpdated();
+        }
+    }
+
+    protected void reconnect() {
+        if(canReconn && reconnTime > 0) {
+            reconnTimer.cancel();
+            reconnTimer = new Timer();
+            reconnTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    connect();
+                }
+            }, reconnTime);
+        }
     }
 }

@@ -1,36 +1,30 @@
 package com.cmtech.android.ble.core;
 
-import android.content.Context;
-
-import com.vise.log.ViseLog;
-
 import static com.cmtech.android.ble.core.DeviceState.CONNECT;
 import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
 
 public class WebConnector extends AbstractConnector {
-    public WebConnector(IDevice device) {
-        super(device);
-    }
-
-    @Override
-    public void open(Context context) {
-        super.open(context);
+    public WebConnector(String address, IConnectorCallback connectorCallback) {
+        super(address, connectorCallback);
     }
 
     @Override
     public void connect() {
-        if (!device.onConnectSuccess())
+        super.connect();
+
+        if (!connCallback.onConnectSuccess()) {
             disconnect(true);
+        } else {
+            setState(CONNECT);
+        }
     }
 
     @Override
     public void disconnect(boolean forever) {
-        device.onDisconnect();
+        super.disconnect(forever);
+        connCallback.onDisconnect();
+        setState(DISCONNECT);
     }
 
-    @Override
-    public void close() {
-        super.close();
-    }
 
 }

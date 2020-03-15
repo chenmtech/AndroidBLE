@@ -22,14 +22,10 @@ import static com.cmtech.android.ble.core.DeviceState.FAILURE;
 
 public abstract class AbstractDevice implements IDevice{
     private Context context; // context
-    private final DeviceRegisterInfo registerInfo; // device register information
-    protected volatile DeviceState state = CLOSED; // state
+    private final DeviceRegisterInfo registerInfo; // connCallback register information
     private int battery; // battery level
-    private final List<OnDeviceListener> listeners; // device listeners
+    private final List<OnDeviceListener> listeners; // connCallback listeners
     protected final IConnector connector; // connector
-
-    private Timer connTimer = new Timer();
-    private boolean canReconn = false; // Can be reconnected?
 
     public AbstractDevice(DeviceRegisterInfo registerInfo) {
         if(registerInfo == null) {
@@ -37,9 +33,9 @@ public abstract class AbstractDevice implements IDevice{
         }
         this.registerInfo = registerInfo;
         if(registerInfo.isLocal()) {
-            connector = new BleConnector(this);
+            connector = new BleConnector(this.getAddress(), this);
         } else {
-            connector = new WebConnector(this);
+            connector = new WebConnector(this.getAddress(), this);
         }
         listeners = new LinkedList<>();
         battery = INVALID_BATTERY;
@@ -104,7 +100,7 @@ public abstract class AbstractDevice implements IDevice{
     }
     @Override
     public DeviceState getState() {
-        return state;
+        return connector.getState();
     }
 
     @Override
@@ -112,41 +108,23 @@ public abstract class AbstractDevice implements IDevice{
         if (context == null) {
             throw new NullPointerException("The context is null.");
         }
-        if (state != CLOSED) {
-            ViseLog.e("The device is opened.");
-            return;
-        }
-
-        ViseLog.e("Device.open()");
         this.context = context;
-        connector.open(context);
 
-        if (registerInfo.isAutoConnect()) {
+        if (connector.open(context) && registerInfo.isAutoConnect())
             connect();
-        } else {
-            setState(DISCONNECT);
-        }
     }
+
     @Override
     public void close() {
         connector.close();
-        setState(CLOSED);
-
-        connTimer.cancel();
-        canReconn = false;
     }
+
     @Override
     public void connect() {
-        setState(CONNECTING);
-        connTimer.cancel();
-        canReconn = true;
         connector.connect();
     }
     @Override
     public void disconnect(boolean forever) {
-        setState(DISCONNECTING);
-        connTimer.cancel();
-        this.canReconn = !forever;
         connector.disconnect(forever);
     }
 
@@ -154,9 +132,9 @@ public abstract class AbstractDevice implements IDevice{
     @Override
     public void switchState() {
         ViseLog.e("Device.switchState()");
-        if (state == FAILURE || state == DISCONNECT) {
+        if (connector.getState() == FAILURE || connector.getState() == DISCONNECT) {
             connect();
-        } else if (state == CONNECT) {
+        } else if (connector.getState() == CONNECT) {
             disconnect(true);
         } else { // 无效操作
             if(context != null)
@@ -174,38 +152,11 @@ public abstract class AbstractDevice implements IDevice{
     }
 
     @Override
-    public boolean onConnectSuccess() {
-        setState(CONNECT);
-        return true;
-    }
-
-    @Override
-    public void onConnectFailure() {
-        setState(FAILURE);
-        if(canReconn) {
-            connTimer.cancel();
-            connTimer = new Timer();
-            connTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    connect();
-                }
-            }, BleConfig.getInstance().getConnectInterval());
-        }
-    }
-
-    @Override
-    public void onDisconnect() {
-        setState(DISCONNECT);
-        if(canReconn) {
-            connTimer.cancel();
-            connTimer = new Timer();
-            connTimer.schedule(new TimerTask() {
-                @Override
-                public void run() {
-                    connect();
-                }
-            }, BleConfig.getInstance().getConnectInterval());
+    public void onConnectorStateUpdated() {
+        for(OnDeviceListener listener : listeners) {
+            if(listener != null) {
+                listener.onStateUpdated(this);
+            }
         }
     }
 
@@ -216,20 +167,10 @@ public abstract class AbstractDevice implements IDevice{
         AbstractDevice that = (AbstractDevice) o;
         return registerInfo.equals(that.registerInfo);
     }
+
     @Override
     public int hashCode() {
         return (registerInfo != null) ? registerInfo.hashCode() : 0;
     }
 
-    protected void setState(DeviceState state) {
-        if (this.state != state) {
-            ViseLog.e(getAddress() + ": " + state);
-            this.state = state;
-            for(OnDeviceListener listener : listeners) {
-                if(listener != null) {
-                    listener.onStateUpdated(this);
-                }
-            }
-        }
-    }
 }

@@ -4,12 +4,12 @@ import android.content.Context;
 
 import com.cmtech.android.ble.exception.BleException;
 
-public interface IDevice {
+public interface IDevice extends IConnector.IConnectorCallback {
     int INVALID_BATTERY = -1; // invalid battery level
 
     DeviceRegisterInfo getRegisterInfo();
     void updateRegisterInfo(DeviceRegisterInfo registerInfo);
-    boolean isLocal(); // is local device
+    boolean isLocal(); // is local connCallback
     String getAddress();
     String getName();
     void setName(String name);
@@ -21,18 +21,14 @@ public interface IDevice {
     void addListener(OnDeviceListener listener);
     void removeListener(OnDeviceListener listener);
 
-    void open(Context context); // open device
-    void close(); // close device
-    void connect(); // connect device
-    void disconnect(boolean forever); // disconnect device. if forever=true, no reconnection occurred, otherwise reconnect it.
+    void open(Context context); // open connCallback
+    void close(); // close connCallback
+    void connect(); // connect connCallback
+    void disconnect(boolean forever); // disconnect connCallback. if forever=true, no reconnection occurred, otherwise reconnect it.
     void switchState(); // switch state
     void handleException(BleException ex); // handle exception
 
-    boolean onConnectSuccess(); // operate when connection success
-    void onConnectFailure(); // operate when connection failure
-    void onDisconnect(); // operate when disconnection
-
-    // device listener interface
+    // connCallback listener interface
     interface OnDeviceListener {
         void onStateUpdated(final IDevice device); // state updated
         void onExceptionNotified(final IDevice device, BleException ex); // exception notified

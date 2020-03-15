@@ -66,11 +66,11 @@ public class BleDeviceDetailInfo implements Parcelable {
     private transient Set<BluetoothServiceType> mServiceSet;
 
     /**
-     * Instantiates a new Bluetooth LE device.
+     * Instantiates a new Bluetooth LE connCallback.
      *
-     * @param device     a standard android Bluetooth device
-     * @param rssi       the RSSI value of the Bluetooth device
-     * @param scanRecord the scan record of the device
+     * @param device     a standard android Bluetooth connCallback
+     * @param rssi       the RSSI value of the Bluetooth connCallback
+     * @param scanRecord the scan record of the connCallback
      * @param timestamp  the timestamp of the RSSI reading
      */
     public BleDeviceDetailInfo(final BluetoothDevice device, final int rssi, final byte[] scanRecord, final long timestamp) {
@@ -84,9 +84,9 @@ public class BleDeviceDetailInfo implements Parcelable {
     }
 
     /**
-     * Instantiates a new Bluetooth LE device.
+     * Instantiates a new Bluetooth LE connCallback.
      *
-     * @param device the device
+     * @param device the connCallback
      */
     public BleDeviceDetailInfo(final BleDeviceDetailInfo device) {
         mCurrentRssi = device.getRssi();
@@ -100,7 +100,7 @@ public class BleDeviceDetailInfo implements Parcelable {
     }
 
     /**
-     * Instantiates a new bluetooth le device.
+     * Instantiates a new bluetooth le connCallback.
      *
      * @param in the in
      */
@@ -190,18 +190,18 @@ public class BleDeviceDetailInfo implements Parcelable {
     }
 
     /**
-     * Gets the bluetooth device bond state.
+     * Gets the bluetooth connCallback bond state.
      *
-     * @return the bluetooth device bond state
+     * @return the bluetooth connCallback bond state
      */
     public String getBluetoothDeviceBondState() {
         return resolveBondingState(mDevice.getBondState());
     }
 
     /**
-     * Gets the bluetooth device class name.
+     * Gets the bluetooth connCallback class name.
      *
-     * @return the bluetooth device class name
+     * @return the bluetooth connCallback class name
      */
     public String getBluetoothDeviceClassName() {
         return BluetoothClassResolver.resolveDeviceClass(mDevice.getBluetoothClass().getDeviceClass());
@@ -227,18 +227,18 @@ public class BleDeviceDetailInfo implements Parcelable {
     }
 
     /**
-     * Gets the bluetooth device major class name.
+     * Gets the bluetooth connCallback major class name.
      *
-     * @return the bluetooth device major class name
+     * @return the bluetooth connCallback major class name
      */
     public String getBluetoothDeviceMajorClassName() {
         return BluetoothClassResolver.resolveMajorDeviceClass(mDevice.getBluetoothClass().getMajorDeviceClass());
     }
 
     /**
-     * Gets the device.
+     * Gets the connCallback.
      *
-     * @return the device
+     * @return the connCallback
      */
     public BluetoothDevice getDevice() {
         return mDevice;
