@@ -18,15 +18,14 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
     private static final String NAME = "_name";
     private static final String IMAGEPATH = "_imagepath";
     private static final String AUTOCONNECT = "_autoconnect";
-    private static final String WARNBLEINNERERROR = "_warnbleinnererror";
 
     public BleDeviceRegisterInfo(String macAddress, String uuidStr) {
         super(macAddress, uuidStr);
     }
 
     private BleDeviceRegisterInfo(String macAddress, String uuidStr, String name, String imagePath,
-                               boolean autoConnect, boolean warnWhenBleInnerError) {
-        super(macAddress, uuidStr, name, imagePath, autoConnect, warnWhenBleInnerError);
+                               boolean autoConnect) {
+        super(macAddress, uuidStr, name, imagePath, autoConnect);
     }
 
     // 从Pref读取所有的设备注册信息
@@ -57,8 +56,7 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
         String nickName = pref.getString(macAddress + NAME, DEFAULT_DEVICE_NAME);
         String imagePath = pref.getString(macAddress + IMAGEPATH, DEFAULT_DEVICE_IMAGE_PATH);
         boolean autoConnect = pref.getBoolean(macAddress + AUTOCONNECT, DEFAULT_DEVICE_AUTO_CONNECT);
-        boolean warnWhenBleError = pref.getBoolean(macAddress + WARNBLEINNERERROR, DEFAULT_WARN_WHEN_BLE_INNER_ERROR);
-        return new BleDeviceRegisterInfo(address, uuidString, nickName, imagePath, autoConnect, warnWhenBleError);
+        return new BleDeviceRegisterInfo(address, uuidString, nickName, imagePath, autoConnect);
     }
 
     // 将注册信息保存到Pref
@@ -77,7 +75,6 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
         editor.putString(macAddress + NAME, name);
         editor.putString(macAddress + IMAGEPATH, imagePath);
         editor.putBoolean(macAddress + AUTOCONNECT, autoConnect);
-        editor.putBoolean(macAddress + WARNBLEINNERERROR, warnWhenBleInnerError);
         return editor.commit();
     }
 
@@ -92,7 +89,7 @@ public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
             editor.putStringSet(ADDRESSSET, addressSet);
         }
 
-        String[] strs = new String[]{MACADDRESS, UUIDSTR, NAME, IMAGEPATH, AUTOCONNECT, WARNBLEINNERERROR};
+        String[] strs = new String[]{MACADDRESS, UUIDSTR, NAME, IMAGEPATH, AUTOCONNECT};
         for (String string : strs) {
             editor.remove(macAddress + string);
         }

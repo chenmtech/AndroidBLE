@@ -15,7 +15,6 @@ public interface IDevice {
     void setName(String name);
     String getUuidString();
     String getImagePath();
-    boolean isAutoConnect();
     int getBattery();
     void setBattery(final int battery);
     DeviceState getState(); // get state

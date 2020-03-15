@@ -60,24 +60,23 @@ public class BleConnector extends AbstractConnector {
         return bleGatt;
     }
 
-    // 设备是否包含gatt elements
-    public boolean containGattElements(BleGattElement[] elements) {
-        for (BleGattElement element : elements) {
-            if (element == null || element.transformToGattObject(this) == null)
-                return false;
-        }
-        return true;
-    }
-
-    // 设备是否包含gatt element
-    public boolean containGattElement(BleGattElement element) {
-        return !(element == null || element.transformToGattObject(this) == null);
-    }
-
     @Override
     public void open(Context context) {
         super.open(context);
+
         gattCmdExecutor = new BleSerialGattCommandExecutor(this);
+    }
+
+    // 关闭设备
+    @Override
+    public void close() {
+        if(bleGatt != null)
+            bleGatt.clear();
+
+        gattCmdExecutor = null;
+        bleGatt = null;
+
+        super.close();
     }
 
     @Override
@@ -94,18 +93,6 @@ public class BleConnector extends AbstractConnector {
         }
     }
 
-    // 关闭设备
-    @Override
-    public void close() {
-        ViseLog.e("BleConnector.close()");
-        if(bleGatt != null)
-            bleGatt.clear();
-
-        gattCmdExecutor = null;
-        bleGatt = null;
-
-        super.close();
-    }
 
 
     // 处理连接成功
@@ -150,6 +137,21 @@ public class BleConnector extends AbstractConnector {
             bleGatt = null;
             device.onDisconnect();
         }
+    }
+
+
+    // 设备是否包含gatt elements
+    public boolean containGattElements(BleGattElement[] elements) {
+        for (BleGattElement element : elements) {
+            if (element == null || element.transformToGattObject(this) == null)
+                return false;
+        }
+        return true;
+    }
+
+    // 设备是否包含gatt element
+    public boolean containGattElement(BleGattElement element) {
+        return !(element == null || element.transformToGattObject(this) == null);
     }
 
     public boolean isGattExecutorAlive() {

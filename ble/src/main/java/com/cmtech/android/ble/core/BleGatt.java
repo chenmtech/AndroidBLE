@@ -62,6 +62,7 @@ public class BleGatt {
     private final Lock connLock = new ReentrantLock();
     private Timer connTimer = new Timer();
     private boolean reconnect = false;
+    private boolean acting = false;
 
     // 回调Handler，除了onCharacteristicChanged回调在其本身的线程中执行外，其他所有回调处理都在此Handler中执行
     private final Handler callbackHandler = new Handler(Looper.getMainLooper()) {
@@ -69,17 +70,17 @@ public class BleGatt {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_CONNECT:
-                    if(device == null || (device.getState() != DISCONNECT && device.getState() != FAILURE)) return;
+                    if(acting) return;
                     BluetoothDevice bluetoothDevice = getBluetoothDevice(device.getAddress());
                     if(bluetoothDevice != null) {
-                        device.setState(CONNECTING);
+                        acting = true;
                         bluetoothDevice.connectGatt(context, false, coreGattCallback, BluetoothDevice.TRANSPORT_LE);
                     }
                     break;
 
                 case MSG_DISCONNECT:
-                    if(device == null || device.getState() != CONNECT || bluetoothGatt == null) return;
-                    device.setState(DISCONNECTING);
+                    if(acting || bluetoothGatt == null) return;
+                    acting = true;
                     bluetoothGatt.disconnect();
                     break;
             }
@@ -126,10 +127,8 @@ public class BleGatt {
 
                         if (status == GATT_SUCCESS) {
                             connectCallback.onDisconnect();
-                            device.setState(DISCONNECT);
                         } else {
                             connectCallback.onConnectFailure(new ConnectException(gatt, status));
-                            device.setState(FAILURE);
                         }
 
                         if(reconnect) {
@@ -142,6 +141,8 @@ public class BleGatt {
                                 }
                             }, BleConfig.getInstance().getConnectInterval());
                         }
+
+                        acting = false;
                     }
                 }
             });
@@ -162,7 +163,6 @@ public class BleGatt {
 
                     if (status == GATT_SUCCESS) {
                         connectCallback.onConnectSuccess(BleGatt.this);
-                        device.setState(CONNECT);
                     } else {
                         if (bluetoothGatt != null) {
                             bluetoothGatt.disconnect();
@@ -171,7 +171,6 @@ public class BleGatt {
                         }
 
                         connectCallback.onConnectFailure(new ConnectException(gatt, status));
-                        device.setState(FAILURE);
 
                         if(reconnect) {
                             connTimer.cancel();
@@ -184,6 +183,7 @@ public class BleGatt {
                             }, BleConfig.getInstance().getConnectInterval());
                         }
                     }
+                    acting = false;
                 }
             });
         }
@@ -345,7 +345,6 @@ public class BleGatt {
         } finally {
             connLock.unlock();
         }
-
     }
 
     // disconnect
