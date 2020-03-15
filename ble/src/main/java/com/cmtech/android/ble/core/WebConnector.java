@@ -19,7 +19,7 @@ public class WebConnector extends AbstractConnector {
 
     @Override
     public void connect() {
-        if (device.onConnectSuccess())
+        if (!device.onConnectSuccess())
             disconnect(true);
     }
 

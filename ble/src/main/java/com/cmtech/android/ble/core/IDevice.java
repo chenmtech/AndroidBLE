@@ -21,10 +21,10 @@ public interface IDevice {
     void addListener(OnDeviceListener listener);
     void removeListener(OnDeviceListener listener);
 
-    void open(Context context); // open
-    void close(); // close
-    void connect(); // connect
-    void disconnect(boolean forever); // disconnect. if forever=true, no reconnection occurred, otherwise reconnect it.
+    void open(Context context); // open device
+    void close(); // close device
+    void connect(); // connect device
+    void disconnect(boolean forever); // disconnect device. if forever=true, no reconnection occurred, otherwise reconnect it.
     void switchState(); // switch state
     void handleException(BleException ex); // handle exception
 
