@@ -19,19 +19,17 @@ public class WebConnector extends AbstractConnector {
 
     @Override
     public void connect() {
-        device.setState(CONNECT);
-        if (!device.onConnectSuccess())
+        if (device.onConnectSuccess())
             disconnect(true);
     }
 
     @Override
     public void disconnect(boolean forever) {
-        device.setState(DISCONNECT);
+        device.onDisconnect();
     }
 
     @Override
     public void close() {
-        ViseLog.e("WebConnector.close()");
         super.close();
     }
 

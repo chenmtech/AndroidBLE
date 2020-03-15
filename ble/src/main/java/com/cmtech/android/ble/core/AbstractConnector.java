@@ -33,22 +33,11 @@ public abstract class AbstractConnector implements IConnector {
     // 打开设备
     @Override
     public void open(Context context) {
-        if (device.getState() != CLOSED) {
-            ViseLog.e("The device is opened.");
-            return;
-        }
-
-        ViseLog.e("Connector.open()");
         this.context = context;
-        device.setState(DISCONNECT);
-        if (device.isAutoConnect()) {
-            connect();
-        }
     }
 
     @Override
     public void close() {
-        device.setState(DeviceState.CLOSED);
         context = null;
     }
 }

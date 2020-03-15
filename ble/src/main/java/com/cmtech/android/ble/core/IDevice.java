@@ -15,18 +15,16 @@ public interface IDevice {
     void setName(String name);
     String getUuidString();
     String getImagePath();
-    boolean isAutoConnect();
     int getBattery();
     void setBattery(final int battery);
     DeviceState getState(); // get state
-    void setState(DeviceState state); // set state
     void addListener(OnDeviceListener listener);
     void removeListener(OnDeviceListener listener);
 
     void open(Context context); // open
+    void close(); // close
     void connect(); // connect
     void disconnect(boolean forever); // disconnect. if forever=true, no reconnection occurred, otherwise reconnect it.
-    void close(); // close
     void switchState(); // switch state
     void handleException(BleException ex); // handle exception
 
