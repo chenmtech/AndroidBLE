@@ -22,12 +22,11 @@ public abstract class DeviceRegisterInfo implements Serializable {
     public static final boolean DEFAULT_DEVICE_AUTO_CONNECT = true; // 设备打开时是否自动连接
     public static final boolean DEFAULT_WARN_WHEN_BLE_INNER_ERROR = true; // 缺省的蓝牙内部错误是否报警
 
-    protected final String macAddress; // 设备mac地址
-    protected final String uuidStr; // 设备广播Uuid16位字符串
-    protected String name = DEFAULT_DEVICE_NAME; // 设备昵称
+    protected final String macAddress; // mac address
+    protected final String uuidStr; // uuid string
+    protected String name = DEFAULT_DEVICE_NAME; // device name
     protected String imagePath = DEFAULT_DEVICE_IMAGE_PATH; // 设备图标完整路径
     protected boolean autoConnect = DEFAULT_DEVICE_AUTO_CONNECT; // 设备打开后是否自动连接
-    protected boolean warnWhenBleInnerError = DEFAULT_WARN_WHEN_BLE_INNER_ERROR; // 蓝牙内部错误是否报警
 
     public DeviceRegisterInfo(String macAddress, String uuidStr) {
         this.macAddress = macAddress;
@@ -35,13 +34,12 @@ public abstract class DeviceRegisterInfo implements Serializable {
     }
 
     protected DeviceRegisterInfo(String macAddress, String uuidStr, String name, String imagePath,
-                                 boolean autoConnect, boolean warnWhenBleInnerError) {
+                                 boolean autoConnect) {
         this.macAddress = macAddress;
         this.uuidStr = uuidStr;
         this.name = name;
         this.imagePath = imagePath;
         this.autoConnect = autoConnect;
-        this.warnWhenBleInnerError = warnWhenBleInnerError;
     }
 
     public abstract boolean isLocal();
@@ -69,19 +67,12 @@ public abstract class DeviceRegisterInfo implements Serializable {
     public void setAutoConnect(boolean autoConnect) {
         this.autoConnect = autoConnect;
     }
-    public boolean isWarnWhenBleInnerError() {
-        return warnWhenBleInnerError;
-    }
-    public void setWarnWhenBleInnerError(boolean warnWhenBleInnerError) {
-        this.warnWhenBleInnerError = warnWhenBleInnerError;
-    }
 
     public void update(DeviceRegisterInfo registerInfo) {
         if (macAddress.equalsIgnoreCase(registerInfo.macAddress) && uuidStr.equalsIgnoreCase(registerInfo.uuidStr)) {
             name = registerInfo.name;
             imagePath = registerInfo.imagePath;
             autoConnect = registerInfo.autoConnect;
-            warnWhenBleInnerError = registerInfo.warnWhenBleInnerError;
         }
     }
 
