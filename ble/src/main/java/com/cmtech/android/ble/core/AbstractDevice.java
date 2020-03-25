@@ -2,7 +2,6 @@ package com.cmtech.android.ble.core;
 
 import android.content.Context;
 
-import com.cmtech.android.ble.BleConfig;
 import com.cmtech.android.ble.R;
 import com.cmtech.android.ble.exception.BleException;
 import com.cmtech.android.ble.exception.OtherException;
@@ -10,14 +9,9 @@ import com.vise.log.ViseLog;
 
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
-import static com.cmtech.android.ble.core.DeviceState.CLOSED;
 import static com.cmtech.android.ble.core.DeviceState.CONNECT;
-import static com.cmtech.android.ble.core.DeviceState.CONNECTING;
 import static com.cmtech.android.ble.core.DeviceState.DISCONNECT;
-import static com.cmtech.android.ble.core.DeviceState.DISCONNECTING;
 import static com.cmtech.android.ble.core.DeviceState.FAILURE;
 
 public abstract class AbstractDevice implements IDevice{
@@ -55,11 +49,11 @@ public abstract class AbstractDevice implements IDevice{
     }
     @Override
     public final String getAddress() {
-        return registerInfo.getMacAddress();
+        return registerInfo.getAddress();
     }
     @Override
     public String getUuidString() {
-        return registerInfo.getUuidStr();
+        return registerInfo.getUuid();
     }
     @Override
     public String getName() {
@@ -71,7 +65,7 @@ public abstract class AbstractDevice implements IDevice{
     }
     @Override
     public String getImagePath() {
-        return registerInfo.getImagePath();
+        return registerInfo.getIcon();
     }
     @Override
     public int getBattery() {

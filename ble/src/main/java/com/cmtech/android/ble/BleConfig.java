@@ -2,30 +2,17 @@ package com.cmtech.android.ble;
 
 
 public class BleConfig {
-    private static final int MIN_CONNECT_INTERVAL = 6000; // min connection interval, unit: millisecond
-
-    private static BleConfig instance;
-    private int connectInterval = MIN_CONNECT_INTERVAL; // 自动扫描时间间隔，单位：秒
+    private static final int MIN_RECONNECT_INTERVAL = 6000; // min reconnection interval, unit: millisecond.
+    private static int reconnInterval = MIN_RECONNECT_INTERVAL; // when disconnect, device should wait this time to reconnect
 
     private BleConfig() {
     }
 
-    public static BleConfig getInstance() {
-        if (instance == null) {
-            synchronized (BleConfig.class) {
-                if (instance == null) {
-                    instance = new BleConfig();
-                }
-            }
-        }
-        return instance;
+    public static int getReconnInterval() {
+        return reconnInterval;
     }
 
-    public int getConnectInterval() {
-        return connectInterval;
-    }
-
-    public void setConnectInterval(int connectInterval) {
-        this.connectInterval = (connectInterval < MIN_CONNECT_INTERVAL) ? MIN_CONNECT_INTERVAL : connectInterval;
+    public static void setReconnInterval(int reconnInterval) {
+        BleConfig.reconnInterval = Math.max(reconnInterval, MIN_RECONNECT_INTERVAL);
     }
 }

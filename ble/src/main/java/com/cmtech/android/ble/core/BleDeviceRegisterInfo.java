@@ -10,88 +10,86 @@ import java.util.List;
 import java.util.Set;
 
 public class BleDeviceRegisterInfo extends DeviceRegisterInfo {
-    private static final String DEFAULT_DEVICE_MAC_ADDRESS = ""; //缺省MAC地址
-    private static final String DEFAULT_DEVICE_UUID_STR = ""; //缺省UUID串
-    private static final String ADDRESSSET = "addressset";
-    private static final String MACADDRESS = "_macaddress";
-    private static final String UUIDSTR = "_uuidstr";
+    private static final String ADDR_SET = "addrset";
+    private static final String ADDRESS = "_address";
+    private static final String UUID = "_uuid";
     private static final String NAME = "_name";
-    private static final String IMAGEPATH = "_imagepath";
+    private static final String ICON = "_icon";
     private static final String AUTOCONNECT = "_autoconnect";
 
-    public BleDeviceRegisterInfo(String macAddress, String uuidStr) {
-        super(macAddress, uuidStr);
+    public BleDeviceRegisterInfo(String address, String uuidStr) {
+        super(address, uuidStr);
     }
 
-    private BleDeviceRegisterInfo(String macAddress, String uuidStr, String name, String imagePath,
+    private BleDeviceRegisterInfo(String address, String uuid, String name, String icon,
                                boolean autoConnect) {
-        super(macAddress, uuidStr, name, imagePath, autoConnect);
+        super(address, uuid, name, icon, autoConnect);
     }
 
     // 从Pref读取所有的设备注册信息
     public static List<DeviceRegisterInfo> readAllFromPref(SharedPreferences pref) {
-        Set<String> addressSet = new HashSet<>();
-        addressSet = pref.getStringSet(ADDRESSSET, addressSet);
-        if (addressSet == null || addressSet.isEmpty()) {
+        Set<String> addrSet = new HashSet<>();
+        addrSet = pref.getStringSet(ADDR_SET, addrSet);
+        if (addrSet == null || addrSet.isEmpty()) {
             return null;
         }
         // 转为数组排序
-        String[] addresses = addressSet.toArray(new String[0]);
-        Arrays.sort(addresses);
-        List<DeviceRegisterInfo> registerInfoList = new ArrayList<>();
-        for (String macAddress : addresses) {
-            DeviceRegisterInfo registerInfo = readFromPref(pref, macAddress);
-            if (registerInfo != null)
-                registerInfoList.add(registerInfo);
+        String[] addrArr = addrSet.toArray(new String[0]);
+        Arrays.sort(addrArr);
+        List<DeviceRegisterInfo> infos = new ArrayList<>();
+        for (String address : addrArr) {
+            DeviceRegisterInfo info = readFromPref(pref, address);
+            if (info != null)
+                infos.add(info);
         }
-        return registerInfoList;
+        return infos;
     }
 
     // 由Pref读取设备注册信息
-    private static DeviceRegisterInfo readFromPref(SharedPreferences pref, String macAddress) {
-        if (TextUtils.isEmpty(macAddress)) return null;
-        String address = pref.getString(macAddress + MACADDRESS, DEFAULT_DEVICE_MAC_ADDRESS);
+    private static DeviceRegisterInfo readFromPref(SharedPreferences pref, String address) {
         if (TextUtils.isEmpty(address)) return null;
-        String uuidString = pref.getString(macAddress + UUIDSTR, DEFAULT_DEVICE_UUID_STR);
-        String nickName = pref.getString(macAddress + NAME, DEFAULT_DEVICE_NAME);
-        String imagePath = pref.getString(macAddress + IMAGEPATH, DEFAULT_DEVICE_IMAGE_PATH);
-        boolean autoConnect = pref.getBoolean(macAddress + AUTOCONNECT, DEFAULT_DEVICE_AUTO_CONNECT);
-        return new BleDeviceRegisterInfo(address, uuidString, nickName, imagePath, autoConnect);
+        String addr = pref.getString(address + ADDRESS, "");
+        if (TextUtils.isEmpty(addr)) return null;
+        String uuid = pref.getString(address + UUID, "");
+        String name = pref.getString(address + NAME, DEFAULT_DEVICE_NAME);
+        String icon = pref.getString(address + ICON, DEFAULT_DEVICE_ICON);
+        boolean autoConnect = pref.getBoolean(address + AUTOCONNECT, DEFAULT_DEVICE_AUTO_CONNECT);
+        return new BleDeviceRegisterInfo(addr, uuid, name, icon, autoConnect);
     }
 
     // 将注册信息保存到Pref
     public boolean saveToPref(SharedPreferences pref) {
-        if (TextUtils.isEmpty(macAddress)) return false;
+        if (TextUtils.isEmpty(address)) return false;
 
         SharedPreferences.Editor editor = pref.edit();
-        Set<String> addressSet = new HashSet<>();
-        addressSet = pref.getStringSet(ADDRESSSET, addressSet);
-        if ((addressSet != null) && (addressSet.isEmpty() || !addressSet.contains(macAddress))) {
-            addressSet.add(macAddress);
-            editor.putStringSet(ADDRESSSET, addressSet);
+        Set<String> addrs = new HashSet<>();
+        addrs = pref.getStringSet(ADDR_SET, addrs);
+        if ((addrs != null) && (addrs.isEmpty() || !addrs.contains(address))) {
+            addrs.add(address);
+            editor.putStringSet(ADDR_SET, addrs);
         }
-        editor.putString(macAddress + MACADDRESS, macAddress);
-        editor.putString(macAddress + UUIDSTR, uuidStr);
-        editor.putString(macAddress + NAME, name);
-        editor.putString(macAddress + IMAGEPATH, imagePath);
-        editor.putBoolean(macAddress + AUTOCONNECT, autoConnect);
+        editor.putString(address + ADDRESS, address);
+        editor.putString(address + UUID, uuid);
+        editor.putString(address + NAME, name);
+        editor.putString(address + ICON, icon);
+        editor.putBoolean(address + AUTOCONNECT, autoConnect);
         return editor.commit();
     }
 
     // 从Pref中删除注册信息
     public boolean deleteFromPref(SharedPreferences pref) {
-        if (TextUtils.isEmpty(macAddress)) return false;
+        if (TextUtils.isEmpty(address)) return false;
 
         SharedPreferences.Editor editor = pref.edit();
-        Set<String> addressSet = pref.getStringSet(ADDRESSSET, null);
-        if (addressSet != null && addressSet.contains(macAddress)) {
-            addressSet.remove(macAddress);
-            editor.putStringSet(ADDRESSSET, addressSet);
+        Set<String> addrs = pref.getStringSet(ADDR_SET, null);
+        if (addrs != null && addrs.contains(address)) {
+            addrs.remove(address);
+            editor.putStringSet(ADDR_SET, addrs);
         }
 
-        String[] strs = new String[]{MACADDRESS, UUIDSTR, NAME, IMAGEPATH, AUTOCONNECT};
-        for (String string : strs) {
-            editor.remove(macAddress + string);
+        String[] strArr = new String[]{ADDRESS, UUID, NAME, ICON, AUTOCONNECT};
+        for (String string : strArr) {
+            editor.remove(address + string);
         }
         return editor.commit();
     }

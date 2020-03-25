@@ -35,7 +35,7 @@ public abstract class AbstractConnector implements IConnector {
     private final long reconnTime; // reconnection times
 
     public AbstractConnector(String address, IConnectorCallback connCallback) {
-        this(address, connCallback, BleConfig.getInstance().getConnectInterval());
+        this(address, connCallback, BleConfig.getReconnInterval());
     }
 
     public AbstractConnector(String address, IConnectorCallback connCallback, long reconnTime) {
