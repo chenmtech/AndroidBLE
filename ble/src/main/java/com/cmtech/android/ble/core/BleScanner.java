@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_LATENCY;
+import static android.bluetooth.le.ScanSettings.SCAN_MODE_LOW_POWER;
 import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_CLOSED;
 import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_INNER_ERROR;
 
@@ -70,7 +71,7 @@ public class BleScanner {
             scanner.startScan(scanCallback);
         } else {
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder()
-                    .setScanMode(SCAN_MODE_LOW_LATENCY)
+                    .setScanMode(SCAN_MODE_LOW_POWER)
                     .setCallbackType(ScanSettings.CALLBACK_TYPE_ALL_MATCHES)
                     .setMatchMode(ScanSettings.MATCH_MODE_AGGRESSIVE)
                     .setNumOfMatches(ScanSettings.MATCH_NUM_ONE_ADVERTISEMENT)
