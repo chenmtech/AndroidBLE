@@ -33,7 +33,6 @@ import static com.cmtech.android.ble.callback.IBleScanCallback.CODE_BLE_INNER_ER
 public class BleScanner {
     private static final List<ScanCallbackAdapter> callbackList = new ArrayList<>(); // 所有扫描的回调
     private static volatile boolean bleInnerError = false; // 是否发生蓝牙内部错误，比如由于频繁扫描引起的错误
-    private static int scanTimes = 0; // 累计扫描次数
 
     // 开始扫描
     public static void startScan(ScanFilter scanFilter, final IBleScanCallback bleScanCallback) {
@@ -51,14 +50,12 @@ public class BleScanner {
                 bleScanCallback.onScanFailed(CODE_BLE_INNER_ERROR);
                 return;
             }
-
             for (ScanCallbackAdapter callback : callbackList) {
                 if (callback.bleScanCallback == bleScanCallback) {
                     scanCallback = callback;
                     break;
                 }
             }
-
             if (scanCallback == null) {
                 scanCallback = new ScanCallbackAdapter(bleScanCallback);
                 callbackList.add(scanCallback);
@@ -80,9 +77,6 @@ public class BleScanner {
                     .setReportDelay(0L);
             scanner.startScan(Collections.singletonList(scanFilter), settingsBuilder.build(), scanCallback);
         }
-        scanTimes++;
-
-        ViseLog.e("Start scanning, scanTimes = " + scanTimes);
     }
 
     // 停止扫描
@@ -107,8 +101,7 @@ public class BleScanner {
             }
         }
         if(scanCallback != null) {
-            BluetoothLeScanner scanner;
-            scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
+            BluetoothLeScanner scanner = BluetoothAdapter.getDefaultAdapter().getBluetoothLeScanner();
             scanner.stopScan(scanCallback);
         }
 
@@ -124,11 +117,6 @@ public class BleScanner {
     // 清除BLE内部错误标志
     public static void clearInnerError() {
         bleInnerError = false;
-    }
-
-    // 重置扫描次数
-    public static void resetScanTimes() {
-        scanTimes = 0;
     }
 
     private static class ScanCallbackAdapter extends ScanCallback {
