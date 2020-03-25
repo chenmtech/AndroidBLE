@@ -26,8 +26,8 @@ public class DeviceState {
     public static final DeviceState CONNECT = new DeviceState(CONNECT_CODE, "已连接", R.mipmap.ic_connected_32px);
     public static final DeviceState FAILURE = new DeviceState(FAILURE_CODE, "连接失败", R.mipmap.ic_disconnect_32px);
     public static final DeviceState DISCONNECT = new DeviceState(DISCONNECT_CODE, "未连接", R.mipmap.ic_disconnect_32px);
-    public static final DeviceState CONNECTING = new DeviceState(CONNECTING_CODE, "连接中", R.mipmap.ic_connecting_32px);
-    public static final DeviceState DISCONNECTING = new DeviceState(DISCONNECTING_CODE, "断开中", R.mipmap.ic_connecting_32px);
+    public static final DeviceState CONNECTING = new DeviceState(CONNECTING_CODE, "连接中", R.drawable.connecting);
+    public static final DeviceState DISCONNECTING = new DeviceState(DISCONNECTING_CODE, "断开中", R.drawable.connecting);
 
     private final int code; // code
     private String description; // state description
